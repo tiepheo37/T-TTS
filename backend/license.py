@@ -20,7 +20,9 @@ Tính năng cốt lõi:
 from __future__ import annotations
 
 import base64
+import calendar
 import ctypes
+import datetime
 import hashlib
 import hmac
 import json
@@ -51,11 +53,33 @@ logger = logging.getLogger("T_TTS_License")
 # Tuyệt đối không chứa private key trong toàn bộ mã nguồn phân phối.
 MASTER_PUBLIC_KEY_B64 = "NK/Fn9eXs78hKfVOGhLPtIW6IOJevBdjY8Et8CIvdtQ="
 
-# 3 loại key bắt buộc và thời hạn quy đổi sang giây
+
+def calculate_6_months_expiration(start_timestamp: float) -> float:
+    """Tính mốc thời gian hết hạn sau đúng 6 tháng theo ngày lịch từ mốc kích hoạt.
+
+    Quy tắc:
+    - Bắt đầu tính từ thời điểm kích hoạt thành công đầu tiên.
+    - Chuyển sang ngày theo múi giờ địa phương.
+    - Cộng 6 tháng vào trường tháng.
+    - Nếu tháng đích có số ngày ít hơn ngày kích hoạt, lấy ngày cuối cùng của tháng đó.
+    - Giữ nguyên giờ, phút, giây của thời điểm kích hoạt.
+    """
+    dt = datetime.datetime.fromtimestamp(start_timestamp)
+    target_year = dt.year + (dt.month + 6 - 1) // 12
+    target_month = (dt.month + 6 - 1) % 12 + 1
+    max_days_in_target = calendar.monthrange(target_year, target_month)[1]
+    target_day = min(dt.day, max_days_in_target)
+    target_dt = dt.replace(year=target_year, month=target_month, day=target_day)
+    return target_dt.timestamp()
+
+
+# 5 loại key bản quyền được hỗ trợ chính thức
 VALID_PLANS = {
-    "KEY-1D": {"hours": 24, "seconds": 24 * 3600, "name": "1 Ngày (24 giờ)"},
-    "KEY-7D": {"hours": 168, "seconds": 168 * 3600, "name": "7 Ngày (168 giờ)"},
-    "KEY-30D": {"hours": 720, "seconds": 720 * 3600, "name": "30 Ngày (720 giờ)"},
+    "KEY-1D": {"hours": 24, "seconds": 24 * 3600, "name": "1 Ngày (24 giờ)", "type": "fixed_seconds"},
+    "KEY-7D": {"hours": 168, "seconds": 168 * 3600, "name": "7 Ngày (168 giờ)", "type": "fixed_seconds"},
+    "KEY-30D": {"hours": 720, "seconds": 720 * 3600, "name": "30 Ngày (720 giờ)", "type": "fixed_seconds"},
+    "KEY-6M": {"months": 6, "name": "6 Tháng (Theo lịch)", "type": "calendar_6m"},
+    "KEY-PERM": {"name": "Vĩnh viễn (Trọn đời)", "type": "permanent"},
 }
 
 # 6 trạng thái bản quyền chuẩn hoá theo yêu cầu
@@ -363,14 +387,16 @@ class LicenseManager:
                 return state
 
             # Nếu chưa kích hoạt, không cần kiểm tra thời hạn
-            if state.get("status") == STATUS_UNACTIVATED or not state.get("expires_at"):
+            if state.get("status") == STATUS_UNACTIVATED:
                 return state
 
             now_wall = self._get_current_time()
             now_mono = time.monotonic()
             last_valid = state.get("last_valid_time") or now_wall
             first_act = state.get("first_activated_at") or now_wall
-            expires_at = state.get("expires_at") or 0.0
+            plan_code = state.get("plan")
+            is_permanent = (plan_code == "KEY-PERM")
+            expires_at = state.get("expires_at")
 
             # -------------------------------------------------------------
             # PHÁT HIỆN LÙI THỜI GIAN HỆ THỐNG (ANTI-ROLLBACK DETECTION)
@@ -410,9 +436,9 @@ class LicenseManager:
             self._last_monotonic = now_mono
 
             # -------------------------------------------------------------
-            # KIỂM TRA HẾT HẠN SỬ DỤNG
+            # KIỂM TRA HẾT HẠN SỬ DỤNG (Chỉ áp dụng cho gói có thời hạn)
             # -------------------------------------------------------------
-            if now_wall >= expires_at:
+            if not is_permanent and expires_at is not None and now_wall >= expires_at:
                 if state.get("status") != STATUS_EXPIRED:
                     logger.info(f"Giấy phép {state.get('license_id')} đã hết hạn vào {expires_at}")
                     state["status"] = STATUS_EXPIRED
@@ -456,32 +482,45 @@ class LicenseManager:
         st = self._check_and_update_state()
         curr_time = self._get_current_time()
         status_code = st.get("status", STATUS_UNACTIVATED)
+        plan_code = st.get("plan")
+        is_permanent = (plan_code == "KEY-PERM")
 
         expires_at = st.get("expires_at")
         rem_sec = 0.0
-        if expires_at and curr_time < expires_at:
+
+        if is_permanent and status_code == STATUS_ACTIVE:
+            rem_str = "Vĩnh viễn (Không giới hạn)"
+            exp_readable = "Vĩnh viễn (Trọn đời)"
+            rem_sec = -1.0
+        elif expires_at and curr_time < expires_at:
             rem_sec = max(0.0, expires_at - curr_time)
 
-        # Định dạng thời gian còn lại (ngày, giờ, phút)
-        days = int(rem_sec // 86400)
-        hours = int((rem_sec % 86400) // 3600)
-        mins = int((rem_sec % 3600) // 60)
-        secs = int(rem_sec % 60)
+            # Định dạng thời gian còn lại (ngày, giờ, phút)
+            days = int(rem_sec // 86400)
+            hours = int((rem_sec % 86400) // 3600)
+            mins = int((rem_sec % 3600) // 60)
+            secs = int(rem_sec % 60)
 
-        if days > 0:
-            rem_str = f"{days} ngày {hours} giờ {mins} phút"
-        elif hours > 0:
-            rem_str = f"{hours} giờ {mins} phút {secs} giây"
-        elif mins > 0:
-            rem_str = f"{mins} phút {secs} giây"
-        elif rem_sec > 0:
-            rem_str = f"{secs} giây"
-        else:
-            rem_str = "0 phút (Đã hết hạn)"
+            if days > 0:
+                rem_str = f"{days} ngày {hours} giờ {mins} phút"
+            elif hours > 0:
+                rem_str = f"{hours} giờ {mins} phút {secs} giây"
+            elif mins > 0:
+                rem_str = f"{mins} phút {secs} giây"
+            elif rem_sec > 0:
+                rem_str = f"{secs} giây"
+            else:
+                rem_str = "0 phút (Đã hết hạn)"
 
-        exp_readable = ""
-        if expires_at:
             exp_readable = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(expires_at))
+        else:
+            if status_code == STATUS_EXPIRED:
+                rem_str = "0 phút (Đã hết hạn)"
+            elif status_code == STATUS_UNACTIVATED:
+                rem_str = "Chưa kích hoạt"
+            else:
+                rem_str = "Bị khóa"
+            exp_readable = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(expires_at)) if expires_at else "Chưa có"
 
         first_act_readable = ""
         if st.get("first_activated_at"):
@@ -564,14 +603,12 @@ class LicenseManager:
                 {"expected_mid": current_mid, "license_mid": target_mid},
             )
 
-        # 5. Kiểm tra thời hạn cấp phép (Chỉ chấp nhận 1D, 7D, 30D)
+        # 5. Kiểm tra thời hạn cấp phép (1D, 7D, 30D, 6M, PERM)
         plan_code = (payload.get("plan") or "").strip().upper()
         if plan_code not in VALID_PLANS:
-            return False, f"Gói bản quyền '{plan_code}' không hợp lệ. Chỉ chấp nhận: KEY-1D, KEY-7D, KEY-30D.", {}
+            return False, f"Gói bản quyền '{plan_code}' không hợp lệ. Hỗ trợ: KEY-1D, KEY-7D, KEY-30D, KEY-6M, KEY-PERM.", {}
 
         plan_info = VALID_PLANS[plan_code]
-        duration_seconds = plan_info["seconds"]
-        duration_hours = plan_info["hours"]
         lic_id = payload.get("lid") or ""
 
         with self.lock:
@@ -592,11 +629,24 @@ class LicenseManager:
             now_wall = self._get_current_time()
             if state.get("license_id") == lic_id and state.get("first_activated_at"):
                 first_activated_at = state["first_activated_at"]
-                expires_at = state["expires_at"]
+                expires_at = state.get("expires_at")
+                duration_hours = state.get("duration_hours")
             else:
                 # Key mới hoàn toàn: thời hạn tính chính xác từ thời điểm kích hoạt thành công đầu tiên
                 first_activated_at = now_wall
-                expires_at = first_activated_at + duration_seconds
+                if plan_info["type"] == "fixed_seconds":
+                    duration_seconds = plan_info["seconds"]
+                    duration_hours = plan_info["hours"]
+                    expires_at = first_activated_at + duration_seconds
+                elif plan_info["type"] == "calendar_6m":
+                    expires_at = calculate_6_months_expiration(first_activated_at)
+                    duration_hours = int(round((expires_at - first_activated_at) / 3600))
+                elif plan_info["type"] == "permanent":
+                    expires_at = None
+                    duration_hours = None
+                else:
+                    expires_at = None
+                    duration_hours = None
 
             # Cập nhật trạng thái mới
             state["license_id"] = lic_id

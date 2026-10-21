@@ -1,0 +1,34 @@
+# Python & Virtual Environments
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+venv_*/
+python312/
+python312.tar.gz
+py312_embed.zip
+voice-studio-app.zip
+*.exe
+!tools/T-TTS_KeyGenerator.exe
+
+# Build & Releases
+build/
+dist/
+release_test/
+release_windows_offline/
+test_install/
+test_install_v101/
+tools/build/
+tools/dist/
+
+# Large Model files & Cache
+models/
+output/
+data/cache/
+data/history.json.bak*
+data/system_state.json.bak*
+
+# OS and Temporary
+*.log
+.vscode/
+.idea/

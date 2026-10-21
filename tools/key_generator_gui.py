@@ -118,6 +118,33 @@ def delete_history_record(record_id: str) -> None:
     save_history(records)
 
 
+CONFIG_FILE = TOOLS_DIR / "key_generator_config.json"
+
+
+def load_config() -> dict:
+    """Tải cấu hình công cụ cấp key (ví dụ: thư mục lưu file mặc định)."""
+    default_export = TOOLS_DIR / "exported_licenses"
+    if not CONFIG_FILE.exists():
+        return {"export_dir": str(default_export)}
+    try:
+        cfg = json.loads(CONFIG_FILE.read_text(encoding="utf-8"))
+        if isinstance(cfg, dict):
+            if "export_dir" not in cfg:
+                cfg["export_dir"] = str(default_export)
+            return cfg
+    except Exception:
+        pass
+    return {"export_dir": str(default_export)}
+
+
+def save_config(cfg: dict) -> None:
+    """Lưu cấu hình công cụ cấp key."""
+    try:
+        CONFIG_FILE.write_text(json.dumps(cfg, ensure_ascii=False, indent=2), encoding="utf-8")
+    except Exception as e:
+        print(f"[CẢNH BÁO] Không thể lưu cấu hình: {e}")
+
+
 def extract_machine_id(raw_text: str) -> str:
     """Trích xuất thông minh Mã Máy từ chuỗi tin nhắn bất kỳ của khách."""
     if not raw_text:
@@ -155,6 +182,8 @@ class KeyGeneratorApp(tk.Tk):
             except Exception:
                 pass
 
+        self.config = load_config()
+        self.export_dir_var = tk.StringVar(value=self.config.get("export_dir", str(TOOLS_DIR / "exported_licenses")))
         self.duration_var = tk.StringVar(value="7d")
         self.last_generated_key = ""
         self.last_license_info = {}
@@ -317,11 +346,44 @@ class KeyGeneratorApp(tk.Tk):
         tk.Label(card_cust, text="Chọn thời hạn cấp phép (Tính từ thời điểm khách kích hoạt lần đầu):", bg=self.c_card, fg="#222222", font=("Segoe UI", 9, "bold")).pack(anchor="w", pady=(4, 2))
 
         dur_frame = tk.Frame(card_cust, bg=self.c_card)
-        dur_frame.pack(fill="x", pady=(0, 4))
+        dur_frame.pack(fill="x", pady=(0, 6))
 
-        tk.Radiobutton(dur_frame, text="⚡ 1 Ngày (24 giờ dùng thử nhanh)", variable=self.duration_var, value="1d", bg=self.c_card, fg="#333333", font=("Segoe UI", 9, "bold"), cursor="hand2").pack(side="left", padx=(0, 16))
-        tk.Radiobutton(dur_frame, text="🌟 7 Ngày (168 giờ - Khuyên dùng trải nghiệm)", variable=self.duration_var, value="7d", bg=self.c_card, fg=self.c_army_dark, font=("Segoe UI", 9, "bold"), cursor="hand2").pack(side="left", padx=(0, 16))
-        tk.Radiobutton(dur_frame, text="💎 30 Ngày (720 giờ - Dùng thử 1 tháng)", variable=self.duration_var, value="30d", bg=self.c_card, fg="#333333", font=("Segoe UI", 9, "bold"), cursor="hand2").pack(side="left")
+        tk.Radiobutton(dur_frame, text="⚡ 1 Ngày (24h)", variable=self.duration_var, value="1d", bg=self.c_card, fg="#333333", font=("Segoe UI", 9, "bold"), cursor="hand2").pack(side="left", padx=(0, 12))
+        tk.Radiobutton(dur_frame, text="🌟 7 Ngày (168h)", variable=self.duration_var, value="7d", bg=self.c_card, fg=self.c_army_dark, font=("Segoe UI", 9, "bold"), cursor="hand2").pack(side="left", padx=(0, 12))
+        tk.Radiobutton(dur_frame, text="💎 30 Ngày (720h)", variable=self.duration_var, value="30d", bg=self.c_card, fg="#333333", font=("Segoe UI", 9, "bold"), cursor="hand2").pack(side="left", padx=(0, 12))
+        tk.Radiobutton(dur_frame, text="📅 6 Tháng (Lịch)", variable=self.duration_var, value="6m", bg=self.c_card, fg="#1E40AF", font=("Segoe UI", 9, "bold"), cursor="hand2").pack(side="left", padx=(0, 12))
+        tk.Radiobutton(dur_frame, text="👑 Vĩnh Viễn", variable=self.duration_var, value="perm", bg=self.c_card, fg="#991B1B", font=("Segoe UI", 9, "bold"), cursor="hand2").pack(side="left")
+
+        # Dòng: Thư mục lưu file key xuất ra
+        export_row = tk.Frame(card_cust, bg=self.c_card)
+        export_row.pack(fill="x", pady=(4, 6))
+
+        tk.Label(export_row, text="Thư mục lưu file key xuất ra:", bg=self.c_card, fg="#222222", font=("Segoe UI", 9, "bold")).pack(anchor="w")
+        export_input_frame = tk.Frame(export_row, bg=self.c_card)
+        export_input_frame.pack(fill="x", pady=(2, 0))
+
+        self.export_dir_entry = tk.Entry(
+            export_input_frame,
+            textvariable=self.export_dir_var,
+            font=("Segoe UI", 9),
+            bg="#FAFAFA",
+            relief="solid",
+            bd=1,
+        )
+        self.export_dir_entry.pack(side="left", fill="x", expand=True, ipady=3)
+
+        btn_browse_dir = tk.Button(
+            export_input_frame,
+            text="📁 Chọn Thư Mục Lưu...",
+            bg="#374151",
+            fg="#FFFFFF",
+            font=("Segoe UI", 9, "bold"),
+            relief="flat",
+            padx=10,
+            cursor="hand2",
+            command=self._choose_export_dir,
+        )
+        btn_browse_dir.pack(side="left", padx=(8, 0))
 
         # Ghi chú nội bộ
         tk.Label(card_cust, text="Ghi chú nội bộ (Mục đích cấp):", bg=self.c_card, fg="#666666", font=("Segoe UI", 8)).pack(anchor="w", pady=(2, 0))
@@ -768,6 +830,17 @@ class KeyGeneratorApp(tk.Tk):
         self.key_text.tag_add(tk.SEL, "1.0", tk.END)
         messagebox.showinfo("Đã Sao Chép Key", "✅ Đã sao chép riêng chuỗi mã key vào bộ nhớ đệm!")
 
+    def _choose_export_dir(self):
+        cur = self.export_dir_var.get()
+        new_dir = filedialog.askdirectory(
+            initialdir=cur if os.path.isdir(cur) else str(TOOLS_DIR),
+            title="Chọn thư mục lưu file key",
+        )
+        if new_dir:
+            self.export_dir_var.set(new_dir)
+            self.config["export_dir"] = new_dir
+            save_config(self.config)
+
     def _save_lic_file(self):
         if not self.last_generated_key or not self.last_license_info:
             return
@@ -775,17 +848,30 @@ class KeyGeneratorApp(tk.Tk):
         cust_safe = re.sub(r"[^\w\s-]", "", self.last_customer_name).strip().replace(" ", "_") or "khach"
         plan = self.last_license_info.get("plan", "KEY")
         default_name = f"license_{cust_safe}_{plan}.lic"
+        initial_dir = self.export_dir_var.get()
+        if not os.path.isdir(initial_dir):
+            try:
+                Path(initial_dir).mkdir(parents=True, exist_ok=True)
+            except Exception:
+                initial_dir = str(TOOLS_DIR)
 
         out_path = filedialog.asksaveasfilename(
             title="Lưu tệp giấy phép T-TTS cho khách",
-            defaultextension=".lic",
+            initialdir=initial_dir,
             initialfile=default_name,
-            filetypes=[("T-TTS License File", "*.lic"), ("Text File", "*.txt"), ("Tất cả", "*.*")],
+            defaultextension=".lic",
+            filetypes=[("T-TTS License File (*.lic)", "*.lic"), ("Text File (*.txt)", "*.txt"), ("Tất cả (*.*)", "*.*")],
         )
         if out_path:
+            p = Path(out_path)
             try:
-                Path(out_path).write_text(self.last_generated_key, encoding="utf-8")
-                messagebox.showinfo("Đã Lưu", f"✅ Đã lưu tệp giấy phép thành công tại:\n{out_path}")
+                p.parent.mkdir(parents=True, exist_ok=True)
+                p.write_text(self.last_generated_key, encoding="utf-8")
+                # Ghi nhớ thư mục lưu
+                self.export_dir_var.set(str(p.parent))
+                self.config["export_dir"] = str(p.parent)
+                save_config(self.config)
+                messagebox.showinfo("Đã Lưu File Key", f"✅ Đã lưu tệp giấy phép thành công tại:\n{out_path}")
             except Exception as e:
                 messagebox.showerror("Lỗi Lưu", f"Không thể lưu file: {e}")
 
@@ -804,7 +890,7 @@ class KeyGeneratorApp(tk.Tk):
 
         records = load_history()
         count = 0
-        c_1d, c_7d, c_30d = 0, 0, 0
+        c_1d, c_7d, c_30d, c_6m, c_perm = 0, 0, 0, 0, 0
 
         for r in records:
             p = r.get("plan", "")
@@ -814,6 +900,10 @@ class KeyGeneratorApp(tk.Tk):
                 c_7d += 1
             elif p == "KEY-30D":
                 c_30d += 1
+            elif p == "KEY-6M":
+                c_6m += 1
+            elif p == "KEY-PERM":
+                c_perm += 1
 
             # Lọc theo từ khóa
             match = True
@@ -838,7 +928,7 @@ class KeyGeneratorApp(tk.Tk):
                     ),
                 )
 
-        self.stats_lbl.configure(text=f"Tổng: {len(records)} key  |  1D: {c_1d}  ·  7D: {c_7d}  ·  30D: {c_30d}  |  Đang hiển thị: {count}")
+        self.stats_lbl.configure(text=f"Tổng: {len(records)} key  |  1D: {c_1d}  ·  7D: {c_7d}  ·  30D: {c_30d}  ·  6M: {c_6m}  ·  Vĩnh viễn: {c_perm}  |  Đang hiển thị: {count}")
 
     def _clear_search(self):
         self.search_entry.delete(0, tk.END)
@@ -894,17 +984,29 @@ class KeyGeneratorApp(tk.Tk):
         cust_safe = re.sub(r"[^\w\s-]", "", r.get("cust_name", "khach")).strip().replace(" ", "_") or "khach"
         plan = r.get("plan", "KEY")
         default_name = f"license_{cust_safe}_{plan}.lic"
+        initial_dir = self.export_dir_var.get()
+        if not os.path.isdir(initial_dir):
+            try:
+                Path(initial_dir).mkdir(parents=True, exist_ok=True)
+            except Exception:
+                initial_dir = str(TOOLS_DIR)
 
         out_path = filedialog.asksaveasfilename(
-            title=f"Xuất file .lic cho khách {r.get('cust_name')}",
-            defaultextension=".lic",
+            title=f"Xuất file license cho khách {r.get('cust_name')}",
+            initialdir=initial_dir,
             initialfile=default_name,
-            filetypes=[("T-TTS License File", "*.lic"), ("Tất cả", "*.*")],
+            defaultextension=".lic",
+            filetypes=[("T-TTS License File (*.lic)", "*.lic"), ("Text File (*.txt)", "*.txt"), ("Tất cả (*.*)", "*.*")],
         )
         if out_path:
+            p = Path(out_path)
             try:
-                Path(out_path).write_text(r["key_string"], encoding="utf-8")
-                messagebox.showinfo("Thành Công", f"✅ Đã lưu file: {out_path}")
+                p.parent.mkdir(parents=True, exist_ok=True)
+                p.write_text(r["key_string"], encoding="utf-8")
+                self.export_dir_var.set(str(p.parent))
+                self.config["export_dir"] = str(p.parent)
+                save_config(self.config)
+                messagebox.showinfo("Thành Công", f"✅ Đã lưu file tại:\n{out_path}")
             except Exception as e:
                 messagebox.showerror("Lỗi", f"Không thể lưu file: {e}")
 

@@ -83,9 +83,11 @@ PRIVATE_KEY_PATH = KEYS_DIR / "master_private.pem"
 PUBLIC_KEY_PATH = KEYS_DIR / "master_public.pem"
 
 VALID_PLANS = {
-    "1d": {"plan": "KEY-1D", "hours": 24, "name": "1 Ngày (24 giờ)"},
-    "7d": {"plan": "KEY-7D", "hours": 168, "name": "7 Ngày (168 giờ)"},
-    "30d": {"plan": "KEY-30D", "hours": 720, "name": "30 Ngày (720 giờ)"},
+    "1d": {"plan": "KEY-1D", "hours": 24, "name": "1 Ngày (24 giờ)", "type": "fixed"},
+    "7d": {"plan": "KEY-7D", "hours": 168, "name": "7 Ngày (168 giờ)", "type": "fixed"},
+    "30d": {"plan": "KEY-30D", "hours": 720, "name": "30 Ngày (720 giờ)", "type": "fixed"},
+    "6m": {"plan": "KEY-6M", "months": 6, "name": "6 Tháng (Theo lịch)", "type": "calendar"},
+    "perm": {"plan": "KEY-PERM", "name": "Vĩnh viễn (Trọn đời)", "type": "permanent"},
 }
 
 
@@ -190,7 +192,7 @@ def create_license_key(
     if code not in VALID_PLANS:
         raise ValueError(
             f"Thời hạn không hợp lệ: '{duration_code}'. "
-            f"Chỉ chấp nhận đúng 3 thời hạn: {', '.join(VALID_PLANS.keys())} (1d, 7d, 30d)."
+            f"Hỗ trợ 5 thời hạn: {', '.join(VALID_PLANS.keys())} (1d, 7d, 30d, 6m, perm)."
         )
 
     clean_mid = machine_id.strip().upper()
@@ -209,9 +211,15 @@ def create_license_key(
         "lid": lic_id,
         "mid": clean_mid,
         "plan": plan_info["plan"],
-        "hours": plan_info["hours"],
         "iat": issued_at,
     }
+    if "hours" in plan_info:
+        payload["hours"] = plan_info["hours"]
+    if "months" in plan_info:
+        payload["months"] = plan_info["months"]
+    if plan_info.get("type") == "permanent":
+        payload["permanent"] = True
+
     if note:
         payload["note"] = note.strip()
 
@@ -233,7 +241,7 @@ def create_license_key(
         "license_id": lic_id,
         "machine_id": clean_mid,
         "plan": plan_info["plan"],
-        "duration_hours": plan_info["hours"],
+        "duration_hours": plan_info.get("hours"),
         "duration_name": plan_info["name"],
         "issued_at": issued_at,
         "issued_at_readable": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(issued_at)),
@@ -323,12 +331,20 @@ def interactive_menu():
                 continue
 
             print("\nChọn thời hạn cấp phép:")
-            print("  1. 1 Ngày  (KEY-1D  - 24 giờ)")
-            print("  2. 7 Ngày  (KEY-7D  - 168 giờ)")
-            print("  3. 30 Ngày (KEY-30D - 720 giờ)")
-            dur_sel = input("Chọn thời hạn [1/2/3 hoặc 1d/7d/30d]: ").strip().lower()
+            print("  1. 1 Ngày   (KEY-1D   - 24 giờ)")
+            print("  2. 7 Ngày   (KEY-7D   - 168 giờ)")
+            print("  3. 30 Ngày  (KEY-30D  - 720 giờ)")
+            print("  4. 6 Tháng  (KEY-6M   - Theo ngày lịch)")
+            print("  5. Vĩnh viễn (KEY-PERM - Trọn đời không hết hạn)")
+            dur_sel = input("Chọn thời hạn [1-5 hoặc 1d/7d/30d/6m/perm]: ").strip().lower()
 
-            dur_map = {"1": "1d", "2": "7d", "3": "30d", "1d": "1d", "7d": "7d", "30d": "30d"}
+            dur_map = {
+                "1": "1d", "1d": "1d",
+                "2": "7d", "7d": "7d",
+                "3": "30d", "30d": "30d",
+                "4": "6m", "6m": "6m",
+                "5": "perm", "perm": "perm",
+            }
             dur_code = dur_map.get(dur_sel)
             if not dur_code:
                 print("[LỖI] Lựa chọn thời hạn không hợp lệ!")
@@ -403,7 +419,7 @@ def main():
     parser.add_argument("--force", action="store_true", help="Ghi đè khóa cũ nếu đã tồn tại")
     parser.add_argument("--create", action="store_true", help="Tạo key bản quyền mới")
     parser.add_argument("--machine", type=str, help="Mã máy (Machine ID) của khách hàng")
-    parser.add_argument("--duration", type=str, choices=["1d", "7d", "30d"], help="Thời hạn (1d, 7d, 30d)")
+    parser.add_argument("--duration", type=str, choices=["1d", "7d", "30d", "6m", "perm"], help="Thời hạn (1d, 7d, 30d, 6m, perm)")
     parser.add_argument("--note", type=str, default="", help="Ghi chú người dùng")
     parser.add_argument("--out", type=str, help="Đường dẫn tệp để xuất key ra đĩa")
     parser.add_argument("--verify", type=str, help="Xác minh một chuỗi key hoặc tệp .lic")
