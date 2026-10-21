@@ -20,7 +20,7 @@ class NativeAudioPlayer:
     """Trình phát âm thanh Windows MCI hỗ trợ cả tệp WAV và MP3."""
 
     def __init__(self):
-        self._lock = threading.Lock()
+        self._lock = threading.RLock()
         self._current_file: Optional[str] = None
         self._is_paused = False
         self._alias = "TTTS_NativePlayer"
@@ -127,6 +127,15 @@ class NativeAudioPlayer:
 
     def is_paused(self) -> bool:
         return self._is_paused
+
+    @property
+    def state(self) -> str:
+        if self._is_paused:
+            return "paused"
+        if self.is_playing():
+            return "playing"
+        return "stopped"
+
 
     def get_position_ms(self) -> int:
         """Lấy vị trí phát hiện tại (milliseconds)."""

@@ -106,6 +106,10 @@ class TTSService:
                     on_progress(f"Khởi tạo mô hình thất bại: {e}")
                 return False
 
+    # Bí danh tương thích ngược
+    initialize_models = initialize_model
+
+
     def get_model_status(self) -> Dict[str, Any]:
         """Trả về trạng thái thực tế của mô hình âm thanh."""
         is_ready = self.engine.ready
@@ -226,10 +230,14 @@ class TTSService:
         return {
             "success": True,
             "main_file": str(main_path),
+            "file_path": str(main_path),
             "wav_path": str(wav_path),
             "mp3_path": saved_mp3_path,
             "duration": duration_sec,
+            "duration_sec": duration_sec,
             "size_bytes": size_bytes,
+            "file_size_bytes": size_bytes,
+            "format": out_format.lower(),
             "voice": resolved_voice,
             "speed": speed,
             "text": clean,

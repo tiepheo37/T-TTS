@@ -153,9 +153,10 @@ class PageVoices(QWidget):
         # BANNER TÔN VINH TÁC GIẢ & LOGO QUÂN ĐỘI NHÂN DÂN VIỆT NAM
         # =========================================================================
         hero_card = QFrame()
+        hero_card.setObjectName("HeroCardVoices")
         hero_card.setProperty("class", "CardFrame")
         hero_card.setStyleSheet(
-            "QFrame { background-color: #122214; border: 2px solid #EAB308; border-radius: 8px; }"
+            "#HeroCardVoices { background-color: #244628; border: 1px solid #3F7545; border-radius: 8px; }"
         )
         hero_layout = QHBoxLayout(hero_card)
         hero_layout.setContentsMargins(16, 12, 16, 12)

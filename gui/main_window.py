@@ -49,10 +49,14 @@ class ModelLoaderThread(QThread):
 
     def run(self):
         try:
-            tts_service.initialize_models()
-            self.loaded.emit(True, "VieNeu-TTS v3 Turbo (ONNX CPU) - Sẵn sàng")
+            ok = tts_service.initialize_model()
+            if ok:
+                self.loaded.emit(True, "VieNeu-TTS v3 Turbo (ONNX CPU) - Sẵn sàng")
+            else:
+                self.loaded.emit(False, tts_service._model_error or "Không thể nạp mô hình.")
         except Exception as e:
             self.loaded.emit(False, str(e))
+
 
 
 class MainWindow(QMainWindow):
@@ -140,13 +144,6 @@ class MainWindow(QMainWindow):
 
         h_layout.addLayout(title_box)
         h_layout.addStretch()
-
-        # Nút chuyển đổi giao diện Sáng / Tối (Theme Switcher)
-        self.btn_theme_toggle = QPushButton("☀️ Giao diện Sáng (K20)")
-        self.btn_theme_toggle.setProperty("class", "SecondaryBtn")
-        self.btn_theme_toggle.setCursor(Qt.PointingHandCursor)
-        self.btn_theme_toggle.clicked.connect(self._toggle_theme)
-        h_layout.addWidget(self.btn_theme_toggle)
 
         # Badge trạng thái mô hình
         self.model_status_badge = QLabel("⏳ Đang nạp mô hình...")
@@ -296,19 +293,6 @@ class MainWindow(QMainWindow):
 
         # Chọn tab mặc định: 0 (Tạo Giọng Nói)
         self._switch_tab(0)
-
-    def _toggle_theme(self):
-        """Chuyển đổi giữa chế độ Rằn ri K20 Tối và Sáng."""
-        if self.current_theme == "k20_dark":
-            self.current_theme = "k20_light"
-            self.btn_theme_toggle.setText("🌙 Giao diện Tối (K20)")
-        else:
-            self.current_theme = "k20_dark"
-            self.btn_theme_toggle.setText("☀️ Giao diện Sáng (K20)")
-
-        new_qss = get_theme_qss(self.current_theme)
-        self.setStyleSheet(new_qss)
-        QApplication.instance().setStyleSheet(new_qss)
 
     def _switch_tab(self, index: int):
         if 0 <= index < self.stack.count():

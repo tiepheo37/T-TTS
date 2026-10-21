@@ -110,6 +110,7 @@ class LicenseActivationDialog(QDialog):
 
         self.btn_copy_mid = QPushButton("📋 Sao Chép")
         self.btn_copy_mid.setProperty("class", "LightSecondaryBtn")
+        self.btn_copy_mid.setStyleSheet("background-color: #E2E8F0; color: #0F172A; font-weight: bold; border: 1px solid #CBD5E1; border-radius: 6px; padding: 6px 12px;")
         self.btn_copy_mid.setCursor(Qt.PointingHandCursor)
         self.btn_copy_mid.clicked.connect(self._copy_machine_id)
         mid_layout.addWidget(self.btn_copy_mid)
@@ -149,6 +150,7 @@ class LicenseActivationDialog(QDialog):
 
         self.btn_browse_lic = QPushButton("📁 Nạp File (.lic / .txt)...")
         self.btn_browse_lic.setProperty("class", "LightSecondaryBtn")
+        self.btn_browse_lic.setStyleSheet("background-color: #E2E8F0; color: #0F172A; font-weight: bold; border: 1px solid #CBD5E1; border-radius: 6px; padding: 6px 12px;")
         self.btn_browse_lic.setCursor(Qt.PointingHandCursor)
         self.btn_browse_lic.clicked.connect(self._browse_license_file)
         key_header_layout.addWidget(self.btn_browse_lic)
@@ -158,6 +160,7 @@ class LicenseActivationDialog(QDialog):
         self.key_edit.setProperty("class", "LightInput")
         self.key_edit.setPlaceholderText("Dán chuỗi mã key (TTTS-LIC1-...) vào đây...")
         self.key_edit.setFont(QFont("Consolas", 10))
+        self.key_edit.setStyleSheet("background-color: #FFFFFF; color: #0F172A; border: 1px solid #94A3B8; border-radius: 6px; padding: 8px;")
         self.key_edit.setFixedHeight(75)
         card_layout.addWidget(self.key_edit)
 
@@ -170,13 +173,17 @@ class LicenseActivationDialog(QDialog):
         # 3. NÚT KÍCH HOẠT & ĐÓNG
         btn_layout = QHBoxLayout()
         self.btn_activate = QPushButton("🚀 KÍCH HOẠT BẢN QUYỀN")
+        self.btn_activate.setObjectName("BtnActivate")
         self.btn_activate.setProperty("class", "LightPrimaryBtn")
+        self.btn_activate.setStyleSheet("background-color: #C92A2A; color: #FFFFFF; font-weight: bold; font-size: 13px; border: 1px solid #B91C1C; border-radius: 6px; padding: 10px 20px;")
         self.btn_activate.setCursor(Qt.PointingHandCursor)
         self.btn_activate.clicked.connect(self._do_activate)
         btn_layout.addWidget(self.btn_activate)
 
         self.btn_close = QPushButton("Đóng")
+        self.btn_close.setObjectName("BtnClose")
         self.btn_close.setProperty("class", "LightSecondaryBtn")
+        self.btn_close.setStyleSheet("background-color: #E2E8F0; color: #0F172A; font-weight: bold; font-size: 13px; border: 1px solid #CBD5E1; border-radius: 6px; padding: 10px 20px;")
         self.btn_close.setCursor(Qt.PointingHandCursor)
         self.btn_close.clicked.connect(self.close)
         btn_layout.addWidget(self.btn_close)

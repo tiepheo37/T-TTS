@@ -280,7 +280,8 @@ class PageSynthesize(QWidget):
         # Scroll Area chứa danh sách các thẻ giọng đọc
         self.voice_scroll = QScrollArea()
         self.voice_scroll.setWidgetResizable(True)
-        self.voice_scroll.setMaximumHeight(200)
+        self.voice_scroll.setMinimumHeight(220)
+        self.voice_scroll.setMaximumHeight(270)
         self.voice_scroll.setFrameShape(QFrame.NoFrame)
 
         self.cards_container = QWidget()
@@ -592,8 +593,8 @@ class PageSynthesize(QWidget):
             card.set_selected(vid == self.selected_voice_id)
             visible_cards.append(card)
 
-        # Sắp xếp theo lưới 2 cột
-        cols = 2
+        # Sắp xếp theo lưới 3 cột hiển thị nhiều giọng đồng thời
+        cols = 3
         for idx, card in enumerate(visible_cards):
             r = idx // cols
             c = idx % cols
@@ -664,22 +665,29 @@ class PageSynthesize(QWidget):
         self.btn_generate.setText("▶ TẠO GIỌNG NÓI")
         self.progress_bar.setVisible(False)
 
+        if not result.get("success", False):
+            err_msg = result.get("error", "Lỗi tạo giọng nói.")
+            self._on_synthesis_error(err_msg)
+            return
+
         self.current_result = result
+        file_path = result.get("file_path") or result.get("main_file") or result.get("wav_path") or ""
+        duration = float(result.get("duration") or result.get("duration_sec") or 0.0)
+        size_bytes = int(result.get("size_bytes") or result.get("file_size_bytes") or 0)
+        fmt = result.get("format", "wav").upper()
+
         self.lbl_status.setStyleSheet("color: #4ADE80;")
-        self.lbl_status.setText(
-            f"✅ Tạo giọng nói thành công! Thời lượng: {result.get('duration_sec', 0):.2f}s | "
-            f"Thời gian xử lý: {result.get('process_time_sec', 0):.2f}s"
-        )
+        self.lbl_status.setText(f"✅ Tạo giọng nói thành công! Thời lượng: {duration:.2f}s | Kích thước: {size_bytes / 1024:.1f} KB")
 
         self.player_card.setVisible(True)
         self.lbl_result_info.setText(
-            f"File: <b>{Path(result.get('file_path', '')).name}</b> "
-            f"({result.get('format', 'wav').upper()} | {result.get('file_size_bytes', 0) / 1024:.1f} KB)"
+            f"File: <b>{Path(file_path).name}</b> ({fmt} | {size_bytes / 1024:.1f} KB)"
         )
 
         # Tự động phát âm thanh vừa sinh ra
-        audio_player.play(result.get("file_path", ""))
-        self.btn_play_pause.setText("⏸ Tạm dừng")
+        if file_path and Path(file_path).exists():
+            audio_player.play(file_path)
+            self.btn_play_pause.setText("⏸ Tạm dừng")
         self.audio_generated.emit(result)
 
     def _on_synthesis_error(self, err: str):
@@ -693,7 +701,7 @@ class PageSynthesize(QWidget):
     def _toggle_playback(self):
         if not self.current_result:
             return
-        filepath = self.current_result.get("file_path", "")
+        filepath = self.current_result.get("file_path") or self.current_result.get("main_file") or self.current_result.get("wav_path") or ""
         if not filepath or not Path(filepath).exists():
             return
 
@@ -714,7 +722,7 @@ class PageSynthesize(QWidget):
     def _open_file_in_explorer(self):
         if not self.current_result:
             return
-        fp = self.current_result.get("file_path", "")
+        fp = self.current_result.get("file_path") or self.current_result.get("main_file") or self.current_result.get("wav_path") or ""
         if fp and Path(fp).exists():
             if os.name == "nt":
                 subprocess.Popen(f'explorer /select,"{Path(fp).resolve()}"')
