@@ -7,24 +7,36 @@ from PyInstaller.utils.hooks import collect_all, collect_submodules, collect_dat
 
 block_cipher = None
 
-# Thu thập dữ liệu và binary cho webview, pythonnet, clr_loader, cryptography
-wv_datas, wv_binaries, wv_hidden = collect_all('webview')
-pn_datas, pn_binaries, pn_hidden = collect_all('pythonnet')
-cl_datas, cl_binaries, cl_hidden = collect_all('clr_loader')
+# Thu thập dữ liệu và binary cho PySide6, cryptography, vieneu, sea_g2p
+pyside_datas, pyside_binaries, pyside_hidden = collect_all('PySide6')
 crypto_datas, crypto_binaries, crypto_hidden = collect_all('cryptography')
 
 datas = [
-    ('web', 'web'),
+    ('gui', 'gui'),
     ('backend', 'backend'),
+    ('web', 'web'),
     ('app_icon.ico', '.'),
-] + collect_data_files('vieneu') + collect_data_files('sea_g2p') + wv_datas + pn_datas + cl_datas + crypto_datas
+] + collect_data_files('vieneu') + collect_data_files('sea_g2p') + pyside_datas + crypto_datas
 
-binaries = wv_binaries + pn_binaries + cl_binaries + crypto_binaries
+binaries = pyside_binaries + crypto_binaries
 
 hiddenimports = [
     'desktop_main',
+    'gui',
+    'gui.styles',
+    'gui.main_window',
+    'gui.dialogs.license_dialog',
+    'gui.pages.page_synthesize',
+    'gui.pages.page_clone',
+    'gui.pages.page_batch',
+    'gui.pages.page_voices',
+    'gui.pages.page_history',
+    'gui.pages.page_settings',
+    'gui.pages.page_about',
+    'gui.pages.page_guide',
     'backend',
-    'backend.app',
+    'backend.service',
+    'backend.audio_player',
     'backend.license',
     'backend.tts_engine',
     'backend.audio_utils',
@@ -33,36 +45,34 @@ hiddenimports = [
     'backend.models_bootstrap',
     'backend.storage',
     'backend.vieneu_adapter',
+    'backend.app',
     'vieneu',
     'vieneu._v3_turbo_engine',
     'vieneu._v3_turbo_engine.onnx_runtime_lite',
     'onnxruntime',
-    'torch',
-    'flask',
     'scipy',
     'soundfile',
     'kaldi_native_fbank',
     'pypdf',
     'docx',
-    'webview',
-    'webview.platforms.winforms',
-    'webview.platforms.edgechromium',
-    'pythonnet',
-    'clr_loader',
-    'bottle',
-    'proxy_tools',
-] + wv_hidden + pn_hidden + cl_hidden + crypto_hidden
+    'imageio_ffmpeg',
+    'PySide6',
+    'PySide6.QtCore',
+    'PySide6.QtGui',
+    'PySide6.QtWidgets',
+    'shiboken6',
+] + pyside_hidden + crypto_hidden
 
 a = Analysis(
     ['desktop_main.py'],
-    pathex=['.', 'backend'],
+    pathex=['.', 'backend', 'gui'],
     binaries=binaries,
     datas=datas,
     hiddenimports=hiddenimports,
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=['torch.distributions'],
+    excludes=['torch.distributions', 'webview', 'pythonnet', 'clr_loader', 'bottle', 'proxy_tools', 'PySide6.QtWebEngine', 'PySide6.QtWebEngineCore', 'PySide6.QtWebEngineWidgets', 'PySide6.QtPdf', 'PySide6.QtPdfWidgets'],
     win_no_prefer_redirects=False,
     win_private_assemblies=False,
     cipher=block_cipher,
