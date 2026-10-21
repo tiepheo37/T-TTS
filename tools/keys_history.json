@@ -1,0 +1,74 @@
+[
+  {
+    "id": "3f16d899-e357-4781-a339-5cef01ef750b",
+    "created_at": "2026-10-21 20:45:54",
+    "cust_name": "Khách hàng dùng thử",
+    "cust_contact": "",
+    "mid": "TTTS-1261-7F92-41AC-7DA5",
+    "plan": "KEY-7D",
+    "duration_name": "7 Ngày (168 giờ)",
+    "duration_hours": 168,
+    "note": "Cấp key trải nghiệm tính năng giọng đọc T-TTS v1.0.1",
+    "key_string": "TTTS-LIC1-eyJob3VycyI6MTY4LCJpYXQiOjE3OTI1OTAzNTQsImxpZCI6IjNmMTZkODk5LWUzNTctNDc4MS1hMzM5LTVjZWYwMWVmNzUwYiIsIm1pZCI6IlRUVFMtMTI2MS03RjkyLTQxQUMtN0RBNSIsIm5vdGUiOiJLaFx1MDBlMWNoIGhcdTAwZTBuZyBkXHUwMGY5bmcgdGhcdTFlZWQgLSBDXHUxZWE1cCBrZXkgdHJcdTFlYTNpIG5naGlcdTFlYzdtIHRcdTAwZWRuaCBuXHUwMTAzbmcgZ2lcdTFlY2RuZyBcdTAxMTFcdTFlY2RjIFQtVFRTIHYxLjAuMSIsInBsYW4iOiJLRVktN0QiLCJ2IjoxfQ.VeD74g3qhClU6nyVkmQOk81IdG005pgFlnVFmhSCViAKYPyMllLdwBLBBBmPje3RjAwbcKyYOpmw9qjaW8EECw"
+  },
+  {
+    "id": "82bec697-83c1-4bb7-83e5-b9794d33e29f",
+    "created_at": "2026-10-21 10:38:13",
+    "cust_name": "Hoàng",
+    "cust_contact": "",
+    "mid": "TTTS-40AE-1F40-387F-2D8E",
+    "plan": "KEY-30D",
+    "duration_name": "30 Ngày (720 giờ)",
+    "duration_hours": 720,
+    "note": "Cấp key trải nghiệm tính năng giọng đọc T-TTS v1.0.1",
+    "key_string": "TTTS-LIC1-eyJob3VycyI6NzIwLCJpYXQiOjE3OTI1NTM4OTMsImxpZCI6IjgyYmVjNjk3LTgzYzEtNGJiNy04M2U1LWI5Nzk0ZDMzZTI5ZiIsIm1pZCI6IlRUVFMtNDBBRS0xRjQwLTM4N0YtMkQ4RSIsIm5vdGUiOiJIb1x1MDBlMG5nIC0gQ1x1MWVhNXAga2V5IHRyXHUxZWEzaSBuZ2hpXHUxZWM3bSB0XHUwMGVkbmggblx1MDEwM25nIGdpXHUxZWNkbmcgXHUwMTExXHUxZWNkYyBULVRUUyB2MS4wLjEiLCJwbGFuIjoiS0VZLTMwRCIsInYiOjF9.4XXCpQN44Ngsh2EM_VKT22YbfY_NaHwXqnfl1oeXzgJlKBhds1XtNZnYNt2a0kjJ2usqZZ-nCnhnuujHHNyRCg"
+  },
+  {
+    "id": "29cc032b-2030-49c4-acf7-36119076996d",
+    "created_at": "2026-10-21 10:37:46",
+    "cust_name": "Hoàng",
+    "cust_contact": "",
+    "mid": "TTTS-40AE-1F40-387F-2D8E",
+    "plan": "KEY-7D",
+    "duration_name": "7 Ngày (168 giờ)",
+    "duration_hours": 168,
+    "note": "Cấp key trải nghiệm tính năng giọng đọc T-TTS v1.0.1",
+    "key_string": "TTTS-LIC1-eyJob3VycyI6MTY4LCJpYXQiOjE3OTI1NTM4NjYsImxpZCI6IjI5Y2MwMzJiLTIwMzAtNDljNC1hY2Y3LTM2MTE5MDc2OTk2ZCIsIm1pZCI6IlRUVFMtNDBBRS0xRjQwLTM4N0YtMkQ4RSIsIm5vdGUiOiJIb1x1MDBlMG5nIC0gQ1x1MWVhNXAga2V5IHRyXHUxZWEzaSBuZ2hpXHUxZWM3bSB0XHUwMGVkbmggblx1MDEwM25nIGdpXHUxZWNkbmcgXHUwMTExXHUxZWNkYyBULVRUUyB2MS4wLjEiLCJwbGFuIjoiS0VZLTdEIiwidiI6MX0.RSJJWrHr5gz6Vtn-kxIg1NZccvVXuX5gVVHW_Ua5UP1zEjzKanj9XWkqO_ccr4kXb3mt0m0r-_ssvqrSIIuUDA"
+  },
+  {
+    "id": "5aca8ca3-e3f8-4c37-bc66-b1479c937c40",
+    "created_at": "2026-10-21 08:36:35",
+    "cust_name": "Pđh",
+    "cust_contact": "",
+    "mid": "TTTS-52DB-6DDE-C551-534C",
+    "plan": "KEY-7D",
+    "duration_name": "7 Ngày (168 giờ)",
+    "duration_hours": 168,
+    "note": "Cấp key trải nghiệm tính năng giọng đọc T-TTS v1.0.1",
+    "key_string": "TTTS-LIC1-eyJob3VycyI6MTY4LCJpYXQiOjE3OTI1NDY1OTUsImxpZCI6IjVhY2E4Y2EzLWUzZjgtNGMzNy1iYzY2LWIxNDc5YzkzN2M0MCIsIm1pZCI6IlRUVFMtNTJEQi02RERFLUM1NTEtNTM0QyIsIm5vdGUiOiJQXHUwMTExaCAtIENcdTFlYTVwIGtleSB0clx1MWVhM2kgbmdoaVx1MWVjN20gdFx1MDBlZG5oIG5cdTAxMDNuZyBnaVx1MWVjZG5nIFx1MDExMVx1MWVjZGMgVC1UVFMgdjEuMC4xIiwicGxhbiI6IktFWS03RCIsInYiOjF9.zo0SXTKMdTyeMei8ILjVRj6Koh6AorVm3NjuTimXSHnFh4My1qoGBx52usQoF0vwhQIlsuoEQ8Oa8eyzsQbZDg"
+  },
+  {
+    "id": "dbc1f2b2-8866-4c26-9e39-3eb5abe4afb0",
+    "created_at": "2026-10-20 16:49:32",
+    "cust_name": "Nguyễn Kiên",
+    "cust_contact": "",
+    "mid": "TTTS-AF34-9E62-E99A-0C14",
+    "plan": "KEY-30D",
+    "duration_name": "30 Ngày (720 giờ)",
+    "duration_hours": 720,
+    "note": "Cấp key trải nghiệm tính năng giọng đọc T-TTS v1.0.1",
+    "key_string": "TTTS-LIC1-eyJob3VycyI6NzIwLCJpYXQiOjE3OTI0ODk3NzIsImxpZCI6ImRiYzFmMmIyLTg4NjYtNGMyNi05ZTM5LTNlYjVhYmU0YWZiMCIsIm1pZCI6IlRUVFMtQUYzNC05RTYyLUU5OUEtMEMxNCIsIm5vdGUiOiJOZ3V5XHUxZWM1biBLaVx1MDBlYW4gLSBDXHUxZWE1cCBrZXkgdHJcdTFlYTNpIG5naGlcdTFlYzdtIHRcdTAwZWRuaCBuXHUwMTAzbmcgZ2lcdTFlY2RuZyBcdTAxMTFcdTFlY2RjIFQtVFRTIHYxLjAuMSIsInBsYW4iOiJLRVktMzBEIiwidiI6MX0.viN381QbJe1AMAyJ5ZvBCXcakE4SA8J6qrUtZWgar8u-9hVyR7Qq6eMxdEGJEBvrIKf8Vwt_E0amQ6HMDgh6Dg"
+  },
+  {
+    "id": "b2de17ff-f65b-43e1-8d7e-a0986ecfd292",
+    "created_at": "2026-10-16 08:40:48",
+    "cust_name": "Khách hàng dùng thử",
+    "cust_contact": "",
+    "mid": "TTTS-A59E-256F-D574-AA72",
+    "plan": "KEY-7D",
+    "duration_name": "7 Ngày (168 giờ)",
+    "duration_hours": 168,
+    "note": "Cấp key trải nghiệm tính năng giọng đọc T-TTS v1.0.1",
+    "key_string": "TTTS-LIC1-eyJob3VycyI6MTY4LCJpYXQiOjE3OTIxMTQ4NDgsImxpZCI6ImIyZGUxN2ZmLWY2NWItNDNlMS04ZDdlLWEwOTg2ZWNmZDI5MiIsIm1pZCI6IlRUVFMtQTU5RS0yNTZGLUQ1NzQtQUE3MiIsIm5vdGUiOiJLaFx1MDBlMWNoIGhcdTAwZTBuZyBkXHUwMGY5bmcgdGhcdTFlZWQgLSBDXHUxZWE1cCBrZXkgdHJcdTFlYTNpIG5naGlcdTFlYzdtIHRcdTAwZWRuaCBuXHUwMTAzbmcgZ2lcdTFlY2RuZyBcdTAxMTFcdTFlY2RjIFQtVFRTIHYxLjAuMSIsInBsYW4iOiJLRVktN0QiLCJ2IjoxfQ.fPxUvM0Smah93zdOns4rSMMCad_Z7MhX9TmNHyxZotinwkkUv9gdDAdWi_Jx5-29jfnoOhqoIauOzMxK-VIaBA"
+  }
+]
