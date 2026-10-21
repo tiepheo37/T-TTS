@@ -141,14 +141,15 @@ class TTSEngine:
 
     def list_voices(self):
         """Danh sách giọng đọc CHỈ gồm 25 giọng thuộc ALLOWLIST + Giọng custom."""
-        self.ensure()
         out = []
         seen_ids = set()
 
-        try:
-            presets = self._tts.list_preset_voices() or []
-        except Exception:
-            presets = []
+        presets = []
+        if self._tts is not None:
+            try:
+                presets = self._tts.list_preset_voices() or []
+            except Exception:
+                presets = []
 
         for item in presets:
             if isinstance(item, (tuple, list)) and len(item) >= 2:

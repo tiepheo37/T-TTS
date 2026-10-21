@@ -1,11 +1,11 @@
-"""gui/pages/page_synthesize.py — TAB 1: TẠO GIỌNG NÓI TIẾNG VIỆT
-==============================================================
+"""gui/pages/page_synthesize.py — TAB 1: TẠO GIỌNG NÓI TIẾNG VIỆT (VOICE CARDS CHUẨN)
+=================================================================================
 Màn hình chính của T-TTS:
-- Nhập văn bản tiếng Việt lớn, đếm ký tự, dán nhanh, nhập từ tệp.
-- Chọn giọng đọc (25 giọng preset allowlist VieNeu v3 Turbo + giọng custom).
-- Điều chỉnh tốc độ đọc thực tế (0.75x - 1.50x).
-- Tùy chọn định dạng xuất (WAV gốc / MP3), chọn thư mục lưu file.
-- Nút bấm tạo giọng nổi bật, chạy ngầm bằng QThread không gây đơ giao diện.
+- Danh sách chọn giọng dạng THẺ (Cards) trực quan, chia theo Nữ/Nam/Nhân bản giống bản gốc.
+- Thanh chèn nhanh thẻ cảm xúc & mốc nghỉ: [cười], [hắng giọng], [thở dài], [nghỉ 500ms], [nghỉ 2s].
+- Ô soạn thảo văn bản lớn, đếm ký tự, dán nhanh, xóa nội dung.
+- Điều chỉnh tốc độ đọc (0.75x - 1.50x), định dạng xuất WAV/MP3.
+- Nút bấm tạo giọng nổi bật, chạy ngầm bằng QThread không gây treo giao diện.
 - Trình phát nghe thử native trực tiếp sau khi hoàn thành.
 """
 
@@ -14,10 +14,10 @@ from __future__ import annotations
 import os
 import subprocess
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List, Dict
 
 from PySide6.QtCore import Qt, QThread, Signal, QTimer
-from PySide6.QtGui import QFont, QIcon
+from PySide6.QtGui import QFont, QCursor
 from PySide6.QtWidgets import (
     QWidget,
     QVBoxLayout,
@@ -29,14 +29,11 @@ from PySide6.QtWidgets import (
     QPushButton,
     QComboBox,
     QSlider,
-    QRadioButton,
-    QButtonGroup,
     QFileDialog,
     QMessageBox,
     QFrame,
-    QApplication,
-    QProgressBar,
     QScrollArea,
+    QProgressBar,
 )
 
 from backend.service import tts_service
@@ -44,8 +41,7 @@ from backend.audio_player import audio_player
 
 
 class SynthesisWorker(QThread):
-    """Tiểu trình chạy ngầm xử lý tổng hợp giọng nói để giữ giao diện luôn mượt mà."""
-
+    """Tiểu trình chạy ngầm xử lý tổng hợp giọng nói."""
     finished = Signal(dict)
     error = Signal(str)
 
@@ -81,558 +77,649 @@ class SynthesisWorker(QThread):
             self.error.emit(str(e))
 
 
+class VoicePreviewWorker(QThread):
+    """Tiểu trình phát thử âm thanh mẫu của giọng được chọn."""
+    finished = Signal(dict)
+    error = Signal(str)
+
+    def __init__(self, voice_id: str):
+        super().__init__()
+        self.voice_id = voice_id
+
+    def run(self):
+        try:
+            sample_text = "Xin chào, đây là giọng đọc thử nghiệm của hệ thống chuyển văn bản thành giọng nói T-TTS."
+            res = tts_service.synthesize_text(
+                text=sample_text,
+                voice_id=self.voice_id,
+                speed=1.0,
+                out_format="wav",
+                filename_prefix=f"preview_{self.voice_id}",
+            )
+            self.finished.emit(res)
+        except Exception as e:
+            self.error.emit(str(e))
+
+
+class VoiceCardWidget(QFrame):
+    """Thẻ hiển thị thông tin từng giọng đọc trực quan (như bản cũ)."""
+    clicked = Signal(str)
+    preview_requested = Signal(str)
+
+    def __init__(self, voice_info: dict, parent: Optional[QWidget] = None):
+        super().__init__(parent)
+        self.voice_id = voice_info.get("id", "")
+        self.voice_name = voice_info.get("name", self.voice_id)
+        self.gender = voice_info.get("gender", "Nam")
+        self.region = voice_info.get("region", "Miền Bắc")
+        self.voice_style = voice_info.get("style", "Tự nhiên")
+        self.desc = voice_info.get("description", "")
+        self.is_custom = voice_info.get("is_custom", False)
+        self.is_selected = False
+
+        self.setProperty("class", "VoiceCard")
+        self.setCursor(Qt.PointingHandCursor)
+        self._build_ui()
+
+    def _build_ui(self):
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(10, 8, 10, 8)
+        layout.setSpacing(4)
+
+        # Hàng 1: Icon, Tên giọng, Badge vùng miền, Checkmark
+        top_row = QHBoxLayout()
+        top_row.setSpacing(6)
+
+        icon_char = "🎤" if self.is_custom else ("👩" if "Nữ" in self.gender else "👨")
+        self.lbl_icon = QLabel(icon_char)
+        self.lbl_icon.setStyleSheet("font-size: 15px;")
+        top_row.addWidget(self.lbl_icon)
+
+        self.lbl_name = QLabel(self.voice_name)
+        self.lbl_name.setStyleSheet("font-weight: bold; font-size: 13px;")
+        top_row.addWidget(self.lbl_name)
+
+        top_row.addStretch()
+
+        self.lbl_region = QLabel(self.region.replace("Miền ", ""))
+        self.lbl_region.setStyleSheet(
+            "background-color: rgba(234, 179, 8, 0.15); color: #EAB308; "
+            "border: 1px solid rgba(234, 179, 8, 0.3); border-radius: 4px; "
+            "padding: 1px 6px; font-size: 11px; font-weight: 600;"
+        )
+        top_row.addWidget(self.lbl_region)
+
+        self.lbl_check = QLabel("✓")
+        self.lbl_check.setStyleSheet("color: #FFD700; font-weight: bold; font-size: 14px;")
+        self.lbl_check.setVisible(False)
+        top_row.addWidget(self.lbl_check)
+
+        layout.addLayout(top_row)
+
+        # Hàng 2: Mô tả phong cách & Nút nghe thử
+        bot_row = QHBoxLayout()
+        bot_row.setSpacing(4)
+
+        summary_text = f"{self.gender} · {self.voice_style}"
+        self.lbl_desc = QLabel(summary_text)
+        self.lbl_desc.setStyleSheet("color: #9EB39B; font-size: 11px;")
+        bot_row.addWidget(self.lbl_desc, 1)
+
+        self.btn_preview = QPushButton("▶ Thử")
+        self.btn_preview.setFixedSize(50, 22)
+        self.btn_preview.setStyleSheet(
+            "background-color: transparent; border: 1px solid #365739; "
+            "border-radius: 4px; font-size: 11px; padding: 0px;"
+        )
+        self.btn_preview.setToolTip(f"Nghe thử giọng mẫu: {self.voice_name}")
+        self.btn_preview.clicked.connect(self._on_preview_clicked)
+        bot_row.addWidget(self.btn_preview)
+
+        layout.addLayout(bot_row)
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            self.clicked.emit(self.voice_id)
+        super().mousePressEvent(event)
+
+    def _on_preview_clicked(self):
+        self.preview_requested.emit(self.voice_id)
+
+    def set_selected(self, selected: bool):
+        self.is_selected = selected
+        self.setProperty("selected", "true" if selected else "false")
+        self.lbl_check.setVisible(selected)
+        if selected:
+            self.lbl_name.setStyleSheet("font-weight: bold; font-size: 13px; color: #FFD700;")
+        else:
+            self.lbl_name.setStyleSheet("font-weight: bold; font-size: 13px;")
+        self.style().unpolish(self)
+        self.style().polish(self)
+
+
 class PageSynthesize(QWidget):
-    """Trang Tạo Giọng Nói Chính."""
+    """Trang Tạo Giọng Nói Chính (Giao diện Thẻ chuẩn Quân Đội)."""
 
     audio_generated = Signal(dict)
 
     def __init__(self, parent: Optional[QWidget] = None):
         super().__init__(parent)
-        self.selected_out_dir: Optional[Path] = None
-        self.last_result: Optional[dict] = None
-        self.worker: Optional[SynthesisWorker] = None
+        self.synthesis_worker: Optional[SynthesisWorker] = None
+        self.preview_worker: Optional[VoicePreviewWorker] = None
+        self.current_result: Optional[dict] = None
+        self.custom_output_dir: Optional[Path] = None
+        self.selected_voice_id = "Hải Đăng"
+        self.all_voices: List[dict] = []
+        self.card_widgets: Dict[str, VoiceCardWidget] = {}
+        self.current_filter = "all"
 
         self._build_ui()
         self.refresh_voices()
 
-        # Timer theo dõi vị trí phát audio
-        self.playback_timer = QTimer(self)
-        self.playback_timer.setInterval(200)
-        self.playback_timer.timeout.connect(self._update_playback_progress)
-
     def _build_ui(self):
-        # Cho phép cuộn khi cửa sổ có kích thước nhỏ
-        scroll = QScrollArea(self)
-        scroll.setWidgetResizable(True)
-        scroll.setFrameShape(QFrame.NoFrame)
-        scroll.setStyleSheet("background: transparent;")
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(18, 14, 18, 14)
+        main_layout.setSpacing(12)
 
-        content_widget = QWidget()
-        layout = QVBoxLayout(content_widget)
-        layout.setContentsMargins(18, 16, 18, 16)
-        layout.setSpacing(14)
+        scroll_area = QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setFrameShape(QFrame.NoFrame)
 
-        # -------------------------------------------------------------
-        # 1. KHU VỰC NHẬP VĂN BẢN
-        # -------------------------------------------------------------
+        scroll_content = QWidget()
+        layout = QVBoxLayout(scroll_content)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(12)
+
+        # =========================================================================
+        # KHU VỰC 1: BẢNG CHỌN GIỌNG ĐỌC DẠNG CARD LIST (GIỐNG BẢN CŨ)
+        # =========================================================================
+        voice_card_frame = QFrame()
+        voice_card_frame.setProperty("class", "CardFrame")
+        vcf_layout = QVBoxLayout(voice_card_frame)
+        vcf_layout.setContentsMargins(14, 12, 14, 12)
+        vcf_layout.setSpacing(8)
+
+        # Tiêu đề & Bộ lọc nhanh
+        header_filter_row = QHBoxLayout()
+        header_filter_row.setSpacing(8)
+
+        lbl_vcf_title = QLabel("🎙️ CHỌN GIỌNG ĐỌC (25 GIỌNG VIENEU PRESET & GIỌNG NHÂN BẢN)")
+        lbl_vcf_title.setProperty("class", "CardTitle")
+        header_filter_row.addWidget(lbl_vcf_title)
+
+        header_filter_row.addStretch()
+
+        self.btn_filter_all = QPushButton("Tất cả")
+        self.btn_filter_all.setProperty("class", "SecondaryBtn")
+        self.btn_filter_all.clicked.connect(lambda: self._set_gender_filter("all"))
+        header_filter_row.addWidget(self.btn_filter_all)
+
+        self.btn_filter_female = QPushButton("👩 Nữ")
+        self.btn_filter_female.setProperty("class", "SecondaryBtn")
+        self.btn_filter_female.clicked.connect(lambda: self._set_gender_filter("Nữ"))
+        header_filter_row.addWidget(self.btn_filter_female)
+
+        self.btn_filter_male = QPushButton("👨 Nam")
+        self.btn_filter_male.setProperty("class", "SecondaryBtn")
+        self.btn_filter_male.clicked.connect(lambda: self._set_gender_filter("Nam"))
+        header_filter_row.addWidget(self.btn_filter_male)
+
+        self.btn_filter_custom = QPushButton("🎤 Nhân bản")
+        self.btn_filter_custom.setProperty("class", "SecondaryBtn")
+        self.btn_filter_custom.clicked.connect(lambda: self._set_gender_filter("custom"))
+        header_filter_row.addWidget(self.btn_filter_custom)
+
+        self.txt_search_voice = QLineEdit()
+        self.txt_search_voice.setPlaceholderText("🔍 Tìm giọng...")
+        self.txt_search_voice.setMaximumWidth(130)
+        self.txt_search_voice.textChanged.connect(self._apply_voice_filter)
+        header_filter_row.addWidget(self.txt_search_voice)
+
+        vcf_layout.addLayout(header_filter_row)
+
+        # Scroll Area chứa danh sách các thẻ giọng đọc
+        self.voice_scroll = QScrollArea()
+        self.voice_scroll.setWidgetResizable(True)
+        self.voice_scroll.setMaximumHeight(200)
+        self.voice_scroll.setFrameShape(QFrame.NoFrame)
+
+        self.cards_container = QWidget()
+        self.cards_grid = QGridLayout(self.cards_container)
+        self.cards_grid.setContentsMargins(2, 2, 2, 2)
+        self.cards_grid.setSpacing(8)
+
+        self.voice_scroll.setWidget(self.cards_container)
+        vcf_layout.addWidget(self.voice_scroll)
+
+        layout.addWidget(voice_card_frame)
+
+        # =========================================================================
+        # KHU VỰC 2: Ô NHẬP VĂN BẢN VÀ CÁC THẺ CHÈN NHANH CẢM XÚC / NGHỈ
+        # =========================================================================
         text_card = QFrame()
         text_card.setProperty("class", "CardFrame")
         tc_layout = QVBoxLayout(text_card)
         tc_layout.setContentsMargins(14, 12, 14, 12)
         tc_layout.setSpacing(8)
 
-        # Header hàng nút thao tác văn bản
-        th_layout = QHBoxLayout()
-        t_title = QLabel("1. VĂN BẢN TIẾNG VIỆT CẦN ĐỌC")
-        t_title.setProperty("class", "CardTitle")
-        th_layout.addWidget(t_title)
-        th_layout.addStretch()
+        tc_title_row = QHBoxLayout()
+        tc_title = QLabel("📝 NỘI DUNG VĂN BẢN CẦN CHUYỂN THÀNH GIỌNG NÓI")
+        tc_title.setProperty("class", "CardTitle")
+        tc_title_row.addWidget(tc_title)
+        tc_title_row.addStretch()
 
-        self.char_count_lbl = QLabel("0 ký tự  |  0 từ")
-        self.char_count_lbl.setStyleSheet("color: #94A3B8; font-size: 12px; font-weight: 500;")
-        th_layout.addWidget(self.char_count_lbl)
+        self.lbl_char_count = QLabel("0 ký tự | 0 từ")
+        self.lbl_char_count.setStyleSheet("color: #9EB39B; font-size: 11px;")
+        tc_title_row.addWidget(self.lbl_char_count)
 
         btn_paste = QPushButton("📋 Dán")
         btn_paste.setProperty("class", "SecondaryBtn")
-        btn_paste.setCursor(Qt.PointingHandCursor)
-        btn_paste.clicked.connect(self._paste_clipboard)
-        th_layout.addWidget(btn_paste)
+        btn_paste.clicked.connect(self._paste_text)
+        tc_title_row.addWidget(btn_paste)
 
-        btn_import_file = QPushButton("📁 Nhập tệp...")
-        btn_import_file.setProperty("class", "SecondaryBtn")
-        btn_import_file.setCursor(Qt.PointingHandCursor)
-        btn_import_file.clicked.connect(self._import_text_file)
-        th_layout.addWidget(btn_import_file)
-
-        btn_clear = QPushButton("🗑️ Xóa")
+        btn_clear = QPushButton("🗑 Xóa")
         btn_clear.setProperty("class", "SecondaryBtn")
-        btn_clear.setCursor(Qt.PointingHandCursor)
         btn_clear.clicked.connect(self._clear_text)
-        th_layout.addWidget(btn_clear)
-        tc_layout.addLayout(th_layout)
+        tc_title_row.addWidget(btn_clear)
 
-        # Ô nhập văn bản lớn
-        self.text_edit = QTextEdit()
-        self.text_edit.setPlaceholderText(
-            "Nhập hoặc dán văn bản tiếng Việt vào đây...\n\n"
-            "Mẹo: Bạn có thể chèn thẻ ngắt nghỉ ví dụ: [pause:0.5s] hoặc [pause:1.0s] để giọng đọc tự nhiên hơn."
+        tc_layout.addLayout(tc_title_row)
+
+        # Thanh chèn nhanh thẻ cảm xúc & mốc nghỉ (Tag Pills Bar giống bản gốc)
+        tags_bar = QHBoxLayout()
+        tags_bar.setSpacing(6)
+
+        lbl_tags = QLabel("Chèn nhanh:")
+        lbl_tags.setStyleSheet("color: #EAB308; font-weight: bold; font-size: 11px;")
+        tags_bar.addWidget(lbl_tags)
+
+        tag_list = [
+            ("[cười]", "😊 Cười"),
+            ("[hắng giọng]", "🗣️ Hắng giọng"),
+            ("[thở dài]", "😮💨 Thở dài"),
+            ("[nghỉ 500ms]", "⏸ Nghỉ 500ms"),
+            ("[nghỉ 2s]", "⏸ Nghỉ 2s"),
+        ]
+        for tag_code, tag_label in tag_list:
+            btn_tag = QPushButton(tag_label)
+            btn_tag.setProperty("class", "TagPill")
+            btn_tag.setCursor(Qt.PointingHandCursor)
+            btn_tag.clicked.connect(lambda checked=False, t=tag_code: self._insert_tag(t))
+            tags_bar.addWidget(btn_tag)
+
+        tags_bar.addStretch()
+        tc_layout.addLayout(tags_bar)
+
+        # Ô soạn thảo văn bản chính
+        self.txt_input = QTextEdit()
+        self.txt_input.setPlaceholderText(
+            "Nhập nội dung văn bản tiếng Việt tại đây...\n"
+            "Mẹo: Bấm các nút icon ở trên để chèn nhanh mốc [cười], [nghỉ 500ms], [nghỉ 2s] vào vị trí con trỏ."
         )
-        self.text_edit.setMinimumHeight(170)
-        self.text_edit.setFont(QFont("Segoe UI", 11))
-        self.text_edit.textChanged.connect(self._on_text_changed)
-        tc_layout.addWidget(self.text_edit)
+        self.txt_input.setMinimumHeight(130)
+        self.txt_input.textChanged.connect(self._on_text_changed)
+        tc_layout.addWidget(self.txt_input)
+
         layout.addWidget(text_card)
 
-        # -------------------------------------------------------------
-        # 2. KHU VỰC CHỌN GIỌNG & ĐIỀU CHỈNH THAM SỐ
-        # -------------------------------------------------------------
+        # =========================================================================
+        # KHU VỰC 3: THIẾT LẬP TỐC ĐỘ, ĐỊNH DẠNG & THƯ MỤC LƯU
+        # =========================================================================
         settings_card = QFrame()
         settings_card.setProperty("class", "CardFrame")
-        sc_layout = QGridLayout(settings_card)
+        sc_layout = QHBoxLayout(settings_card)
         sc_layout.setContentsMargins(14, 12, 14, 12)
-        sc_layout.setSpacing(12)
+        sc_layout.setSpacing(16)
 
-        # Cột 1: Chọn giọng đọc
-        lbl_v = QLabel("2. CHỌN GIỌNG ĐỌC:")
-        lbl_v.setProperty("class", "CardTitle")
-        sc_layout.addWidget(lbl_v, 0, 0, 1, 2)
+        # Tốc độ đọc
+        speed_box = QVBoxLayout()
+        speed_box.setSpacing(4)
+        self.lbl_speed = QLabel("Tốc độ đọc: 1.00x")
+        self.lbl_speed.setStyleSheet("font-weight: 600; color: #E2ECE1;")
+        speed_box.addWidget(self.lbl_speed)
 
-        self.voice_combo = QComboBox()
-        self.voice_combo.setMinimumWidth(280)
-        self.voice_combo.currentIndexChanged.connect(self._on_voice_changed)
-        sc_layout.addWidget(self.voice_combo, 1, 0)
+        self.slider_speed = QSlider(Qt.Horizontal)
+        self.slider_speed.setRange(75, 150)
+        self.slider_speed.setValue(100)
+        self.slider_speed.valueChanged.connect(self._on_speed_changed)
+        speed_box.addWidget(self.slider_speed)
+        sc_layout.addLayout(speed_box, 1)
 
-        self.voice_desc_lbl = QLabel("")
-        self.voice_desc_lbl.setStyleSheet("color: #22D3EE; font-size: 11px;")
-        sc_layout.addWidget(self.voice_desc_lbl, 2, 0)
+        # Định dạng xuất
+        fmt_box = QVBoxLayout()
+        fmt_box.setSpacing(4)
+        lbl_fmt = QLabel("Định dạng xuất:")
+        lbl_fmt.setStyleSheet("font-weight: 600; color: #E2ECE1;")
+        fmt_box.addWidget(lbl_fmt)
 
-        # Cột 2: Tốc độ đọc
-        lbl_s = QLabel("3. TỐC ĐỘ ĐỌC (0.75x - 1.50x):")
-        lbl_s.setProperty("class", "CardTitle")
-        sc_layout.addWidget(lbl_s, 0, 1)
+        self.combo_fmt = QComboBox()
+        self.combo_fmt.addItem("WAV 48kHz 16-bit PCM (Chất lượng gốc)", "wav")
+        self.combo_fmt.addItem("MP3 192kbps (Dung lượng nhẹ)", "mp3")
+        fmt_box.addWidget(self.combo_fmt)
+        sc_layout.addLayout(fmt_box, 1)
 
-        speed_box = QHBoxLayout()
-        self.speed_slider = QSlider(Qt.Horizontal)
-        self.speed_slider.setRange(75, 150)
-        self.speed_slider.setValue(100)
-        self.speed_slider.valueChanged.connect(self._on_speed_changed)
-        speed_box.addWidget(self.speed_slider)
+        # Nút chọn thư mục lưu
+        dir_box = QVBoxLayout()
+        dir_box.setSpacing(4)
+        lbl_dir = QLabel("Thư mục lưu:")
+        lbl_dir.setStyleSheet("font-weight: 600; color: #E2ECE1;")
+        dir_box.addWidget(lbl_dir)
 
-        self.speed_val_lbl = QLabel("1.00x")
-        self.speed_val_lbl.setStyleSheet("color: #22D3EE; font-weight: bold; min-width: 45px;")
-        speed_box.addWidget(self.speed_val_lbl)
-
-        btn_reset_speed = QPushButton("Đặt lại")
-        btn_reset_speed.setProperty("class", "SecondaryBtn")
-        btn_reset_speed.setCursor(Qt.PointingHandCursor)
-        btn_reset_speed.clicked.connect(lambda: self.speed_slider.setValue(100))
-        speed_box.addWidget(btn_reset_speed)
-        sc_layout.addLayout(speed_box, 1, 1)
+        btn_select_dir = QPushButton("📁 Chọn thư mục...")
+        btn_select_dir.setProperty("class", "SecondaryBtn")
+        btn_select_dir.clicked.connect(self._select_output_dir)
+        dir_box.addWidget(btn_select_dir)
+        sc_layout.addLayout(dir_box, 1)
 
         layout.addWidget(settings_card)
 
-        # -------------------------------------------------------------
-        # 3. KHU VỰC XUẤT TỆP & THƯ MỤC LƯU
-        # -------------------------------------------------------------
-        export_card = QFrame()
-        export_card.setProperty("class", "CardFrame")
-        ec_layout = QHBoxLayout(export_card)
-        ec_layout.setContentsMargins(14, 12, 14, 12)
-        ec_layout.setSpacing(16)
-
-        # Định dạng xuất
-        fmt_layout = QVBoxLayout()
-        fmt_lbl = QLabel("Định dạng âm thanh:")
-        fmt_lbl.setStyleSheet("color: #F1F5F9; font-weight: bold; font-size: 12px;")
-        fmt_layout.addWidget(fmt_lbl)
-
-        radio_layout = QHBoxLayout()
-        self.radio_wav = QRadioButton("WAV (48kHz gốc)")
-        self.radio_wav.setChecked(True)
-        self.radio_wav.setCursor(Qt.PointingHandCursor)
-        self.radio_mp3 = QRadioButton("MP3 (192kbps)")
-        self.radio_mp3.setCursor(Qt.PointingHandCursor)
-
-        self.fmt_group = QButtonGroup(self)
-        self.fmt_group.addButton(self.radio_wav)
-        self.fmt_group.addButton(self.radio_mp3)
-        radio_layout.addWidget(self.radio_wav)
-        radio_layout.addWidget(self.radio_mp3)
-        fmt_layout.addLayout(radio_layout)
-        ec_layout.addLayout(fmt_layout)
-
-        # Tiền tố tên file
-        prefix_layout = QVBoxLayout()
-        prefix_lbl = QLabel("Tên tệp (tùy chọn):")
-        prefix_lbl.setStyleSheet("color: #F1F5F9; font-weight: bold; font-size: 12px;")
-        prefix_layout.addWidget(prefix_lbl)
-        self.prefix_edit = QLineEdit()
-        self.prefix_edit.setPlaceholderText("Để trống sẽ tự động đặt theo nội dung...")
-        prefix_layout.addWidget(self.prefix_edit)
-        ec_layout.addLayout(prefix_layout)
-
-        # Thư mục lưu
-        dir_layout = QVBoxLayout()
-        dir_lbl = QLabel("Thư mục lưu âm thanh:")
-        dir_lbl.setStyleSheet("color: #F1F5F9; font-weight: bold; font-size: 12px;")
-        dir_layout.addWidget(dir_lbl)
-
-        dir_btns = QHBoxLayout()
-        self.btn_select_dir = QPushButton("📁 Chọn thư mục...")
-        self.btn_select_dir.setProperty("class", "SecondaryBtn")
-        self.btn_select_dir.setCursor(Qt.PointingHandCursor)
-        self.btn_select_dir.clicked.connect(self._select_output_dir)
-        dir_btns.addWidget(self.btn_select_dir)
-
-        self.btn_open_out_dir = QPushButton("📂 Mở thư mục")
-        self.btn_open_out_dir.setProperty("class", "SecondaryBtn")
-        self.btn_open_out_dir.setCursor(Qt.PointingHandCursor)
-        self.btn_open_out_dir.clicked.connect(self._open_output_folder)
-        dir_btns.addWidget(self.btn_open_out_dir)
-        dir_layout.addLayout(dir_btns)
-        ec_layout.addLayout(dir_layout)
-
-        layout.addWidget(export_card)
-
-        # -------------------------------------------------------------
-        # 4. NÚT TẠO GIỌNG NÓI CHÍNH (PROMINENT ACTION BUTTON)
-        # -------------------------------------------------------------
+        # =========================================================================
+        # NÚT TẠO GIỌNG NÓI & THANH TIẾN TRÌNH
+        # =========================================================================
         action_layout = QHBoxLayout()
-        self.btn_generate = QPushButton("▶  TẠO GIỌNG NÓI")
-        self.btn_generate.setProperty("class", "PrimaryBtn")
-        self.btn_generate.setFixedHeight(48)
-        self.btn_generate.setFont(QFont("Segoe UI", 13, QFont.Bold))
-        self.btn_generate.setCursor(Qt.PointingHandCursor)
-        self.btn_generate.clicked.connect(self._start_synthesize)
-        action_layout.addWidget(self.btn_generate)
-        layout.addLayout(action_layout)
+        action_layout.setSpacing(12)
 
-        # Thanh tiến trình xử lý
+        self.btn_generate = QPushButton("▶ TẠO GIỌNG NÓI")
+        self.btn_generate.setObjectName("BtnGenerate")
+        self.btn_generate.setProperty("class", "PrimaryBtn")
+        self.btn_generate.setCursor(Qt.PointingHandCursor)
+        self.btn_generate.setMinimumHeight(44)
+        self.btn_generate.clicked.connect(self.start_synthesis)
+        action_layout.addWidget(self.btn_generate, 2)
+
         self.progress_bar = QProgressBar()
-        self.progress_bar.setRange(0, 0)  # Indeterminate animation
+        self.progress_bar.setRange(0, 0)
         self.progress_bar.setFixedHeight(8)
         self.progress_bar.setVisible(False)
+        self.progress_bar.setStyleSheet(
+            "QProgressBar { background-color: #111F13; border: 1px solid #2F4D32; border-radius: 4px; }"
+            "QProgressBar::chunk { background-color: #EAB308; }"
+        )
+
+        layout.addLayout(action_layout)
         layout.addWidget(self.progress_bar)
 
-        self.status_msg_lbl = QLabel("")
-        self.status_msg_lbl.setStyleSheet("font-size: 12px; font-weight: 500;")
-        self.status_msg_lbl.setAlignment(Qt.AlignCenter)
-        layout.addWidget(self.status_msg_lbl)
+        self.lbl_status = QLabel("")
+        self.lbl_status.setStyleSheet("font-size: 12px; font-weight: 500;")
+        self.lbl_status.setVisible(False)
+        layout.addWidget(self.lbl_status)
 
-        # -------------------------------------------------------------
-        # 5. KHU VỰC PHÁT ÂM THANH KẾT QUẢ (AUDIO PLAYER CARD)
-        # -------------------------------------------------------------
+        # =========================================================================
+        # KHU VỰC 4: TRÌNH PHÁT NATIVE KẾT QUẢ ÂM THANH
+        # =========================================================================
         self.player_card = QFrame()
         self.player_card.setProperty("class", "CardFrame")
-        self.player_card.setStyleSheet("background-color: #172235; border: 1px solid #1687FF; border-radius: 8px;")
         self.player_card.setVisible(False)
-
         pc_layout = QVBoxLayout(self.player_card)
-        pc_layout.setContentsMargins(16, 12, 16, 12)
-        pc_layout.setSpacing(10)
+        pc_layout.setContentsMargins(14, 12, 14, 12)
+        pc_layout.setSpacing(8)
 
-        # Thông tin file vừa tạo
-        info_row = QHBoxLayout()
-        self.res_title_lbl = QLabel("🎉 TẠO ÂM THANH THÀNH CÔNG!")
-        self.res_title_lbl.setStyleSheet("color: #22C55E; font-weight: bold; font-size: 13px;")
-        info_row.addWidget(self.res_title_lbl)
-        info_row.addStretch()
+        pc_title = QLabel("🎵 KẾT QUẢ PHÁT ÂM THANH")
+        pc_title.setProperty("class", "CardTitle")
+        pc_layout.addWidget(pc_title)
 
-        self.res_details_lbl = QLabel("")
-        self.res_details_lbl.setStyleSheet("color: #94A3B8; font-size: 12px;")
-        info_row.addWidget(self.res_details_lbl)
-        pc_layout.addLayout(info_row)
+        self.lbl_result_info = QLabel("")
+        self.lbl_result_info.setStyleSheet("color: #E2ECE1; font-size: 12px;")
+        pc_layout.addWidget(self.lbl_result_info)
 
-        self.res_path_lbl = QLabel("")
-        self.res_path_lbl.setStyleSheet("color: #F1F5F9; font-family: Consolas; font-size: 11px;")
-        self.res_path_lbl.setWordWrap(True)
-        pc_layout.addWidget(self.res_path_lbl)
+        player_btn_row = QHBoxLayout()
+        player_btn_row.setSpacing(8)
 
-        # Hàng thanh trượt thời gian phát
-        seek_row = QHBoxLayout()
-        self.playback_time_lbl = QLabel("0:00 / 0:00")
-        self.playback_time_lbl.setStyleSheet("color: #94A3B8; font-size: 11px; min-width: 75px;")
-        seek_row.addWidget(self.playback_time_lbl)
-
-        self.player_slider = QSlider(Qt.Horizontal)
-        self.player_slider.setRange(0, 1000)
-        self.player_slider.setValue(0)
-        self.player_slider.sliderMoved.connect(self._on_seek_slider_moved)
-        seek_row.addWidget(self.player_slider)
-        pc_layout.addLayout(seek_row)
-
-        # Hàng nút điều khiển phát
-        ctrl_row = QHBoxLayout()
-        self.btn_play_pause = QPushButton("▶ Nghe Thử")
-        self.btn_play_pause.setProperty("class", "PrimaryBtn")
-        self.btn_play_pause.setCursor(Qt.PointingHandCursor)
-        self.btn_play_pause.clicked.connect(self._toggle_play_pause)
-        ctrl_row.addWidget(self.btn_play_pause)
+        self.btn_play_pause = QPushButton("▶ Phát")
+        self.btn_play_pause.setProperty("class", "GoldBtn")
+        self.btn_play_pause.clicked.connect(self._toggle_playback)
+        player_btn_row.addWidget(self.btn_play_pause)
 
         self.btn_stop = QPushButton("⏹ Dừng")
         self.btn_stop.setProperty("class", "SecondaryBtn")
-        self.btn_stop.setCursor(Qt.PointingHandCursor)
         self.btn_stop.clicked.connect(self._stop_playback)
-        ctrl_row.addWidget(self.btn_stop)
+        player_btn_row.addWidget(self.btn_stop)
 
-        ctrl_row.addStretch()
+        btn_open_file = QPushButton("📂 Mở file")
+        btn_open_file.setProperty("class", "SecondaryBtn")
+        btn_open_file.clicked.connect(self._open_file_in_explorer)
+        player_btn_row.addWidget(btn_open_file)
 
-        btn_open_file_loc = QPushButton("📂 Mở tệp trong Explorer")
-        btn_open_file_loc.setProperty("class", "SecondaryBtn")
-        btn_open_file_loc.setCursor(Qt.PointingHandCursor)
-        btn_open_file_loc.clicked.connect(self._open_file_location)
-        ctrl_row.addWidget(btn_open_file_loc)
+        btn_open_folder = QPushButton("📁 Mở thư mục chứa")
+        btn_open_folder.setProperty("class", "SecondaryBtn")
+        btn_open_folder.clicked.connect(self._open_output_folder)
+        player_btn_row.addWidget(btn_open_folder)
 
-        btn_copy_path = QPushButton("📋 Sao chép đường dẫn")
-        btn_copy_path.setProperty("class", "SecondaryBtn")
-        btn_copy_path.setCursor(Qt.PointingHandCursor)
-        btn_copy_path.clicked.connect(self._copy_audio_path)
-        ctrl_row.addWidget(btn_copy_path)
+        player_btn_row.addStretch()
+        pc_layout.addLayout(player_btn_row)
 
-        pc_layout.addLayout(ctrl_row)
         layout.addWidget(self.player_card)
 
-        layout.addStretch()
+        scroll_area.setWidget(scroll_content)
+        main_layout.addWidget(scroll_area)
 
-        scroll.setWidget(content_widget)
-        main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(0, 0, 0, 0)
-        main_layout.addWidget(scroll)
+    def _insert_tag(self, tag: str):
+        """Chèn thẻ cảm xúc / mốc nghỉ vào đúng vị trí con trỏ."""
+        cursor = self.txt_input.textCursor()
+        cursor.insertText(tag + " ")
+        self.txt_input.setFocus()
 
-    # =========================================================================
-    # CÁC HÀM XỬ LÝ SỰ KIỆN
-    # =========================================================================
-    def refresh_voices(self):
-        """Cập nhật danh sách giọng đọc từ engine."""
-        curr_id = self.voice_combo.currentData()
-        self.voice_combo.clear()
-
-        voices = tts_service.list_voices()
-        default_idx = 0
-
-        for idx, v in enumerate(voices):
-            vid = v["id"]
-            label = v.get("label", vid)
-            self.voice_combo.addItem(label, vid)
-            if vid == curr_id or vid == "Hải Đăng":
-                default_idx = idx
-
-        if self.voice_combo.count() > 0:
-            self.voice_combo.setCurrentIndex(default_idx)
-            self._on_voice_changed(default_idx)
-
-    def _on_voice_changed(self, index: int):
-        vid = self.voice_combo.currentData()
-        if not vid:
-            return
-        voices = tts_service.list_voices()
-        for v in voices:
-            if v["id"] == vid:
-                gender = v.get("gender", "")
-                region = v.get("region", "")
-                style = v.get("style", "")
-                desc = v.get("description", "")
-                self.voice_desc_lbl.setText(f"🏷️ {gender} · {region} · {style} — {desc}")
-                break
-
-    def _on_text_changed(self):
-        txt = self.text_edit.toPlainText().strip()
-        chars = len(txt)
-        words = len(txt.split()) if txt else 0
-        self.char_count_lbl.setText(f"{chars:,} ký tự  |  {words:,} từ")
-
-    def _on_speed_changed(self, val: int):
-        speed_float = val / 100.0
-        self.speed_val_lbl.setText(f"{speed_float:.2f}x")
-
-    def _paste_clipboard(self):
-        clip = QApplication.clipboard()
-        self.text_edit.insertPlainText(clip.text())
+    def _paste_text(self):
+        clipboard = QApplication.clipboard()
+        text = clipboard.text()
+        if text:
+            self.txt_input.insertPlainText(text)
 
     def _clear_text(self):
-        self.text_edit.clear()
+        self.txt_input.clear()
 
-    def _import_text_file(self):
-        fpath, _ = QFileDialog.getOpenFileName(
-            self,
-            "Chọn tệp văn bản",
-            "",
-            "Văn bản (*.txt *.docx *.pdf);;Tất cả tệp (*.*)",
-        )
-        if not fpath:
-            return
-        p = Path(fpath)
-        try:
-            if p.suffix.lower() == ".txt":
-                content = p.read_text(encoding="utf-8", errors="replace")
-            elif p.suffix.lower() == ".docx":
-                import docx
-                doc = docx.Document(str(p))
-                content = "\n".join([para.text for para in doc.paragraphs])
-            elif p.suffix.lower() == ".pdf":
-                import pypdf
-                reader = pypdf.PdfReader(str(p))
-                content = "\n".join([page.extract_text() or "" for page in reader.pages])
-            else:
-                content = p.read_text(encoding="utf-8", errors="replace")
-            self.text_edit.setPlainText(content)
-        except Exception as e:
-            QMessageBox.critical(self, "Lỗi đọc tệp", f"Không thể đọc tệp văn bản: {e}")
+    def _on_text_changed(self):
+        text = self.txt_input.toPlainText()
+        char_count = len(text)
+        word_count = len(text.split())
+        self.lbl_char_count.setText(f"{char_count:,} ký tự | {word_count:,} từ")
+
+    def _on_speed_changed(self, val: int):
+        speed = val / 100.0
+        self.lbl_speed.setText(f"Tốc độ đọc: {speed:.2f}x")
 
     def _select_output_dir(self):
-        dir_path = QFileDialog.getExistingDirectory(self, "Chọn thư mục lưu file âm thanh")
-        if dir_path:
-            self.selected_out_dir = Path(dir_path)
-            self.btn_select_dir.setText(f"📁 .../{self.selected_out_dir.name}")
-            self.btn_select_dir.setToolTip(str(self.selected_out_dir))
+        chosen = QFileDialog.getExistingDirectory(self, "Chọn Thư Mục Lưu Âm Thanh", str(Path.cwd()))
+        if chosen:
+            self.custom_output_dir = Path(chosen)
+            QMessageBox.information(self, "Đã Đổi Thư Mục", f"Các file âm thanh tiếp theo sẽ được lưu vào:\n{chosen}")
 
-    def _open_output_folder(self):
-        folder = self.selected_out_dir or tts_service.default_out_dir
-        folder.mkdir(parents=True, exist_ok=True)
-        if sys.platform == "win32":
-            os.startfile(str(folder))
-        else:
-            subprocess.Popen(["xdg-open", str(folder)])
+    def refresh_voices(self):
+        """Nạp danh sách 25 giọng chuẩn + giọng tùy biến vào danh sách Card."""
+        try:
+            self.all_voices = tts_service.list_voices()
+        except Exception:
+            self.all_voices = []
 
-    def _start_synthesize(self):
-        text = self.text_edit.toPlainText().strip()
+        # Xóa các widget cũ
+        for w in self.card_widgets.values():
+            w.deleteLater()
+        self.card_widgets.clear()
+
+        # Tạo mới các card
+        for v in self.all_voices:
+            vid = v.get("id", "")
+            card = VoiceCardWidget(v)
+            card.clicked.connect(self._on_card_selected)
+            card.preview_requested.connect(self._preview_voice)
+            self.card_widgets[vid] = card
+
+        # Đặt lại giọng mặc định nếu có
+        if self.selected_voice_id not in self.card_widgets and self.all_voices:
+            self.selected_voice_id = self.all_voices[0]["id"]
+
+        self._apply_voice_filter()
+
+    def _set_gender_filter(self, gender: str):
+        self.current_filter = gender
+        self._apply_voice_filter()
+
+    def _apply_voice_filter(self):
+        search_query = self.txt_search_voice.text().strip().lower()
+
+        # Xóa layout grid
+        while self.cards_grid.count():
+            item = self.cards_grid.takeAt(0)
+            widget = item.widget()
+            if widget:
+                widget.setParent(None)
+
+        visible_cards = []
+        for v in self.all_voices:
+            vid = v.get("id", "")
+            card = self.card_widgets.get(vid)
+            if not card:
+                continue
+
+            # Kiểm tra bộ lọc giới tính / loại
+            if self.current_filter == "Nữ" and "Nữ" not in card.gender:
+                card.setVisible(False)
+                continue
+            elif self.current_filter == "Nam" and ("Nam" not in card.gender or card.is_custom):
+                card.setVisible(False)
+                continue
+            elif self.current_filter == "custom" and not card.is_custom:
+                card.setVisible(False)
+                continue
+
+            # Kiểm tra tìm kiếm
+            if search_query:
+                combined_text = f"{card.voice_name} {card.region} {card.voice_style} {card.desc}".lower()
+                if search_query not in combined_text:
+                    card.setVisible(False)
+                    continue
+
+            card.setVisible(True)
+            card.set_selected(vid == self.selected_voice_id)
+            visible_cards.append(card)
+
+        # Sắp xếp theo lưới 2 cột
+        cols = 2
+        for idx, card in enumerate(visible_cards):
+            r = idx // cols
+            c = idx % cols
+            self.cards_grid.addWidget(card, r, c)
+
+    def _on_card_selected(self, voice_id: str):
+        self.selected_voice_id = voice_id
+        for vid, card in self.card_widgets.items():
+            card.set_selected(vid == voice_id)
+
+    def _preview_voice(self, voice_id: str):
+        if self.preview_worker and self.preview_worker.isRunning():
+            return
+        self.lbl_status.setVisible(True)
+        self.lbl_status.setStyleSheet("color: #EAB308;")
+        self.lbl_status.setText(f"⏳ Đang nạp và phát thử giọng: {voice_id}...")
+
+        self.preview_worker = VoicePreviewWorker(voice_id)
+        self.preview_worker.finished.connect(self._on_preview_finished)
+        self.preview_worker.error.connect(self._on_preview_error)
+        self.preview_worker.start()
+
+    def _on_preview_finished(self, res: dict):
+        self.lbl_status.setStyleSheet("color: #4ADE80;")
+        self.lbl_status.setText("✅ Đã phát giọng thử nghiệm.")
+        filepath = res.get("file_path", "")
+        if filepath and Path(filepath).exists():
+            audio_player.play(filepath)
+
+    def _on_preview_error(self, err: str):
+        self.lbl_status.setStyleSheet("color: #F87171;")
+        self.lbl_status.setText(f"❌ Lỗi nghe thử giọng: {err}")
+
+    def start_synthesis(self):
+        text = self.txt_input.toPlainText().strip()
         if not text:
-            QMessageBox.warning(self, "Chưa nhập văn bản", "Vui lòng nhập văn bản tiếng Việt cần đọc.")
+            QMessageBox.warning(self, "Chưa Nhập Văn Bản", "Vui lòng nhập văn bản tiếng Việt cần chuyển sang giọng nói!")
             return
 
-        # Kiểm tra bản quyền trước khi bắt đầu
-        lic_info = tts_service.get_license_info()
-        if not lic_info["is_active"]:
-            QMessageBox.critical(
-                self,
-                "Bản quyền không hợp lệ",
-                f"Chức năng tạo giọng nói bị khóa:\n\n{lic_info['status_message']}\n\n"
-                "Vui lòng vào tab 'Bản quyền & Giấy phép' để kích hoạt key mới.",
-            )
+        if not self.selected_voice_id:
+            QMessageBox.warning(self, "Chưa Chọn Giọng", "Vui lòng chọn một giọng đọc từ danh mục!")
             return
 
-        voice_id = self.voice_combo.currentData() or "Hải Đăng"
-        speed = self.speed_slider.value() / 100.0
-        out_fmt = "mp3" if self.radio_mp3.isChecked() else "wav"
-        prefix = self.prefix_edit.text().strip()
+        speed = self.slider_speed.value() / 100.0
+        fmt = self.combo_fmt.currentData() or "wav"
 
-        # Dừng phát âm thanh cũ nếu đang phát
-        audio_player.stop()
-        self.playback_timer.stop()
-
-        # Cập nhật trạng thái UI
         self.btn_generate.setEnabled(False)
-        self.btn_generate.setText("⏳ Đang tổng hợp giọng nói...")
+        self.btn_generate.setText("⏳ Đang xử lý tạo giọng...")
         self.progress_bar.setVisible(True)
-        self.status_msg_lbl.setText("Đang chạy mô hình VieNeu-TTS v3 Turbo ONNX CPU...")
-        self.status_msg_lbl.setStyleSheet("color: #22D3EE;")
-        self.player_card.setVisible(False)
+        self.lbl_status.setVisible(True)
+        self.lbl_status.setStyleSheet("color: #EAB308;")
+        self.lbl_status.setText(f"Đang tổng hợp với giọng '{self.selected_voice_id}' (Tốc độ {speed:.2f}x)...")
 
-        # Khởi chạy Worker Thread
-        self.worker = SynthesisWorker(
+        self.synthesis_worker = SynthesisWorker(
             text=text,
-            voice_id=voice_id,
+            voice_id=self.selected_voice_id,
             speed=speed,
-            out_format=out_fmt,
-            filename_prefix=prefix,
-            custom_out_dir=self.selected_out_dir,
+            out_format=fmt,
+            filename_prefix="speech",
+            custom_out_dir=self.custom_output_dir,
         )
-        self.worker.finished.connect(self._on_synthesis_finished)
-        self.worker.error.connect(self._on_synthesis_error)
-        self.worker.start()
+        self.synthesis_worker.finished.connect(self._on_synthesis_finished)
+        self.synthesis_worker.error.connect(self._on_synthesis_error)
+        self.synthesis_worker.start()
 
-    def _on_synthesis_finished(self, res: dict):
+    def _on_synthesis_finished(self, result: dict):
         self.btn_generate.setEnabled(True)
-        self.btn_generate.setText("▶  TẠO GIỌNG NÓI")
+        self.btn_generate.setText("▶ TẠO GIỌNG NÓI")
         self.progress_bar.setVisible(False)
 
-        if not res.get("success"):
-            err_msg = res.get("error", "Lỗi tổng hợp âm thanh.")
-            self.status_msg_lbl.setText(f"❌ {err_msg}")
-            self.status_msg_lbl.setStyleSheet("color: #EF4444;")
-            QMessageBox.critical(self, "Lỗi tạo giọng", err_msg)
-            return
-
-        self.last_result = res
-        self.status_msg_lbl.setText("✅ Tổng hợp âm thanh hoàn tất!")
-        self.status_msg_lbl.setStyleSheet("color: #22C55E;")
-
-        # Hiển thị kết quả trong Player Card
-        main_file = Path(res["main_file"])
-        size_mb = res["size_bytes"] / (1024 * 1024)
-        self.res_details_lbl.setText(
-            f"Thời lượng: {res['duration']}s  ·  Dung lượng: {size_mb:.2f} MB  ·  Giọng: {res['voice']}  ·  Tốc độ: {res['speed']}x"
+        self.current_result = result
+        self.lbl_status.setStyleSheet("color: #4ADE80;")
+        self.lbl_status.setText(
+            f"✅ Tạo giọng nói thành công! Thời lượng: {result.get('duration_sec', 0):.2f}s | "
+            f"Thời gian xử lý: {result.get('process_time_sec', 0):.2f}s"
         )
-        self.res_path_lbl.setText(f"📍 Tệp: {main_file.name}\n({str(main_file)})")
 
         self.player_card.setVisible(True)
-        self.btn_play_pause.setText("▶ Nghe Thử")
-        self.player_slider.setValue(0)
-        self.playback_time_lbl.setText(f"0:00 / {self._format_seconds(res['duration'])}")
+        self.lbl_result_info.setText(
+            f"File: <b>{Path(result.get('file_path', '')).name}</b> "
+            f"({result.get('format', 'wav').upper()} | {result.get('file_size_bytes', 0) / 1024:.1f} KB)"
+        )
 
-        self.audio_generated.emit(res)
+        # Tự động phát âm thanh vừa sinh ra
+        audio_player.play(result.get("file_path", ""))
+        self.btn_play_pause.setText("⏸ Tạm dừng")
+        self.audio_generated.emit(result)
 
     def _on_synthesis_error(self, err: str):
         self.btn_generate.setEnabled(True)
-        self.btn_generate.setText("▶  TẠO GIỌNG NÓI")
+        self.btn_generate.setText("▶ TẠO GIỌNG NÓI")
         self.progress_bar.setVisible(False)
-        self.status_msg_lbl.setText(f"❌ Lỗi: {err}")
-        self.status_msg_lbl.setStyleSheet("color: #EF4444;")
-        QMessageBox.critical(self, "Lỗi", f"Quá trình xử lý gặp lỗi:\n\n{err}")
+        self.lbl_status.setStyleSheet("color: #F87171;")
+        self.lbl_status.setText(f"❌ Lỗi: {err}")
+        QMessageBox.critical(self, "Lỗi Tổng Hợp Giọng Nói", f"Đã xảy ra lỗi:\n{err}")
 
-    # =========================================================================
-    # ĐIỀU KHIỂN PHÁT ÂM THANH
-    # =========================================================================
-    def _toggle_play_pause(self):
-        if not self.last_result or not self.last_result.get("main_file"):
+    def _toggle_playback(self):
+        if not self.current_result:
+            return
+        filepath = self.current_result.get("file_path", "")
+        if not filepath or not Path(filepath).exists():
             return
 
-        main_file = self.last_result["main_file"]
-
-        if audio_player.is_playing():
+        if audio_player.state == "playing":
             audio_player.pause()
             self.btn_play_pause.setText("▶ Tiếp tục")
-            self.playback_timer.stop()
-        elif audio_player.is_paused():
+        elif audio_player.state == "paused":
             audio_player.resume()
             self.btn_play_pause.setText("⏸ Tạm dừng")
-            self.playback_timer.start()
         else:
-            # Phát từ đầu
-            ok = audio_player.play(main_file)
-            if ok:
-                self.btn_play_pause.setText("⏸ Tạm dừng")
-                self.playback_timer.start()
-            else:
-                QMessageBox.warning(self, "Không thể phát", f"Không thể phát tệp âm thanh: {main_file}")
+            audio_player.play(filepath)
+            self.btn_play_pause.setText("⏸ Tạm dừng")
 
     def _stop_playback(self):
         audio_player.stop()
-        self.playback_timer.stop()
-        self.btn_play_pause.setText("▶ Nghe Thử")
-        self.player_slider.setValue(0)
+        self.btn_play_pause.setText("▶ Phát")
 
-    def _update_playback_progress(self):
-        if not audio_player.is_playing() and not audio_player.is_paused():
-            self.btn_play_pause.setText("▶ Nghe Thử")
-            self.playback_timer.stop()
-            self.player_slider.setValue(0)
+    def _open_file_in_explorer(self):
+        if not self.current_result:
             return
+        fp = self.current_result.get("file_path", "")
+        if fp and Path(fp).exists():
+            if os.name == "nt":
+                subprocess.Popen(f'explorer /select,"{Path(fp).resolve()}"')
 
-        pos_ms = audio_player.get_position_ms()
-        dur_ms = audio_player.get_duration_ms()
-        if dur_ms > 0:
-            val = int((pos_ms / float(dur_ms)) * 1000)
-            self.player_slider.blockSignals(True)
-            self.player_slider.setValue(val)
-            self.player_slider.blockSignals(False)
-            self.playback_time_lbl.setText(
-                f"{self._format_seconds(pos_ms / 1000.0)} / {self._format_seconds(dur_ms / 1000.0)}"
-            )
-
-    def _on_seek_slider_moved(self, val: int):
-        dur_ms = audio_player.get_duration_ms()
-        if dur_ms > 0:
-            target_ms = int((val / 1000.0) * dur_ms)
-            audio_player.seek_ms(target_ms)
-
-    def _open_file_location(self):
-        if not self.last_result or not self.last_result.get("main_file"):
-            return
-        f = Path(self.last_result["main_file"])
-        if f.exists() and sys.platform == "win32":
-            subprocess.run(f'explorer /select,"{str(f)}"', shell=True)
-        elif f.parent.exists():
-            os.startfile(str(f.parent))
-
-    def _copy_audio_path(self):
-        if self.last_result and self.last_result.get("main_file"):
-            clip = QApplication.clipboard()
-            clip.setText(self.last_result["main_file"])
-            QMessageBox.information(self, "Đã sao chép", "Đã sao chép đường dẫn tệp âm thanh vào bộ nhớ đệm.")
-
-    def _format_seconds(self, s: float) -> str:
-        s = int(s)
-        mins = s // 60
-        secs = s % 60
-        return f"{mins}:{secs:02d}"
+    def _open_output_folder(self):
+        out_dir = self.custom_output_dir or tts_service.output_dir
+        if out_dir.exists() and os.name == "nt":
+            subprocess.Popen(f'explorer "{out_dir.resolve()}"')

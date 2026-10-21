@@ -67,21 +67,45 @@ def _complete(d, files):
 
 
 def _fetch_files(repo, files, subfolder, dest):
-    from huggingface_hub import hf_hub_download
     dest = Path(dest)
     dest.mkdir(parents=True, exist_ok=True)
+    
+    # 1. Kiểm tra các thư mục local có sẵn trước để tránh gọi mạng không cần thiết
+    fallback_sources = [
+        get_app_dir() / "models" / dest.name,
+        get_app_dir().parent / "models" / dest.name,
+        Path.cwd() / "models" / dest.name,
+        Path(__file__).resolve().parent.parent / "models" / dest.name,
+    ]
     for fn in files:
         target = dest / fn
-        if target.exists():
+        if target.exists() and target.stat().st_size > 0:
             continue
+        # Thử sao chép từ thư mục local khác nếu có
+        copied_local = False
+        for sdir in fallback_sources:
+            src_candidate = sdir / fn
+            if src_candidate.exists() and src_candidate.stat().st_size > 0:
+                try:
+                    shutil.copy2(src_candidate, target)
+                    copied_local = True
+                    break
+                except Exception:
+                    pass
+        if copied_local or target.exists():
+            continue
+
+        # 2. Nếu không có local mới tải từ Hugging Face
+        # Chú ý: speaker_encoder.onnx và denoiser.onnx nằm tại root của repo, không nằm trong subfolder onnx_int8
+        effective_sub = None if fn in ("speaker_encoder.onnx", "denoiser.onnx") else (subfolder or None)
         try:
-            src = hf_hub_download(repo, fn, repo_type="model",
-                                  subfolder=subfolder or None)
+            from huggingface_hub import hf_hub_download
+            src = hf_hub_download(repo, fn, repo_type="model", subfolder=effective_sub)
+            shutil.copy(src, target)
         except Exception:
             if fn.endswith(".json"):
                 continue  # meta phụ, có thể vắng
             raise
-        shutil.copy(src, target)  # copy dereference: file thật, đúng tên
 
 
 def ensure_local_models(models_root=None, precision="fp32", progress_cb=None):

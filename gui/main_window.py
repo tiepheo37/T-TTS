@@ -1,21 +1,21 @@
-"""gui/main_window.py — CỬA SỔ CHÍNH DESKTOP WINDOWS NATIVE T-TTS v1.0.1
-========================================================================
-- Giao diện Modern Dark: Xanh đen (#0B1120), thanh bên (#101827), điểm nhấn Cyan/Blue.
-- Thanh điều hướng 8 mục bên trái, khu vực làm việc QStackedWidget bên phải.
-- Header hiển thị trạng thái mô hình thực tế (Đang nạp / Đã sẵn sàng / Lỗi) và trạng thái Bản quyền.
-- Loại bỏ hoàn toàn /docs, localhost, 127.0.0.1, Flask server và Chrome App Mode.
-- Tự động nạp trước mô hình VieNeu-TTS v3 Turbo ONNX CPU trong nền khi khởi động.
+"""gui/main_window.py — CỬA SỔ ỨNG DỤNG DESKTOP CHÍNH (QUÂN ĐỘI NHÂN DÂN VIỆT NAM)
+==================================================================================
+- Tích hợp Phù hiệu chính thức của QUÂN ĐỘI NHÂN DÂN VIỆT NAM.
+- Nổi bật tác giả ĐẠI ÚY NGUYỄN VĂN TIỆP ở thanh điều hướng và trang Giới thiệu.
+- Hỗ trợ chuyển đổi linh hoạt giữa 2 chế độ màu:
+  * 🌙 RẰN RI K20 TỐI (Military K20 Dark)
+  * ☀️ QUÂN ĐỘI SÁNG (Military K20 Light)
+- Quản lý 8 trang nghiệp vụ chính, luồng nạp mô hình nền mượt mà.
 """
 
 from __future__ import annotations
 
-import os
 import sys
 from pathlib import Path
 from typing import Optional
 
 from PySide6.QtCore import Qt, QThread, Signal, QTimer
-from PySide6.QtGui import QIcon, QFont, QColor
+from PySide6.QtGui import QIcon, QPixmap
 from PySide6.QtWidgets import (
     QMainWindow,
     QWidget,
@@ -25,38 +25,34 @@ from PySide6.QtWidgets import (
     QPushButton,
     QStackedWidget,
     QFrame,
-    QApplication,
     QMessageBox,
+    QApplication,
 )
 
-from .styles import MODERN_DARK_QSS
-from .dialogs.license_dialog import LicenseActivationDialog
-from .pages.page_synthesize import PageSynthesize
-from .pages.page_clone import PageClone
-from .pages.page_batch import PageBatch
-from .pages.page_voices import PageVoices
-from .pages.page_history import PageHistory
-from .pages.page_settings import PageSettings
-from .pages.page_about import PageAbout
-from .pages.page_guide import PageGuide
+from gui.styles import get_theme_qss, FRIENDLY_LIGHT_QSS
+from gui.dialogs.license_dialog import LicenseDialog
+from gui.pages.page_synthesize import PageSynthesize
+from gui.pages.page_clone import PageClone
+from gui.pages.page_batch import PageBatch
+from gui.pages.page_voices import PageVoices
+from gui.pages.page_history import PageHistory
+from gui.pages.page_settings import PageSettings
+from gui.pages.page_about import PageAbout
+from gui.pages.page_guide import PageGuide
 
 from backend.service import tts_service
-from backend.audio_player import audio_player
 
 
 class ModelLoaderThread(QThread):
-    """Tiểu trình chạy ngầm khởi tạo mô hình VieNeu-TTS khi mở ứng dụng."""
-
-    status_changed = Signal(str)
-    finished_loading = Signal(bool, str)
+    """Tiểu trình nạp trước mô hình VieNeu-TTS v3 Turbo ONNX trong luồng nền."""
+    loaded = Signal(bool, str)
 
     def run(self):
-        def _prog(msg):
-            self.status_changed.emit(msg)
-
-        ok = tts_service.initialize_model(on_progress=_prog)
-        st = tts_service.get_model_status()
-        self.finished_loading.emit(ok, st.get("error", ""))
+        try:
+            tts_service.initialize_models()
+            self.loaded.emit(True, "VieNeu-TTS v3 Turbo (ONNX CPU) - Sẵn sàng")
+        except Exception as e:
+            self.loaded.emit(False, str(e))
 
 
 class MainWindow(QMainWindow):
@@ -65,10 +61,13 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setObjectName("MainRoot")
-        self.setWindowTitle("T-TTS v1.0.1 — Chuyển Văn Bản Thành Giọng Nói Tiếng Việt")
-        self.setMinimumSize(1024, 680)
-        self.resize(1280, 820)
-        self.setStyleSheet(MODERN_DARK_QSS)
+        self.setWindowTitle("T-TTS v1.0.1 — Hệ Thống Giọng Nói Quân Đội Nhân Dân Việt Nam (Đại úy Nguyễn Văn Tiệp)")
+        self.setMinimumSize(1024, 700)
+        self.resize(1300, 840)
+
+        # Chế độ màu mặc định: k20_dark
+        self.current_theme = "k20_dark"
+        self.setStyleSheet(get_theme_qss(self.current_theme))
 
         # Đặt biểu tượng ứng dụng nếu có
         icon_path = self._find_app_icon()
@@ -78,14 +77,14 @@ class MainWindow(QMainWindow):
         self.nav_buttons: list[QPushButton] = []
         self._build_ui()
 
-        # Tiểu trình nạp trước mô hình trong nền
+        # Nạp mô hình trong nền
         self.loader_thread: Optional[ModelLoaderThread] = None
         self._start_background_model_loader()
 
-        # Kiểm tra trạng thái bản quyền
+        # Cập nhật huy hiệu bản quyền
         self._update_license_badge()
 
-        # Nếu chưa kích hoạt bản quyền, mở hộp thoại kích hoạt sau khi giao diện đã hiển thị
+        # Kiểm tra bản quyền sau khi hiển thị
         QTimer.singleShot(600, self._check_initial_license)
 
     def _find_app_icon(self) -> Optional[Path]:
@@ -111,29 +110,51 @@ class MainWindow(QMainWindow):
         header = QFrame()
         header.setObjectName("HeaderFrame")
         h_layout = QHBoxLayout(header)
-        h_layout.setContentsMargins(18, 10, 18, 10)
-        h_layout.setSpacing(14)
+        h_layout.setContentsMargins(16, 8, 16, 8)
+        h_layout.setSpacing(12)
 
-        # Logo / Title
-        logo_layout = QVBoxLayout()
-        logo_layout.setSpacing(2)
-        title_lbl = QLabel("T-TTS v1.0.1")
+        # Logo Quân đội nhỏ trên header
+        lbl_top_logo = QLabel()
+        logo_path = Path(__file__).resolve().parent / "assets" / "logo_quan_doi.png"
+        if not logo_path.exists():
+            logo_path = Path.cwd() / "gui" / "assets" / "logo_quan_doi.png"
+        if logo_path.exists():
+            pm = QPixmap(str(logo_path)).scaled(32, 42, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            lbl_top_logo.setPixmap(pm)
+        else:
+            lbl_top_logo.setText("⭐")
+            lbl_top_logo.setStyleSheet("font-size: 24px; color: #FFD700;")
+        h_layout.addWidget(lbl_top_logo)
+
+        # Tiêu đề ứng dụng
+        title_box = QVBoxLayout()
+        title_box.setSpacing(1)
+
+        title_lbl = QLabel("T-TTS v1.0.1 — HỆ THỐNG TRỢ LÝ GIỌNG NÓI QUÂN ĐỘI")
         title_lbl.setObjectName("AppTitle")
-        sub_lbl = QLabel("Chuyển Văn Bản Thành Giọng Nói Tiếng Việt · VieNeu-TTS v3 Turbo ONNX CPU")
-        sub_lbl.setObjectName("AppSubtitle")
-        logo_layout.addWidget(title_lbl)
-        logo_layout.addWidget(sub_lbl)
-        h_layout.addLayout(logo_layout)
+        title_box.addWidget(title_lbl)
 
+        sub_lbl = QLabel("Chuyển Văn Bản Thành Giọng Nói Tiếng Việt · Phát triển bởi Đại úy Nguyễn Văn Tiệp")
+        sub_lbl.setObjectName("AppSubtitle")
+        title_box.addWidget(sub_lbl)
+
+        h_layout.addLayout(title_box)
         h_layout.addStretch()
 
+        # Nút chuyển đổi giao diện Sáng / Tối (Theme Switcher)
+        self.btn_theme_toggle = QPushButton("☀️ Giao diện Sáng (K20)")
+        self.btn_theme_toggle.setProperty("class", "SecondaryBtn")
+        self.btn_theme_toggle.setCursor(Qt.PointingHandCursor)
+        self.btn_theme_toggle.clicked.connect(self._toggle_theme)
+        h_layout.addWidget(self.btn_theme_toggle)
+
         # Badge trạng thái mô hình
-        self.model_status_badge = QLabel("🔄 Đang khởi tạo mô hình...")
+        self.model_status_badge = QLabel("⏳ Đang nạp mô hình...")
         self.model_status_badge.setObjectName("BadgeModelLoading")
         self.model_status_badge.setAlignment(Qt.AlignCenter)
         h_layout.addWidget(self.model_status_badge)
 
-        # Badge trạng thái bản quyền (Click vào để mở hộp thoại kích hoạt)
+        # Badge bản quyền
         self.license_badge = QPushButton("🛡️ Kiểm tra bản quyền...")
         self.license_badge.setObjectName("BadgeLicenseActive")
         self.license_badge.setCursor(Qt.PointingHandCursor)
@@ -143,7 +164,7 @@ class MainWindow(QMainWindow):
         central_layout.addWidget(header)
 
         # -------------------------------------------------------------
-        # 2. KHU VỰC THÂN CHÍNH (SIDEBAR TRÁI + WORKSPACE PHẢI)
+        # 2. KHU VỰC THÂN CHÍNH (SIDEBAR + WORKSPACE)
         # -------------------------------------------------------------
         body_widget = QWidget()
         body_layout = QHBoxLayout(body_widget)
@@ -152,24 +173,43 @@ class MainWindow(QMainWindow):
 
         # Sidebar điều hướng bên trái
         sidebar = QFrame()
-        sidebar.setObjectName("NavSidebar")
+        sidebar.setObjectName("NavFrame")
         sb_layout = QVBoxLayout(sidebar)
-        sb_layout.setContentsMargins(0, 12, 0, 12)
-        sb_layout.setSpacing(2)
+        sb_layout.setContentsMargins(8, 12, 8, 12)
+        sb_layout.setSpacing(4)
 
-        # 8 mục điều hướng chính thức
+        # Nhãn nhóm 1
+        lbl_g1 = QLabel("Chức năng chính")
+        lbl_g1.setProperty("class", "NavGroupLabel")
+        sb_layout.addWidget(lbl_g1)
+
         nav_items = [
             ("🎙️  Tạo Giọng Nói", 0),
             ("🧬  Nhân Bản Giọng", 1),
             ("⚡  Xử Lý Hàng Loạt", 2),
             ("👥  Quản Lý Giọng", 3),
-            ("📜  Lịch Sử", 4),
-            ("⚙️  Cài Đặt", 5),
-            ("🛡️  Bản Quyền & Giấy Phép", 6),
+            ("📜  Lịch Sử Tạo", 4),
+        ]
+        for text, idx in nav_items:
+            btn = QPushButton(text)
+            btn.setProperty("class", "NavBtn")
+            btn.setCheckable(True)
+            btn.setCursor(Qt.PointingHandCursor)
+            btn.clicked.connect(lambda _, index=idx: self._switch_tab(index))
+            sb_layout.addWidget(btn)
+            self.nav_buttons.append(btn)
+
+        # Nhãn nhóm 2
+        lbl_g2 = QLabel("Hệ thống & Bản quyền")
+        lbl_g2.setProperty("class", "NavGroupLabel")
+        sb_layout.addWidget(lbl_g2)
+
+        nav_items_2 = [
+            ("⚙️  Cài Đặt & Cấu Hình", 5),
+            ("🛡️  Bản Quyền & Tác Giả", 6),
             ("📖  Hướng Dẫn Sử Dụng", 7),
         ]
-
-        for text, idx in nav_items:
+        for text, idx in nav_items_2:
             btn = QPushButton(text)
             btn.setProperty("class", "NavBtn")
             btn.setCheckable(True)
@@ -180,18 +220,52 @@ class MainWindow(QMainWindow):
 
         sb_layout.addStretch()
 
-        # Chân trang sidebar hiển thị thông tin tác giả ngắn gọn
-        footer_lbl = QLabel("Phát triển bởi\nĐại úy Nguyễn Văn Tiệp")
-        footer_lbl.setAlignment(Qt.AlignCenter)
-        footer_lbl.setStyleSheet("color: #64748B; font-size: 11px; padding: 10px; border-top: 1px solid #1E2D44;")
-        sb_layout.addWidget(footer_lbl)
+        # =========================================================================
+        # BANNER TÁC GIẢ NỔI BẬT Ở CHÂN SIDEBAR (KÈM PHÙ HIỆU QUÂN ĐỘI)
+        # =========================================================================
+        author_sidebar_card = QFrame()
+        author_sidebar_card.setObjectName("SidebarAuthorCard")
+        author_sidebar_card.setCursor(Qt.PointingHandCursor)
+        author_sidebar_card.mousePressEvent = lambda e: self._switch_tab(6)
+
+        asc_layout = QHBoxLayout(author_sidebar_card)
+        asc_layout.setContentsMargins(10, 8, 10, 8)
+        asc_layout.setSpacing(10)
+
+        lbl_asc_logo = QLabel()
+        if logo_path.exists():
+            pm_sb = QPixmap(str(logo_path)).scaled(38, 50, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            lbl_asc_logo.setPixmap(pm_sb)
+        else:
+            lbl_asc_logo.setText("⭐")
+            lbl_asc_logo.setStyleSheet("font-size: 24px; color: #FFD700;")
+        asc_layout.addWidget(lbl_asc_logo)
+
+        asc_info = QVBoxLayout()
+        asc_info.setSpacing(1)
+
+        lbl_p = QLabel("PHÁT TRIỂN BỞI")
+        lbl_p.setStyleSheet("color: #FFD700; font-size: 10px; font-weight: 800; letter-spacing: 0.5px;")
+        asc_info.addWidget(lbl_p)
+
+        lbl_author_sb = QLabel("Đại úy Nguyễn Văn Tiệp")
+        lbl_author_sb.setStyleSheet("color: #FFFFFF; font-size: 12px; font-weight: bold;")
+        asc_info.addWidget(lbl_author_sb)
+
+        lbl_unit = QLabel("Quân đội nhân dân Việt Nam")
+        lbl_unit.setStyleSheet("color: #A2BCA0; font-size: 10px;")
+        asc_info.addWidget(lbl_unit)
+
+        asc_layout.addLayout(asc_info, 1)
+        sb_layout.addWidget(author_sidebar_card)
 
         body_layout.addWidget(sidebar)
 
-        # Workspace bên phải (QStackedWidget)
+        # -------------------------------------------------------------
+        # 3. WORKSPACE (QSTACKEDWIDGET 8 TRANG)
+        # -------------------------------------------------------------
         self.stack = QStackedWidget()
 
-        # Tạo các trang chức năng
         self.page_synth = PageSynthesize()
         self.page_clone = PageClone()
         self.page_batch = PageBatch()
@@ -201,137 +275,136 @@ class MainWindow(QMainWindow):
         self.page_about = PageAbout()
         self.page_guide = PageGuide()
 
-        # Kết nối các tín hiệu giữa các trang
-        self.page_synth.audio_generated.connect(self._on_audio_generated)
+        self.stack.addWidget(self.page_synth)
+        self.stack.addWidget(self.page_clone)
+        self.stack.addWidget(self.page_batch)
+        self.stack.addWidget(self.page_voices)
+        self.stack.addWidget(self.page_history)
+        self.stack.addWidget(self.page_settings)
+        self.stack.addWidget(self.page_about)
+        self.stack.addWidget(self.page_guide)
+
+        # Kết nối sự kiện giữa các trang
+        self.page_synth.audio_generated.connect(lambda _: self.page_history.reload_history())
         self.page_clone.voice_cloned.connect(self._on_voice_cloned)
         self.page_voices.voices_updated.connect(self._on_voices_updated)
         self.page_about.request_open_activation.connect(self._open_activation_dialog)
 
-        self.stack.addWidget(self.page_synth)      # Index 0
-        self.stack.addWidget(self.page_clone)      # Index 1
-        self.stack.addWidget(self.page_batch)      # Index 2
-        self.stack.addWidget(self.page_voices)     # Index 3
-        self.stack.addWidget(self.page_history)    # Index 4
-        self.stack.addWidget(self.page_settings)   # Index 5
-        self.stack.addWidget(self.page_about)      # Index 6
-        self.stack.addWidget(self.page_guide)      # Index 7
-
-        body_layout.addWidget(self.stack)
-        central_layout.addWidget(body_widget)
-
+        body_layout.addWidget(self.stack, 1)
+        central_layout.addWidget(body_widget, 1)
         self.setCentralWidget(central)
 
-        # Mặc định chọn tab đầu tiên
+        # Chọn tab mặc định: 0 (Tạo Giọng Nói)
         self._switch_tab(0)
 
-    def _switch_tab(self, index: int):
-        self.stack.setCurrentIndex(index)
-        for i, btn in enumerate(self.nav_buttons):
-            btn.setChecked(i == index)
+    def _toggle_theme(self):
+        """Chuyển đổi giữa chế độ Rằn ri K20 Tối và Sáng."""
+        if self.current_theme == "k20_dark":
+            self.current_theme = "k20_light"
+            self.btn_theme_toggle.setText("🌙 Giao diện Tối (K20)")
+        else:
+            self.current_theme = "k20_dark"
+            self.btn_theme_toggle.setText("☀️ Giao diện Sáng (K20)")
 
-        # Khi chuyển sang tab Lịch sử hoặc Quản lý giọng, làm mới dữ liệu
-        if index == 3:
-            self.page_voices.reload_voices()
-        elif index == 4:
-            self.page_history.reload_history()
-        elif index == 6:
-            self.page_about.reload_license_info()
+        new_qss = get_theme_qss(self.current_theme)
+        self.setStyleSheet(new_qss)
+        QApplication.instance().setStyleSheet(new_qss)
+
+    def _switch_tab(self, index: int):
+        if 0 <= index < self.stack.count():
+            self.stack.setCurrentIndex(index)
+            for i, btn in enumerate(self.nav_buttons):
+                is_active = (i == index)
+                btn.setChecked(is_active)
+                btn.setProperty("active", "true" if is_active else "false")
+                btn.style().unpolish(btn)
+                btn.style().polish(btn)
+
+            # Tự động làm mới dữ liệu trang khi người dùng mở
+            current_widget = self.stack.currentWidget()
+            if hasattr(current_widget, "reload_history"):
+                current_widget.reload_history()
+            elif hasattr(current_widget, "reload_voices"):
+                current_widget.reload_voices()
+            elif hasattr(current_widget, "reload_license_info"):
+                current_widget.reload_license_info()
 
     def _start_background_model_loader(self):
-        self.model_status_badge.setText("🔄 Đang khởi tạo mô hình VieNeu-TTS...")
+        self.model_status_badge.setText("⏳ Đang nạp mô hình...")
         self.model_status_badge.setObjectName("BadgeModelLoading")
-        self.model_status_badge.setStyleSheet(
-            "background-color: rgba(245, 158, 11, 0.15); color: #F59E0B; "
-            "border: 1px solid #F59E0B; border-radius: 12px; padding: 4px 10px; font-weight: bold; font-size: 11px;"
-        )
+        self.model_status_badge.style().unpolish(self.model_status_badge)
+        self.model_status_badge.style().polish(self.model_status_badge)
 
         self.loader_thread = ModelLoaderThread()
-        self.loader_thread.finished_loading.connect(self._on_model_loaded)
+        self.loader_thread.loaded.connect(self._on_model_loaded)
         self.loader_thread.start()
 
-    def _on_model_loaded(self, success: bool, error: str):
+    def _on_model_loaded(self, success: bool, message: str):
         if success:
-            self.model_status_badge.setText("● Mô hình đã sẵn sàng (ONNX CPU)")
+            self.model_status_badge.setText("🟢 Mô hình: VieNeu-TTS v3 Turbo ONNX (Sẵn sàng)")
             self.model_status_badge.setObjectName("BadgeModelReady")
-            self.model_status_badge.setStyleSheet(
-                "background-color: rgba(34, 197, 94, 0.15); color: #22C55E; "
-                "border: 1px solid #22C55E; border-radius: 12px; padding: 4px 10px; font-weight: bold; font-size: 11px;"
-            )
-            # Làm mới danh sách giọng ở các trang
-            self.page_synth.refresh_voices()
-            self.page_batch.refresh_voices()
-            self.page_voices.reload_voices()
+            # Cập nhật danh sách giọng cho trang Tạo giọng nói
+            if hasattr(self.page_synth, "refresh_voices"):
+                self.page_synth.refresh_voices()
         else:
-            self.model_status_badge.setText("✕ Khởi tạo mô hình thất bại")
+            self.model_status_badge.setText("🔴 Lỗi nạp mô hình")
             self.model_status_badge.setObjectName("BadgeModelError")
-            self.model_status_badge.setStyleSheet(
-                "background-color: rgba(239, 68, 68, 0.15); color: #EF4444; "
-                "border: 1px solid #EF4444; border-radius: 12px; padding: 4px 10px; font-weight: bold; font-size: 11px;"
-            )
-            QMessageBox.critical(
-                self,
-                "Lỗi Khởi Tạo Mô Hình",
-                f"Không thể nạp mô hình giọng nói VieNeu-TTS v3 Turbo:\n\n{error}\n\n"
-                "Vui lòng kiểm tra lại tài nguyên thư mục models.",
-            )
+            self.model_status_badge.setToolTip(f"Chi tiết lỗi: {message}")
+
+        self.model_status_badge.style().unpolish(self.model_status_badge)
+        self.model_status_badge.style().polish(self.model_status_badge)
 
     def _update_license_badge(self):
         info = tts_service.get_license_info()
-        is_active = info.get("is_active", False)
-        plan = info.get("plan") or ""
-        rem = info.get("remaining_formatted") or ""
+        status = info.get("status", "unknown")
+        plan = info.get("plan", "none").upper()
+        days_left = info.get("days_left", 0)
 
-        if is_active:
-            if plan == "KEY-PERM":
-                txt = "● Bản quyền: Vĩnh viễn"
+        if status == "active":
+            if plan == "PERMANENT":
+                self.license_badge.setText("⭐ Bản quyền: Vĩnh Viễn")
             else:
-                txt = f"● Bản quyền: {plan} ({rem})"
-            self.license_badge.setText(txt)
-            self.license_badge.setStyleSheet(
-                "background-color: rgba(22, 135, 255, 0.15); color: #22D3EE; "
-                "border: 1px solid #1687FF; border-radius: 12px; padding: 4px 10px; font-weight: bold; font-size: 11px;"
-            )
+                self.license_badge.setText(f"🛡️ Bản quyền ({plan}): Còn {days_left} ngày")
+        elif status == "trial":
+            self.license_badge.setText(f"⏳ Dùng thử: Còn {days_left} ngày")
+        elif status == "expired":
+            self.license_badge.setText("⚠️ Bản quyền đã hết hạn")
         else:
-            status = info.get("status")
-            if status == "expired":
-                self.license_badge.setText("✕ Bản quyền đã hết hạn")
-            else:
-                self.license_badge.setText("⚠️ Chưa kích hoạt bản quyền")
-            self.license_badge.setStyleSheet(
-                "background-color: rgba(239, 68, 68, 0.15); color: #EF4444; "
-                "border: 1px solid #EF4444; border-radius: 12px; padding: 4px 10px; font-weight: bold; font-size: 11px;"
-            )
+            self.license_badge.setText("🔑 Chưa kích hoạt")
 
     def _check_initial_license(self):
         info = tts_service.get_license_info()
-        if not info.get("is_active"):
+        if not info.get("licensed", False):
             self._open_activation_dialog()
 
     def _open_activation_dialog(self):
-        dlg = LicenseActivationDialog(self)
+        dlg = LicenseDialog(self)
+        dlg.setStyleSheet(FRIENDLY_LIGHT_QSS)
         dlg.license_activated.connect(self._on_license_activated)
         dlg.exec()
 
     def _on_license_activated(self, info: dict):
         self._update_license_badge()
-        self.page_about.reload_license_info()
+        if hasattr(self.page_about, "reload_license_info"):
+            self.page_about.reload_license_info()
+        QMessageBox.information(
+            self,
+            "Kích Hoạt Thành Công",
+            f"Bản quyền hệ thống T-TTS v1.0.1 đã được kích hoạt thành công!\n"
+            f"Gói bản quyền: {info.get('plan', '').upper()}"
+        )
 
-    def _on_audio_generated(self, res: dict):
-        self.page_history.reload_history()
-
-    def _on_voice_cloned(self, vname: str):
-        self.page_synth.refresh_voices()
-        self.page_batch.refresh_voices()
-        self.page_voices.reload_voices()
+    def _on_voice_cloned(self, voice_id: str):
+        if hasattr(self.page_synth, "refresh_voices"):
+            self.page_synth.refresh_voices()
+        if hasattr(self.page_voices, "reload_voices"):
+            self.page_voices.reload_voices()
 
     def _on_voices_updated(self):
-        self.page_synth.refresh_voices()
-        self.page_batch.refresh_voices()
+        if hasattr(self.page_synth, "refresh_voices"):
+            self.page_synth.refresh_voices()
 
     def closeEvent(self, event):
-        """Dọn dẹp sạch tài nguyên và dừng bộ phát âm thanh khi đóng cửa sổ."""
-        try:
-            audio_player.stop()
-        except Exception:
-            pass
+        if self.loader_thread and self.loader_thread.isRunning():
+            self.loader_thread.wait(1000)
         event.accept()

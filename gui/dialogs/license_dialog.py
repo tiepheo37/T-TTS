@@ -247,3 +247,7 @@ class LicenseActivationDialog(QDialog):
             self.status_lbl.setText(f"❌ {msg}")
             self.status_lbl.setStyleSheet("color: #DC2626; font-weight: bold; font-size: 13px;")
             QMessageBox.critical(self, "Kích Hoạt Thất Bại", msg)
+
+
+LicenseDialog = LicenseActivationDialog
+

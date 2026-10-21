@@ -110,9 +110,19 @@ def main():
     log("\n--- BƯỚC 4: SAO CHÉP MODELS, DATA, OUTPUT VÀO THƯ MỤC THỬ NGHIỆM ---")
     src_models = ROOT / "models"
     dst_models = RELEASE_TEST_DIR / "models"
-    if src_models.exists() and not dst_models.exists():
+    if src_models.exists():
+        if dst_models.exists():
+            shutil.rmtree(dst_models)
         shutil.copytree(src_models, dst_models)
-        log("[OK] Đã sao chép thư mục models/")
+        log("[OK] Đã sao chép thư mục models/ đầy đủ vào release_test")
+
+    # Đồng bộ cả sang built_dir trong dist nếu người dùng mở từ dist
+    dst_models_dist = built_dir / "models"
+    if src_models.exists():
+        if dst_models_dist.exists():
+            shutil.rmtree(dst_models_dist)
+        shutil.copytree(src_models, dst_models_dist)
+        log("[OK] Đã sao chép thư mục models/ đầy đủ vào dist")
 
     src_data = ROOT / "data"
     dst_data = RELEASE_TEST_DIR / "data"
@@ -127,9 +137,22 @@ def main():
     # Cờ portable.txt
     (RELEASE_TEST_DIR / "portable.txt").write_text("T-TTS v1.0.1 Desktop Test Portable Flag", encoding="utf-8")
 
-    # Icon
+    # Icon & Phù hiệu Quân đội
     if (ROOT / "app_icon.ico").exists():
         shutil.copy2(ROOT / "app_icon.ico", RELEASE_TEST_DIR / "app_icon.ico")
+    
+    src_assets = ROOT / "gui" / "assets"
+    if src_assets.exists():
+        dst_assets1 = internal_dir / "gui" / "assets"
+        dst_assets1.mkdir(parents=True, exist_ok=True)
+        for f in src_assets.glob("*"):
+            shutil.copy2(f, dst_assets1 / f.name)
+
+        dst_assets2 = RELEASE_TEST_DIR / "gui" / "assets"
+        dst_assets2.mkdir(parents=True, exist_ok=True)
+        for f in src_assets.glob("*"):
+            shutil.copy2(f, dst_assets2 / f.name)
+        log("[OK] Đã sao chép phù hiệu Quân đội nhân dân Việt Nam vào assets")
 
     # 6. Tạo file Hướng dẫn sử dụng & Chẩn đoán lỗi cơ bản
     guide_txt = """================================================================================

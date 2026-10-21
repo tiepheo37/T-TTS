@@ -1,21 +1,20 @@
-"""gui/pages/page_about.py — TAB 7: BẢN QUYỀN & GIẤY PHÉP (ABOUT & LICENSE)
+"""gui/pages/page_about.py — TAB 7: BẢN QUYỀN & THÔNG TIN TÁC GIẢ QUÂN ĐỘI
 ========================================================================
-Thiết kế trang trọng, làm nổi bật tác giả theo yêu cầu Phần IX:
-- THÔNG TIN BẮT BUỘC:
-  * T-TTS v1.0.1
-  * PHÁT TRIỂN: Đại úy Nguyễn Văn Tiệp (Điểm nhấn chính, chữ lớn, phân cấp thị giác rõ ràng).
-  * Mô tả: "Phần mềm chuyển văn bản thành giọng nói tiếng Việt, tích hợp mô hình VieNeu-TTS v3 Turbo sử dụng ONNX Runtime CPU."
-  * Thông tin mô hình: "Mô hình VieNeu-TTS do Phạm Nguyễn Ngọc Bảo phát triển."
-- Phân biệt rõ tác giả phần mềm T-TTS với tác giả mô hình giọng nói VieNeu-TTS.
-- Hiển thị tình trạng bản quyền hiện tại của máy tính, Machine ID và nút mở cửa sổ kích hoạt key mới.
+Thiết kế trang trọng, làm nổi bật tác giả Đại úy Nguyễn Văn Tiệp:
+- Phù hiệu chính thức của QUÂN ĐỘI NHÂN DÂN VIỆT NAM.
+- Phân định rõ ràng:
+  * Tác giả phát triển phần mềm T-TTS: Đại úy Nguyễn Văn Tiệp
+  * Tác giả mô hình lõi VieNeu-TTS v3 Turbo: Phạm Nguyễn Ngọc Bảo
+- Trạng thái bản quyền hiện tại, Machine ID và nút mở cửa sổ kích hoạt key.
 """
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Optional
 
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QFont, QColor
+from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import (
     QWidget,
     QVBoxLayout,
@@ -53,79 +52,119 @@ class PageAbout(QWidget):
         layout.setSpacing(16)
 
         # -------------------------------------------------------------
-        # 1. THẺ TÁC GIẢ PHÁT TRIỂN (AUTHOR HIGHLIGHT CARD)
+        # 1. THẺ TÔN VINH TÁC GIẢ VỚI LOGO QUÂN ĐỘI NHÂN DÂN VIỆT NAM
         # -------------------------------------------------------------
         author_card = QFrame()
         author_card.setProperty("class", "CardFrame")
         author_card.setStyleSheet(
-            "background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #101827, stop:1 #172554);"
-            "border: 2px solid #1687FF; border-radius: 10px; padding: 18px;"
+            "QFrame { background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #122415, stop:1 #1C3A20); "
+            "border: 2px solid #FFD700; border-radius: 10px; }"
         )
-        ac_layout = QVBoxLayout(author_card)
-        ac_layout.setContentsMargins(18, 16, 18, 16)
-        ac_layout.setSpacing(8)
+        ac_main_layout = QHBoxLayout(author_card)
+        ac_main_layout.setContentsMargins(20, 18, 20, 18)
+        ac_main_layout.setSpacing(20)
 
-        # Header Huy hiệu & Tên Ứng dụng
+        # Phù hiệu Quân đội Nhân dân Việt Nam bên trái
+        lbl_logo = QLabel()
+        lbl_logo.setAlignment(Qt.AlignCenter)
+        logo_path = Path(__file__).resolve().parent.parent / "assets" / "logo_quan_doi.png"
+        if not logo_path.exists():
+            logo_path = Path.cwd() / "gui" / "assets" / "logo_quan_doi.png"
+        if logo_path.exists():
+            pm = QPixmap(str(logo_path)).scaled(85, 115, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            lbl_logo.setPixmap(pm)
+        else:
+            lbl_logo.setText("⭐")
+            lbl_logo.setStyleSheet("font-size: 54px; color: #FFD700;")
+        ac_main_layout.addWidget(lbl_logo)
+
+        # Khối nội dung thông tin tác giả
+        ac_layout = QVBoxLayout()
+        ac_layout.setSpacing(6)
+
+        # Header Huy hiệu
         badge_row = QHBoxLayout()
+        badge_row.setSpacing(8)
+
         app_tag = QLabel("T-TTS v1.0.1")
         app_tag.setStyleSheet(
-            "background-color: #1687FF; color: #FFFFFF; font-weight: bold; "
-            "padding: 4px 12px; border-radius: 4px; font-size: 13px;"
+            "background-color: #C92A2A; color: #FFD700; font-weight: 800; "
+            "padding: 4px 12px; border-radius: 4px; font-size: 13px; border: 1px solid #FFD700;"
         )
         badge_row.addWidget(app_tag)
 
+        army_tag = QLabel("QUÂN ĐỘI NHÂN DÂN VIỆT NAM")
+        army_tag.setStyleSheet(
+            "background-color: rgba(234, 179, 8, 0.15); color: #FFD700; "
+            "border: 1px solid #EAB308; padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: bold;"
+        )
+        badge_row.addWidget(army_tag)
+
         offline_tag = QLabel("OFFLINE DESKTOP")
         offline_tag.setStyleSheet(
-            "background-color: rgba(34, 211, 238, 0.15); color: #22D3EE; "
-            "border: 1px solid #22D3EE; padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: bold;"
+            "background-color: rgba(34, 197, 94, 0.15); color: #4ADE80; "
+            "border: 1px solid #22C55E; padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: bold;"
         )
         badge_row.addWidget(offline_tag)
         badge_row.addStretch()
         ac_layout.addLayout(badge_row)
 
-        lbl_intro = QLabel("PHẦN MỀM CHUYỂN VĂN BẢN THÀNH GIỌNG NÓI TIẾNG VIỆT")
-        lbl_intro.setStyleSheet("color: #94A3B8; font-size: 12px; font-weight: 600; letter-spacing: 0.5px;")
+        lbl_intro = QLabel("PHẦN MỀM CHUYỂN VĂN BẢN THÀNH GIỌNG NÓI TIẾNG VIỆT CHUYÊN NGHIỆP")
+        lbl_intro.setStyleSheet("color: #E2ECE1; font-size: 12px; font-weight: 600; letter-spacing: 0.5px;")
         ac_layout.addWidget(lbl_intro)
 
-        # ĐIỂM NHẤN CHÍNH: TÁC GIẢ PHÁT TRIỂN
-        author_title_lbl = QLabel("PHÁT TRIỂN BỞI")
-        author_title_lbl.setStyleSheet("color: #F59E0B; font-size: 12px; font-weight: bold; letter-spacing: 1px; margin-top: 6px;")
+        # TÁC GIẢ CHÍNH
+        author_title_lbl = QLabel("TÁC GIẢ & KIẾN TRÚC SƯ PHẦN MỀM:")
+        author_title_lbl.setStyleSheet("color: #FFD700; font-size: 12px; font-weight: bold; letter-spacing: 1px; margin-top: 4px;")
         ac_layout.addWidget(author_title_lbl)
 
         author_name_lbl = QLabel("Đại úy Nguyễn Văn Tiệp")
         author_name_lbl.setStyleSheet(
-            "color: #FFFFFF; font-size: 26px; font-weight: bold; "
-            "font-family: 'Segoe UI', Arial, sans-serif; letter-spacing: 0.5px;"
+            "color: #FFFFFF; font-size: 26px; font-weight: 800; "
+            "letter-spacing: 0.5px; padding-bottom: 2px;"
         )
         ac_layout.addWidget(author_name_lbl)
 
-        # Mô tả chính thức
-        desc_lbl = QLabel(
-            "Phần mềm chuyển văn bản thành giọng nói tiếng Việt, tích hợp mô hình VieNeu-TTS v3 Turbo sử dụng ONNX Runtime CPU."
+        lbl_rank = QLabel("Quân hàm: Đại úy · Quân đội nhân dân Việt Nam")
+        lbl_rank.setStyleSheet("color: #FFD700; font-size: 12px; font-weight: 600;")
+        ac_layout.addWidget(lbl_rank)
+
+        lbl_desc = QLabel(
+            "Phần mềm được phát triển phục vụ công tác chuyển đổi văn bản thành giọng nói tiếng Việt chất lượng cao, "
+            "hoạt động 100% offline, tích hợp công nghệ suy luận ONNX Runtime CPU tối ưu cho máy tính cá nhân."
         )
-        desc_lbl.setWordWrap(True)
-        desc_lbl.setStyleSheet("color: #E2E8F0; font-size: 13px; line-height: 1.5; margin-top: 4px;")
-        ac_layout.addWidget(desc_lbl)
+        lbl_desc.setStyleSheet("color: #A3BCA0; font-size: 12px; line-height: 1.4;")
+        lbl_desc.setWordWrap(True)
+        ac_layout.addWidget(lbl_desc)
 
-        # Dải phân cách nhẹ
-        sep = QFrame()
-        sep.setFrameShape(QFrame.HLine)
-        sep.setStyleSheet("color: #28364A; margin-top: 8px; margin-bottom: 8px;")
-        ac_layout.addWidget(sep)
-
-        # Ghi nhận bản quyền mô hình VieNeu-TTS (Phân biệt rõ ràng)
-        model_credit_lbl = QLabel(
-            "<b>Thông tin mô hình:</b> Mô hình VieNeu-TTS do <b>Phạm Nguyễn Ngọc Bảo</b> phát triển.<br>"
-            "<i>(T-TTS sử dụng bộ suy luận VieNeu ONNX Runtime CPU chính thức theo giấy phép mã nguồn mở).</i>"
-        )
-        model_credit_lbl.setWordWrap(True)
-        model_credit_lbl.setStyleSheet("color: #94A3B8; font-size: 12px; line-height: 1.4;")
-        ac_layout.addWidget(model_credit_lbl)
-
+        ac_main_layout.addLayout(ac_layout, 1)
         layout.addWidget(author_card)
 
         # -------------------------------------------------------------
-        # 2. KHUNG TRẠNG THÁI BẢN QUYỀN MÁY TÍNH
+        # 2. GHI NHẬN TÁC GIẢ MÔ HÌNH VIE-NEU TTS
+        # -------------------------------------------------------------
+        model_card = QFrame()
+        model_card.setProperty("class", "CardFrame")
+        mc_layout = QVBoxLayout(model_card)
+        mc_layout.setContentsMargins(16, 12, 16, 12)
+        mc_layout.setSpacing(6)
+
+        mc_title = QLabel("🔬 CÔNG NGHỆ SUY LUẬN & MÔ HÌNH ÂM THANH LÕI")
+        mc_title.setProperty("class", "CardTitle")
+        mc_layout.addWidget(mc_title)
+
+        lbl_model_credit = QLabel(
+            "Mô hình giọng nói: <b>VieNeu-TTS v3 Turbo</b> do tác giả <b>Phạm Nguyễn Ngọc Bảo</b> phát triển.<br>"
+            "Kiến trúc suy luận: <i>ONNX Runtime CPU INT8</i> đa luồng (100% Offline, độc lập, không yêu cầu card đồ họa rời GPU)."
+        )
+        lbl_model_credit.setStyleSheet("color: #E2ECE1; font-size: 12px; line-height: 1.4;")
+        lbl_model_credit.setWordWrap(True)
+        mc_layout.addWidget(lbl_model_credit)
+
+        layout.addWidget(model_card)
+
+        # -------------------------------------------------------------
+        # 3. THẺ TRẠNG THÁI BẢN QUYỀN & MÃ MÁY (MACHINE ID)
         # -------------------------------------------------------------
         lic_card = QFrame()
         lic_card.setProperty("class", "CardFrame")
@@ -133,83 +172,76 @@ class PageAbout(QWidget):
         lc_layout.setContentsMargins(16, 14, 16, 14)
         lc_layout.setSpacing(10)
 
-        lc_title = QLabel("🛡️ TRẠNG THÁI BẢN QUYỀN TRÊN THIẾT BỊ NÀY")
+        lc_title_row = QHBoxLayout()
+        lc_title = QLabel("🛡️ TRẠNG THÁI BẢN QUYỀN MÁY TÍNH HIỆN TẠI")
         lc_title.setProperty("class", "CardTitle")
-        lc_layout.addWidget(lc_title)
+        lc_title_row.addWidget(lc_title)
+        lc_title_row.addStretch()
 
-        # Hàng Machine ID
-        mid_layout = QHBoxLayout()
-        mid_title = QLabel("Mã Máy Tính (Machine ID):")
-        mid_title.setStyleSheet("color: #F1F5F9; font-weight: bold;")
-        mid_layout.addWidget(mid_title)
+        self.btn_open_act = QPushButton("🔑 Kích Hoạt Bản Quyền Mới")
+        self.btn_open_act.setProperty("class", "GoldBtn")
+        self.btn_open_act.clicked.connect(self._on_activate_clicked)
+        lc_title_row.addWidget(self.btn_open_act)
+        lc_layout.addLayout(lc_title_row)
 
-        self.mid_lbl = QLabel("")
-        self.mid_lbl.setStyleSheet("color: #22D3EE; font-family: Consolas; font-weight: bold; font-size: 13px;")
-        mid_layout.addWidget(self.mid_lbl)
+        # Machine ID Box
+        mid_box = QHBoxLayout()
+        lbl_mid_title = QLabel("Mã Định Danh Máy (Machine ID):")
+        lbl_mid_title.setStyleSheet("color: #FFD700; font-weight: bold; font-size: 12px;")
+        mid_box.addWidget(lbl_mid_title)
+
+        self.lbl_mid_val = QLabel("Đang tải...")
+        self.lbl_mid_val.setStyleSheet(
+            "background-color: #111F13; color: #4ADE80; font-family: 'Consolas', monospace; "
+            "font-size: 13px; font-weight: bold; padding: 6px 12px; border-radius: 6px; border: 1px solid #2F4D32;"
+        )
+        self.lbl_mid_val.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        mid_box.addWidget(self.lbl_mid_val)
 
         btn_copy_mid = QPushButton("📋 Sao chép")
         btn_copy_mid.setProperty("class", "SecondaryBtn")
-        btn_copy_mid.setCursor(Qt.PointingHandCursor)
-        btn_copy_mid.clicked.connect(self._copy_mid)
-        mid_layout.addWidget(btn_copy_mid)
+        btn_copy_mid.clicked.connect(self._copy_machine_id)
+        mid_box.addWidget(btn_copy_mid)
 
-        mid_layout.addStretch()
-        lc_layout.addLayout(mid_layout)
+        mid_box.addStretch()
+        lc_layout.addLayout(mid_box)
 
-        # Chi tiết bản quyền
-        self.lic_status_lbl = QLabel("")
-        self.lic_status_lbl.setStyleSheet("font-size: 13px; font-weight: 500;")
-        lc_layout.addWidget(self.lic_status_lbl)
+        # Thông tin chi tiết bản quyền
+        self.lbl_lic_status = QLabel("Trạng thái: Đang kiểm tra...")
+        self.lbl_lic_status.setStyleSheet("color: #E2ECE1; font-size: 13px; font-weight: 500;")
+        lc_layout.addWidget(self.lbl_lic_status)
 
-        self.lic_details_lbl = QLabel("")
-        self.lic_details_lbl.setWordWrap(True)
-        self.lic_details_lbl.setStyleSheet("color: #94A3B8; font-size: 12px; line-height: 1.6;")
-        lc_layout.addWidget(self.lic_details_lbl)
-
-        # Hàng nút kích hoạt
-        btn_row = QHBoxLayout()
-        self.btn_open_act = QPushButton("🔑  KÍCH HOẠT / NHẬP KEY MỚI")
-        self.btn_open_act.setProperty("class", "PrimaryBtn")
-        self.btn_open_act.setCursor(Qt.PointingHandCursor)
-        self.btn_open_act.clicked.connect(lambda: self.request_open_activation.emit())
-        btn_row.addWidget(self.btn_open_act)
-
-        btn_refresh_lic = QPushButton("🔄 Kiểm tra lại")
-        btn_refresh_lic.setProperty("class", "SecondaryBtn")
-        btn_refresh_lic.setCursor(Qt.PointingHandCursor)
-        btn_refresh_lic.clicked.connect(self.reload_license_info)
-        btn_row.addWidget(btn_refresh_lic)
-
-        btn_row.addStretch()
-        lc_layout.addLayout(btn_row)
+        self.lbl_lic_detail = QLabel("")
+        self.lbl_lic_detail.setStyleSheet("color: #9EB39B; font-size: 12px;")
+        lc_layout.addWidget(self.lbl_lic_detail)
 
         layout.addWidget(lic_card)
 
         # -------------------------------------------------------------
-        # 3. CHÍNH SÁCH BẢN QUYỀN VÀ BẢO HÀNH
+        # 4. CHÍNH SÁCH 5 GÓI BẢN QUYỀN
         # -------------------------------------------------------------
         policy_card = QFrame()
         policy_card.setProperty("class", "CardFrame")
         pc_layout = QVBoxLayout(policy_card)
-        pc_layout.setContentsMargins(16, 14, 16, 14)
+        pc_layout.setContentsMargins(16, 12, 16, 12)
         pc_layout.setSpacing(6)
 
-        pol_title = QLabel("📜 ĐIỀU KHOẢN SỬ DỤNG & BẢO ĐẢM DỮ LIỆU")
-        pol_title.setProperty("class", "CardTitle")
-        pc_layout.addWidget(pol_title)
+        pc_title = QLabel("📜 5 GÓI BẢN QUYỀN CẤP PHÉP HỆ THỐNG")
+        pc_title.setProperty("class", "CardTitle")
+        pc_layout.addWidget(pc_title)
 
-        pol_text = QLabel(
-            "• Bản quyền phần mềm gắn liền với chữ ký số Ed25519 và mã phần cứng của máy tính.<br>"
-            "• Hỗ trợ đầy đủ 5 thời hạn bản quyền: <b>1 Ngày, 7 Ngày, 30 Ngày, 6 Tháng và Vĩnh Viễn</b>.<br>"
-            "• Khi giấy phép hết hạn, toàn bộ lịch sử, các file âm thanh đã xuất và các giọng đã nhân bản "
-            "<b>hoàn toàn được giữ nguyên</b> và không bao giờ bị xóa.<br>"
-            "• Hoạt động 100% offline, không gửi bất kỳ dữ liệu âm thanh hoặc văn bản nào của người dùng ra Internet."
+        plans_text = (
+            "• <b>1 Ngày (KEY-1D)</b>: Gói dùng thử nhanh trong 24 giờ kể từ khi kích hoạt.<br>"
+            "• <b>7 Ngày (KEY-7D)</b>: Gói trải nghiệm 1 tuần (168 giờ).<br>"
+            "• <b>30 Ngày (KEY-30D)</b>: Gói bản quyền 1 tháng tiêu chuẩn.<br>"
+            "• <b>6 Tháng (KEY-6M)</b>: Cấp phép nửa năm, tự động tính hạn theo lịch ngày thực tế.<br>"
+            "• <b>Vĩnh Viễn (KEY-PERM)</b>: Bản quyền trọn đời, không bao giờ hết hạn."
         )
-        pol_text.setWordWrap(True)
-        pol_text.setStyleSheet("color: #94A3B8; font-size: 12px; line-height: 1.6;")
-        pc_layout.addWidget(pol_text)
-        layout.addWidget(policy_card)
+        lbl_plans = QLabel(plans_text)
+        lbl_plans.setStyleSheet("color: #E2ECE1; font-size: 12px; line-height: 1.4;")
+        pc_layout.addWidget(lbl_plans)
 
+        layout.addWidget(policy_card)
         layout.addStretch()
 
         scroll.setWidget(content_widget)
@@ -218,37 +250,41 @@ class PageAbout(QWidget):
         main_layout.addWidget(scroll)
 
     def reload_license_info(self):
-        mid = tts_service.get_machine_id()
-        self.mid_lbl.setText(mid)
-
         info = tts_service.get_license_info()
-        is_active = info.get("is_active", False)
-        status = info.get("status", "unactivated")
-        plan = info.get("plan") or "Chưa có"
-        rem_str = info.get("remaining_formatted", "")
-        exp_str = info.get("expires_readable", "Chưa có")
-        first_act = info.get("first_activated_readable", "Chưa kích hoạt")
+        mid = info.get("machine_id", "KHÔNG XÁC ĐỊNH")
+        self.lbl_mid_val.setText(mid)
 
-        if is_active:
-            self.lic_status_lbl.setText("● BẢN QUYỀN HỢP LỆ — ĐANG HOẠT ĐỘNG BÌNH THƯỜNG")
-            self.lic_status_lbl.setStyleSheet("color: #22C55E; font-weight: bold; font-size: 13px;")
-            self.lic_details_lbl.setText(
-                f"• Gói bản quyền: <b>{plan}</b><br>"
-                f"• Thời hạn còn lại: <b>{rem_str}</b><br>"
-                f"• Kích hoạt lần đầu: {first_act}<br>"
-                f"• Hạn sử dụng: {exp_str}"
+        status = info.get("status", "unknown")
+        plan = info.get("plan", "none").upper()
+        days_left = info.get("days_left", 0)
+        expires_at = info.get("expires_at")
+
+        if status == "active":
+            if plan == "PERMANENT":
+                self.lbl_lic_status.setText("Trạng thái: <b style='color:#FFD700;'>ĐÃ KÍCH HOẠT VĨNH VIỄN (TRỌN ĐỜI)</b>")
+                self.lbl_lic_detail.setText("Bản quyền trọn đời không giới hạn thời gian sử dụng.")
+            else:
+                self.lbl_lic_status.setText(
+                    f"Trạng thái: <b style='color:#4ADE80;'>ĐANG HOẠT ĐỘNG (Gói {plan})</b> — Còn {days_left} ngày"
+                )
+                self.lbl_lic_detail.setText(f"Hạn sử dụng đến: {expires_at or 'Không giới hạn'}")
+        elif status == "trial":
+            self.lbl_lic_status.setText(
+                f"Trạng thái: <b style='color:#FDE047;'>DÙNG THỬ (TRIAL)</b> — Còn {days_left} ngày"
             )
+            self.lbl_lic_detail.setText(f"Hạn dùng thử: {expires_at or 'N/A'}")
+        elif status == "expired":
+            self.lbl_lic_status.setText("Trạng thái: <b style='color:#F87171;'>BẢN QUYỀN ĐÃ HẾT HẠN</b>")
+            self.lbl_lic_detail.setText("Vui lòng kích hoạt key mới để tiếp tục sử dụng phần mềm.")
         else:
-            self.lic_status_lbl.setText("✕ CHƯA KÍCH HOẠT HOẶC ĐÃ HẾT HẠN SỬ DỤNG")
-            self.lic_status_lbl.setStyleSheet("color: #EF4444; font-weight: bold; font-size: 13px;")
-            self.lic_details_lbl.setText(
-                f"• Trạng thái: {info.get('status_message')}<br>"
-                f"• Gói gần nhất: {plan}<br>"
-                f"• Hãy bấm nút <b>'KÍCH HOẠT / NHẬP KEY MỚI'</b> bên dưới để tiếp tục sử dụng."
-            )
+            self.lbl_lic_status.setText("Trạng thái: <b style='color:#F87171;'>CHƯA KÍCH HOẠT</b>")
+            self.lbl_lic_detail.setText("Nhấn nút 'Kích Hoạt Bản Quyền Mới' ở trên để nhập key.")
 
-    def _copy_mid(self):
-        mid = self.mid_lbl.text().strip()
-        if mid:
+    def _copy_machine_id(self):
+        mid = self.lbl_mid_val.text()
+        if mid and mid != "Đang tải...":
             QApplication.clipboard().setText(mid)
-            QMessageBox.information(self, "Đã sao chép", f"Đã sao chép Mã Máy:\n\n{mid}")
+            QMessageBox.information(self, "Đã Sao Chép", f"Đã sao chép Machine ID vào bộ nhớ tạm:\n{mid}")
+
+    def _on_activate_clicked(self):
+        self.request_open_activation.emit()
