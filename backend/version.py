@@ -10,9 +10,9 @@ import json
 from pathlib import Path
 from typing import Dict, Any, Tuple
 
-APP_VERSION = "3.0.1"
+APP_VERSION = "3.1.0"
 APP_NAME = "T-TTS"
-APP_DISPLAY_NAME = "T-TTS v3.0.1 — Hệ Thống Trợ Lý Giọng Nói Quân Đội"
+APP_DISPLAY_NAME = "T-TTS v3.1.0 — Hệ Thống Trợ Lý Giọng Nói Quân Đội"
 APP_AUTHOR = "Nguyễn Văn Tiệp"
 APP_ID = "com.nguyenvantiep.ttts"
 
