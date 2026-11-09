@@ -1096,8 +1096,12 @@ class PageAudioStudio(QWidget):
         temp_input = Path(tempfile.gettempdir()) / f"studio_dsp_in_{os.getpid()}.wav"
         self.current_audio.export(str(temp_input), format="wav")
 
+        has_sel = self.waveform.has_selection()
+        sel_start = self.waveform.sel_start_ms if has_sel else None
+        sel_end = self.waveform.sel_end_ms if has_sel else None
+
         from gui.dialog_audio_enhancement import AudioEnhancementDialog
-        dlg = AudioEnhancementDialog(input_wav_path=temp_input, parent=self)
+        dlg = AudioEnhancementDialog(input_wav_path=temp_input, start_ms=sel_start, end_ms=sel_end, parent=self)
         if dlg.exec() == QDialog.Accepted:
             enhanced_path = getattr(dlg, "final_enhanced_path", None)
             if enhanced_path and Path(enhanced_path).is_file():

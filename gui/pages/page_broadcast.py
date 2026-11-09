@@ -586,10 +586,17 @@ class PageBroadcast(QWidget):
         cfg_row.addWidget(self.radio_wav)
         cfg_row.addWidget(self.radio_mp3)
 
-        self.chk_dsp_mastering = QCheckBox("✨ Nâng cấp DSP (EBU R128 / Khử nhiễu)")
+        self.chk_dsp_mastering = QCheckBox("✨ Nâng cấp DSP:")
         self.chk_dsp_mastering.setChecked(True)
         self.chk_dsp_mastering.setToolTip("Tự động áp dụng bộ lọc phát thanh chuẩn hóa âm lượng EBU R128 và khử nhiễu trước khi xuất tệp")
         cfg_row.addWidget(self.chk_dsp_mastering)
+
+        self.combo_dsp_preset = QComboBox()
+        self.combo_dsp_preset.addItem("🎖️ Phát thanh Quân đội", "military_narration")
+        self.combo_dsp_preset.addItem("📡 Chuẩn EBU R128 (-23 LUFS)", "broadcast")
+        self.combo_dsp_preset.addItem("🎵 Giọng đọc + Nhạc nền", "voice_bgm")
+        self.combo_dsp_preset.addItem("🎙️ Thuyết minh Studio", "studio_voice")
+        cfg_row.addWidget(self.combo_dsp_preset)
 
         ec_layout.addLayout(cfg_row)
 
@@ -1337,8 +1344,10 @@ class PageBroadcast(QWidget):
                 if raw_fp.is_file():
                     from backend.audio_enhancement import audio_enhancement_engine, PRESETS
                     dsp_out = raw_fp.parent / f"{raw_fp.stem}_mastered{raw_fp.suffix}"
+                    pkey = self.combo_dsp_preset.currentData() if hasattr(self, "combo_dsp_preset") else "military_narration"
+                    cfg = PRESETS.get(pkey, PRESETS.get("broadcast_military"))
                     dsp_res = audio_enhancement_engine.enhance_audio(
-                        raw_fp, dsp_out, config=PRESETS["broadcast_military"]
+                        raw_fp, dsp_out, config=cfg
                     )
                     if dsp_res.get("success"):
                         res["file_path"] = str(dsp_out)
