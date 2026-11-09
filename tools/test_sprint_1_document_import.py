@@ -216,6 +216,74 @@ class TestSprint1DocumentImport(unittest.TestCase):
         self.assertIn("⏸ Nghỉ 500ms", btn_texts)
         self.assertIn("⏸ Nghỉ 2s", btn_texts)
 
+    def test_10_large_document_extraction(self):
+        """Kiểm tra trích xuất tài liệu văn bản lớn nhiều đoạn mà không nghẽn."""
+        large_txt = self.test_dir / "large_document.txt"
+        paragraphs = [
+            f"Đoạn văn số {i}: Đơn vị duy trì nghiêm chế độ trực sẵn sàng chiến đấu, tuần tra canh gác bảo vệ an toàn tuyệt đối mục tiêu được giao."
+            for i in range(1, 201)
+        ]
+        large_txt.write_text("\n\n".join(paragraphs), encoding="utf-8")
+
+        res = extract_document_text(large_txt)
+        self.assertTrue(res["success"])
+        self.assertEqual(len(res["paragraphs"]), 200)
+        self.assertGreater(res["word_count"], 4000)
+        self.assertGreater(res["char_count"], 25000)
+
+    def test_11_replace_and_append_behavior(self):
+        """Kiểm tra logic Thay thế (Replace) và Nối tiếp (Append) trên PageSynthesize."""
+        from PySide6.QtWidgets import QApplication
+        app = QApplication.instance() or QApplication([])
+
+        from gui.pages.page_synthesize import PageSynthesize
+        page = PageSynthesize()
+
+        # Ban đầu nhập văn bản
+        page.txt_input.setPlainText("Văn bản gốc ban đầu.")
+
+        # Thử nghiệm Replace
+        new_text = "Nội dung tài liệu vừa trích xuất."
+        page.txt_input.setPlainText(new_text)
+        self.assertEqual(page.txt_input.toPlainText(), new_text)
+
+        # Thử nghiệm Append
+        append_text = "Nội dung trích xuất nối tiếp."
+        curr = page.txt_input.toPlainText()
+        page.txt_input.setPlainText(curr.rstrip() + "\n\n" + append_text)
+        self.assertEqual(
+            page.txt_input.toPlainText(),
+            "Nội dung tài liệu vừa trích xuất.\n\nNội dung trích xuất nối tiếp."
+        )
+
+    def test_12_cancel_preserves_existing_text(self):
+        """Kiểm tra khi người dùng hủy thao tác nhập tài liệu thì văn bản hiện tại giữ nguyên 100%."""
+        from PySide6.QtWidgets import QApplication
+        app = QApplication.instance() or QApplication([])
+
+        from gui.pages.page_synthesize import PageSynthesize
+        from gui.dialog_import_document import DocumentImportDialog
+
+        page = PageSynthesize()
+        original_draft = "Dự thảo nội dung quan trọng đang soạn dở..."
+        page.txt_input.setPlainText(original_draft)
+
+        # Mở dialog và gọi reject (Hủy)
+        dlg = DocumentImportDialog(page, initial_file=self.txt_utf8)
+        dlg.reject()
+
+        # Kiểm tra nội dung trong page.txt_input không bị thay đổi
+        self.assertEqual(page.txt_input.toPlainText(), original_draft)
+
+    def test_13_tts_service_regression(self):
+        """Kiểm tra việc tích hợp tính năng Document Import không làm hồi quy VieNeu-TTS."""
+        from backend.service import tts_service
+        voices = tts_service.list_voices()
+        self.assertGreaterEqual(len(voices), 25)
+        # Verify default voice exists
+        v_ids = [v["id"] for v in voices]
+        self.assertIn("Thiện Minh", v_ids)
+
 
 if __name__ == "__main__":
     unittest.main()

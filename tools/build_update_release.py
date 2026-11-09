@@ -146,44 +146,42 @@ def main():
 
 ## 🌟 CÓ GÌ MỚI TRONG BẢN v{APP_VERSION}?
 
-### 1. 📅 Phân Hệ Schedule Studio (Phát Thanh & Nhắc Việc Tự Động)
-- Đặt lịch phát âm thanh và tổng hợp giọng nói tự động một lần, hàng ngày, hoặc hàng tuần.
-- Quản lý danh sách phát thanh đa nguồn (Audio Playlist Studio): phát tuần tự nhiều bản tin trong một khung giờ.
-- Bộ chọn nguồn phong phú: Tệp âm thanh máy tính (WAV/MP3), Lịch sử TTS, Dự án Audio Studio, Dự án Broadcast Studio.
-- Chuyển đổi Văn bản sang TTS trực tiếp (Document-to-TTS): Nạp tệp Word (.docx) hoặc Text (.txt), tự động trích xuất nội dung, chỉnh sửa, chọn giọng đọc và tổng hợp vào Playlist.
-- Cấu hình khoảng nghỉ giữa các bản tin (pause_after), tự động phát hiện tệp bị di chuyển/xóa (Missing File warning) và hỗ trợ chọn lại đường dẫn (Relink).
-- Điều khiển phát sóng thời gian thực (Dừng / Tạm dừng / Tiếp tục) với giao diện Live Broadcast trực quan.
+### 1. 📂 Nhập Tài Liệu Văn Bản Thông Minh (Document Import)
+- **Hỗ trợ đa định dạng:** Microsoft Word (.docx), PDF (.pdf) đa trang, Văn bản thuần (.txt) tự động nhận diện mã hóa Unicode UTF-8, UTF-8 BOM, CP1258.
+- **Trích xuất nền non-blocking:** Worker Thread xử lý ngầm, thanh tiến trình thực tế, hỗ trợ hủy ngang an toàn không gây treo giao diện.
+- **Thống kê và xem trước trực quan:** Số trang, số từ, số ký tự, ước tính thời lượng phát thanh, cảnh báo PDF bản scan thiếu text layer.
+- **Linh hoạt chèn nội dung:** Tùy chọn Thay thế (Replace), Nối tiếp (Append) hoặc Tạo dự án tài liệu mới.
+- **Bảo toàn giao diện:** Tích hợp nút `📂 Nhập tài liệu` cạnh `📋 Dán từ Clipboard` trong Text Editor, giữ nguyên các nút cảm xúc [cười], [nghỉ 500ms], [nghỉ 2s].
 
-### 2. 🎚️ Phân Hệ Audio Studio (Biên Tập Âm Thanh Phòng Thu Chuyên Nghiệp)
-- Tích hợp đồ thị sóng âm Waveform thời gian thực với thanh con trỏ (playhead) và vùng chọn (selection).
-- Tính năng Waveform Zoom chuyên nghiệp:
-  + Cuộn chuột (Wheel) hoặc Ctrl+Wheel: Phóng to / thu nhỏ trục thời gian (Horizontal Zoom) quanh vị trí con trỏ chuột.
-  + Shift + Cuộn chuột: Phóng to / thu nhỏ biên độ dạng sóng (Vertical Zoom từ 0.2x đến 5.0x).
-  + Kéo chuột phải / chuột giữa để trượt (Pan) timeline khi đang zoom.
-  + Thanh cuộn ngang Timeline (Horizontal Scrollbar) đồng bộ hai chiều.
-  + Thước đo thời gian thông minh tự động điều chỉnh vạch chia theo mức phóng to.
-  + Giữ nguyên tuyệt đối vị trí Playhead và Vùng chọn (Selection), không làm lệch âm thanh gốc.
-  + Thuật toán Downsampling vector hóa bằng NumPy với bộ nhớ đệm (Cache) đỉnh sóng peaks, mượt mà 60 FPS không tốn RAM.
-- Công cụ biên tập hoàn chỉnh: Cắt (Cut), Sao chép (Copy), Dán (Paste), Xóa (Delete), Cắt tỉa (Trim), Tách đoạn (Split).
-- Xử lý hiệu ứng âm thanh: Điều chỉnh Gain dB, Mờ đầu (Fade In), Mờ cuối (Fade Out), Chuẩn hóa (Normalize) và chèn khoảng lặng.
-- Hoàn tác không giới hạn (Undo/Redo) và xuất tệp định dạng chuẩn Studio WAV/MP3.
+### 2. ✨ Phân Hệ Xử Lý Nâng Cao Âm Thanh DSP (Audio Enhancement 8.1 - 8.8)
+- **8.1 Giảm nhiễu thích ứng (Adaptive Noise Reduction):** Bộ lọc FFT afftdn lọc tạp âm phòng thu, kết hợp High-pass (80Hz) chống rung mic và Low-pass (12kHz) chống rít.
+- **8.2 Voice Clarity Equalizer (EQ 5 Dải):** Cân bằng âm thanh tối ưu cho phụ âm và ngữ điệu tiếng Việt: Dải ấm (250Hz), cắt nghẹt (600Hz), dải rõ chữ sắc nét (3.5kHz), độ thoáng không gian (10kHz).
+- **8.3 Chuẩn hóa âm lượng EBU R128 LUFS:** Đạt chuẩn phát thanh truyền hình quốc tế và quân sự với Integrated Loudness -16.0 LUFS, LRA 7.0, True Peak trần -1.5 dBFS.
+- **8.4 Bộ giảm âm gió (De-Esser):** Triệt tiêu hiện tượng xì rít chói tai của các âm gió /s/, /x/, /tr/ trong tiếng Việt.
+- **8.5 Speech Dynamic Compressor:** Nén dải động cân bằng giọng đọc to/nhỏ, mang lại chất giọng phát thanh dầy dặn, đầm ấm và truyền cảm.
+- **8.6 Bộ Presets chuyên dụng:**
+  + *Phát thanh Quân đội tiêu chuẩn*
+  + *Giọng ấm truyền cảm (Kể chuyện / Văn học)*
+  + *Rõ tiếng ngoài trời / Loa phóng thanh truyền thanh*
+  + *Phòng thu Podcast hiện đại*
+- **8.8 So sánh nghe thử A/B đồng bộ thời gian thực:** Chuyển đổi tức thì giữa bản Gốc và bản Đã nâng cấp DSP tại đúng vị trí con trỏ phát (Synchronized Playback).
 
-### 3. 🎙️ Phân Hệ Broadcast Studio 2.0 (Biên Tập Bản Tin Đa Tầng)
-- Hỗ trợ 7 loại phân đoạn phát thanh tiêu chuẩn: Lời mở đầu, Nhạc hiệu, Bản tin chính, Phỏng vấn, Phóng sự, Thông báo khẩn, Lời kết.
-- Cơ chế tạo giọng đọc độc lập từng phân đoạn với giọng đọc và tốc độ riêng biệt.
-- Tự động hạ âm lượng nhạc nền (Auto-Ducking) khi có lời đọc và phục hồi khi kết thúc, lặp nhạc nền thông minh.
-- Lưu trữ dự án định dạng JSON đồng bộ và bảo toàn mọi dữ liệu người dùng.
+### 3. 📝 Chuẩn Hóa Văn Bản Tiếng Việt & Dự Án Tài Liệu (Phase 9)
+- **Chuẩn hóa thông minh:** Tự động đọc ngày tháng năm ("22/12/1944" -> "ngày hai mươi hai tháng mười hai năm một nghìn chín trăm bốn mươi tư"), giờ phút ("08:30" -> "tám giờ rưỡi"), phần trăm ("100%"), số tiền tệ ("500.000 VNĐ").
+- **Mở rộng từ viết tắt quân sự & chính trị:** QĐNDVN, QĐND, CAND, BTL, BCHQS, QK, Đ/c, UBND, HĐND, TW...
+- **Phân đoạn câu thông minh (Smart Chunking):** Phân chia đoạn theo dấu ngắt câu (. ! ? ;), không bao giờ cắt ngang một từ tiếng Việt.
+- **Batch TTS Engine:** Hàng đợi tổng hợp giọng nói đa phân đoạn với theo dõi tiến trình, ETA, tạm dừng, tiếp tục, hủy và thử lại phân đoạn lỗi.
+- **Trung tâm xuất bản thống nhất (Export Center):** Xuất WAV (24k/44.1k/48kHz 16-bit) và MP3 (128k - 320kbps) tích hợp chuẩn hóa LUFS.
 
-### 4. 🚀 Hệ Thống Auto Update & Tải Bản Cập Nhật An Toàn
-- Tự động kiểm tra bản cập nhật mới từ GitHub Releases qua HTTPS an toàn.
-- Giao diện Dark Navy Blue hiện đại, hiển thị tiến trình tải trực quan và tùy chọn "Để sau" không ép buộc.
-- Xác minh toàn vẹn mã băm SHA-256 chống can thiệp hoặc tải thiếu file.
-- Tự động tạo snapshot sao lưu dữ liệu trước khi cài đặt nâng cấp.
+### 4. 🚀 Tự Động Cập Nhật An Toàn Tuyệt Đối (Auto Update v3.1.0)
+- Tự động nhận diện bản cập nhật v3.1.0 từ GitHub Releases qua HTTPS.
+- Tự động sao lưu toàn bộ dữ liệu người dùng, License Ed25519 và các dự án trước khi nâng cấp.
+- Cài đè an toàn qua Inno Setup với cờ `onlyifdoesntexist`, cam kết không mất mát bất kỳ dữ liệu nào.
 
 ## 🔐 BẢO TOÀN DỮ LIỆU & BẢN QUYỀN OFFLINE
 - Giữ nguyên mô hình VieNeu-TTS v3 Turbo ONNX CPU (100% Offline, không phụ thuộc GPU hay Internet).
 - Machine ID và bản quyền offline Ed25519 được giữ nguyên vẹn 100%.
-- Toàn bộ lịch sử phát thanh (`history.json`), danh mục giọng tùy biến (`custom_voices.json`) và các dự án được bảo vệ an toàn tuyệt đối qua cờ `uninsneveruninstall`.
+- Toàn bộ lịch sử phát thanh (`history.json`), danh mục giọng tùy biến (`custom_voices.json`) và các dự án được bảo vệ an toàn tuyệt đối.
 
 ## 📦 TẬP TIN PHÁT HÀNH VÀ MÃ BĂM SHA256
 ```

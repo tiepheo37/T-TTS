@@ -1,5 +1,5 @@
 ================================================================================
-🇻🇳 T-TTS v3.0.1 — HỆ THỐNG TRỢ LÝ GIỌNG NÓI QUÂN ĐỘI
+🇻🇳 T-TTS v3.1.0 — HỆ THỐNG TRỢ LÝ GIỌNG NÓI QUÂN ĐỘI
 PHẦN MỀM CHUYỂN VĂN BẢN THÀNH GIỌNG NÓI TIẾNG VIỆT (NATIVE WINDOWS DESKTOP)
 ================================================================================
 
