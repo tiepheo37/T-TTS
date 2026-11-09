@@ -585,6 +585,12 @@ class PageBroadcast(QWidget):
         self.fmt_group.addButton(self.radio_mp3)
         cfg_row.addWidget(self.radio_wav)
         cfg_row.addWidget(self.radio_mp3)
+
+        self.chk_dsp_mastering = QCheckBox("✨ Nâng cấp DSP (EBU R128 / Khử nhiễu)")
+        self.chk_dsp_mastering.setChecked(True)
+        self.chk_dsp_mastering.setToolTip("Tự động áp dụng bộ lọc phát thanh chuẩn hóa âm lượng EBU R128 và khử nhiễu trước khi xuất tệp")
+        cfg_row.addWidget(self.chk_dsp_mastering)
+
         ec_layout.addLayout(cfg_row)
 
         action_row = QHBoxLayout()
@@ -1325,6 +1331,18 @@ class PageBroadcast(QWidget):
                 intro_music_path=self.edit_intro_music.text().strip() or None,
                 outro_music_path=self.edit_outro_music.text().strip() or None,
             )
+            # Nếu người dùng bật Nâng cấp DSP Mastering, áp dụng bộ lọc EBU R128 + Lọc nhiễu
+            if res.get("success") and self.chk_dsp_mastering.isChecked():
+                raw_fp = Path(res.get("file_path", ""))
+                if raw_fp.is_file():
+                    from backend.audio_enhancement import audio_enhancement_engine, PRESETS
+                    dsp_out = raw_fp.parent / f"{raw_fp.stem}_mastered{raw_fp.suffix}"
+                    dsp_res = audio_enhancement_engine.enhance_audio(
+                        raw_fp, dsp_out, config=PRESETS["broadcast_military"]
+                    )
+                    if dsp_res.get("success"):
+                        res["file_path"] = str(dsp_out)
+                        res["duration_sec"] = get_audio_duration_safe(dsp_out)
             return res
 
         worker = FunctionTaskWorker(_export_fn)

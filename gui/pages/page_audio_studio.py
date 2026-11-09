@@ -427,6 +427,12 @@ class PageAudioStudio(QWidget):
         self.btn_bgm.clicked.connect(self.mix_bgm_dialog)
         t_layout.addWidget(self.btn_bgm)
 
+        self.btn_dsp = QPushButton("✨ Nâng Cấp DSP")
+        self.btn_dsp.setProperty("class", "SecondaryBtn")
+        self.btn_dsp.setToolTip("Bộ lọc nhiễu, 5-band EQ giọng nói, De-Esser, Compressor và chuẩn hóa EBU R128 LUFS")
+        self.btn_dsp.clicked.connect(self.enhance_audio_dialog)
+        t_layout.addWidget(self.btn_dsp)
+
         t_layout.addStretch()
         main_layout.addWidget(tools_card)
 
@@ -922,6 +928,26 @@ class PageAudioStudio(QWidget):
             notification_hub.notify_success.emit("Lồng Nhạc Nền Thành Công", f"Đã lồng nhạc: '{dlg.selected_file.name}' ({dlg.volume_db} dB).")
         except Exception as e:
             QMessageBox.critical(self, "Lỗi lồng nhạc", f"Không thể lồng nhạc nền:\n\n{e}")
+
+    def enhance_audio_dialog(self):
+        """Mở hộp thoại nâng cấp chất lượng âm thanh DSP."""
+        if self.current_audio is None or len(self.current_audio) == 0:
+            QMessageBox.warning(self, "Chưa Có Âm Thanh", "Vui lòng nhập hoặc nạp tệp âm thanh trước khi áp dụng DSP!")
+            return
+
+        # Lưu audio hiện tại ra file tạm để đưa vào dialog
+        temp_input = Path(tempfile.gettempdir()) / f"studio_dsp_in_{os.getpid()}.wav"
+        self.current_audio.export(str(temp_input), format="wav")
+
+        from gui.dialog_audio_enhancement import AudioEnhancementDialog
+        dlg = AudioEnhancementDialog(input_wav_path=temp_input, parent=self)
+        if dlg.exec() == QDialog.Accepted:
+            enhanced_path = getattr(dlg, "final_enhanced_path", None)
+            if enhanced_path and Path(enhanced_path).is_file():
+                self._push_undo_state()
+                self.current_audio = load_audio_segment_safe(enhanced_path)
+                self._refresh_audio_view()
+                notification_hub.notify_success.emit("Nâng Cấp Âm Thanh Thành Công", "Đã áp dụng chuỗi bộ lọc DSP cho âm thanh dự án.")
 
     # =========================================================================
     # ĐIỀU KHIỂN PHÁT ÂM THANH NATIVE (PLAYBACK)
