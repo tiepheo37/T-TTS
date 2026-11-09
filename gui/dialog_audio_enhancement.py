@@ -120,6 +120,7 @@ class AudioEnhancementDialog(QDialog):
         input_wav_path: str | Path,
         start_ms: Optional[int] = None,
         end_ms: Optional[int] = None,
+        initial_config: Optional[AudioEnhancementConfig] = None,
         parent: Optional[QWidget] = None,
     ):
         super().__init__(parent)
@@ -146,7 +147,10 @@ class AudioEnhancementDialog(QDialog):
         self._init_ui()
         self._refresh_presets_combo()
         self._measure_input_loudness()
-        self._load_preset("clean_voice")
+        if initial_config:
+            self._apply_config_to_ui(initial_config)
+        else:
+            self._load_preset("clean_voice")
         self._trigger_processing()
 
     def _init_ui(self):
@@ -166,6 +170,11 @@ class AudioEnhancementDialog(QDialog):
         lbl_title.setStyleSheet("color: #4ADE80; font-size: 13px;")
         top_row.addWidget(lbl_title)
         top_row.addStretch()
+
+        self.btn_open_analyzer = QPushButton("🔍 Phân Tích Thông Minh")
+        self.btn_open_analyzer.setToolTip("Đo lường 8 thông số âm học và tự động đề xuất cấu hình tối ưu")
+        self.btn_open_analyzer.clicked.connect(self._open_analyzer_dialog)
+        top_row.addWidget(self.btn_open_analyzer)
 
         self.btn_reset_pipeline = QPushButton("🔄 Khôi Phục Mặc Định")
         self.btn_reset_pipeline.setToolTip("Khôi phục cấu hình các bộ lọc về giá trị gốc")
@@ -774,12 +783,16 @@ class AudioEnhancementDialog(QDialog):
         except Exception:
             self.lbl_meter_in.setText("📊 <b>Độ to đầu vào:</b> Chưa đo được")
 
-    def _load_preset(self, preset_key: str):
-        all_p = PresetManager.list_all_presets()
-        if preset_key not in all_p:
-            return
-        cfg = all_p[preset_key]
+    def _open_analyzer_dialog(self):
+        """Mở hộp thoại phân tích chất lượng âm thanh 8 chỉ số âm học."""
+        from gui.dialog_voice_analyzer import VoiceQualityAnalyzerDialog
+        dlg = VoiceQualityAnalyzerDialog(self.input_path, self)
+        if dlg.exec() == QDialog.Accepted and dlg.applied_suggested_config:
+            self._apply_config_to_ui(dlg.applied_suggested_config)
+            self._trigger_processing()
 
+    def _apply_config_to_ui(self, cfg: AudioEnhancementConfig):
+        """Áp dụng các thông số từ AudioEnhancementConfig lên các điều khiển giao diện."""
         # 1. Noise reduction
         self.cb_nr.setChecked(cfg.enable_noise_reduction)
         self.slider_nr.setValue(int(cfg.noise_reduction_db))
@@ -819,6 +832,13 @@ class AudioEnhancementDialog(QDialog):
         self.cb_limiter.setChecked(cfg.enable_limiter)
         self.slider_lim_ceil.setValue(int(cfg.limiter_ceiling * 10))
         self.slider_lim_rel.setValue(int(cfg.limiter_release))
+
+    def _load_preset(self, preset_key: str):
+        all_p = PresetManager.list_all_presets()
+        if preset_key not in all_p:
+            return
+        cfg = all_p[preset_key]
+        self._apply_config_to_ui(cfg)
 
     def _get_current_config(self) -> AudioEnhancementConfig:
         return AudioEnhancementConfig(

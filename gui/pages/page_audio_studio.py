@@ -557,6 +557,12 @@ class PageAudioStudio(QWidget):
         self.btn_dsp.clicked.connect(self.enhance_audio_dialog)
         t_layout.addWidget(self.btn_dsp)
 
+        self.btn_analyze = QPushButton("🔍 Phân Tích Âm Thanh")
+        self.btn_analyze.setProperty("class", "SecondaryBtn")
+        self.btn_analyze.setToolTip("Đo đạc 8 thông số âm học LUFS, Clipping, Noise, Silence và gợi ý tối ưu")
+        self.btn_analyze.clicked.connect(self.analyze_audio_dialog)
+        t_layout.addWidget(self.btn_analyze)
+
         t_layout.addStretch()
         main_layout.addWidget(tools_card)
 
@@ -608,7 +614,7 @@ class PageAudioStudio(QWidget):
             self.btn_cut, self.btn_copy, self.btn_del, self.btn_trim,
             self.btn_split, self.btn_silence, self.btn_join,
             self.btn_gain, self.btn_fade_in, self.btn_fade_out,
-            self.btn_normalize, self.btn_bgm
+            self.btn_normalize, self.btn_bgm, self.btn_dsp, self.btn_analyze
         ):
             btn.setEnabled(has_audio)
 
@@ -1109,6 +1115,37 @@ class PageAudioStudio(QWidget):
                 self.current_audio = load_audio_segment_safe(enhanced_path)
                 self._refresh_audio_view()
                 notification_hub.notify_success.emit("Nâng Cấp Âm Thanh Thành Công", "Đã áp dụng chuỗi bộ lọc DSP cho âm thanh dự án.")
+
+    def analyze_audio_dialog(self):
+        """Mở hộp thoại phân tích chất lượng âm thanh 8 chỉ số âm học và gợi ý thông minh."""
+        if self.current_audio is None or len(self.current_audio) == 0:
+            QMessageBox.warning(self, "Chưa Có Âm Thanh", "Vui lòng nhập hoặc nạp tệp âm thanh trước khi phân tích!")
+            return
+
+        temp_input = Path(tempfile.gettempdir()) / f"studio_analyze_in_{os.getpid()}.wav"
+        self.current_audio.export(str(temp_input), format="wav")
+
+        from gui.dialog_voice_analyzer import VoiceQualityAnalyzerDialog
+        dlg = VoiceQualityAnalyzerDialog(input_wav_path=temp_input, parent=self)
+        if dlg.exec() == QDialog.Accepted and dlg.should_open_dsp:
+            from gui.dialog_audio_enhancement import AudioEnhancementDialog
+            has_sel = self.waveform.has_selection()
+            sel_start = self.waveform.sel_start_ms if has_sel else None
+            sel_end = self.waveform.sel_end_ms if has_sel else None
+            dsp_dlg = AudioEnhancementDialog(
+                input_wav_path=temp_input,
+                start_ms=sel_start,
+                end_ms=sel_end,
+                initial_config=dlg.applied_suggested_config,
+                parent=self,
+            )
+            if dsp_dlg.exec() == QDialog.Accepted:
+                enhanced_path = getattr(dsp_dlg, "final_enhanced_path", None)
+                if enhanced_path and Path(enhanced_path).is_file():
+                    self._push_undo_state()
+                    self.current_audio = load_audio_segment_safe(enhanced_path)
+                    self._refresh_audio_view()
+                    notification_hub.notify_success.emit("Nâng Cấp Âm Thanh Thành Công", "Đã áp dụng cấu hình đề xuất thông minh.")
 
     # =========================================================================
     # ĐIỀU KHIỂN PHÁT ÂM THANH NATIVE (PLAYBACK)

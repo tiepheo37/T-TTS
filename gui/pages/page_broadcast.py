@@ -527,6 +527,12 @@ class PageBroadcast(QWidget):
         self.chk_ducking = QCheckBox("Tự động hạ âm lượng khi có lời đọc (Auto-Ducking)")
         self.chk_ducking.setChecked(True)
         vol_row.addWidget(self.chk_ducking)
+
+        self.btn_smart_mix = QPushButton("🧠 Cân Bằng Thông Minh (Smart Mix)")
+        self.btn_smart_mix.setProperty("class", "SecondaryBtn")
+        self.btn_smart_mix.setToolTip("Tự động phân tích giọng đọc và nhạc nền để đề xuất tỷ lệ âm lượng và Ducking hoàn hảo")
+        self.btn_smart_mix.clicked.connect(self._smart_broadcast_mix_dialog)
+        vol_row.addWidget(self.btn_smart_mix)
         vol_row.addStretch()
         bcf_layout.addLayout(vol_row)
 
@@ -1229,6 +1235,72 @@ class PageBroadcast(QWidget):
             QMessageBox.information(self, "Chưa chọn nhạc", "Vui lòng chọn tệp nhạc nền trước khi nghe thử.")
             return
         self.play_segment_audio(bg_p)
+
+    def _smart_broadcast_mix_dialog(self):
+        """Phân tích cân bằng thông minh giữa giọng đọc và nhạc nền (Sprint 5 - 9.5)."""
+        bg_path_str = self.bg_path_edit.text().strip()
+        if not bg_path_str or not Path(bg_path_str).is_file():
+            QMessageBox.warning(
+                self,
+                "Chưa Chọn Nhạc Nền",
+                "Vui lòng chọn tệp nhạc nền trước khi thực hiện cân bằng âm thanh thông minh.",
+            )
+            return
+
+        # Tìm phân đoạn giọng đọc đầu tiên có tệp âm thanh hợp lệ
+        voice_path = None
+        for s in self.segments:
+            fp = s.get("file_path")
+            if fp and Path(fp).is_file():
+                voice_path = fp
+                break
+
+        if not voice_path:
+            QMessageBox.warning(
+                self,
+                "Chưa Có Giọng Đọc",
+                "Cần ít nhất một phân đoạn đã tạo âm thanh giọng đọc để phân tích cân bằng âm lượng.",
+            )
+            return
+
+        try:
+            from backend.intelligent_audio import smart_broadcast_mixer
+            res = smart_broadcast_mixer.analyze_mix_balance(voice_path, bg_path_str)
+            if not res.get("success"):
+                QMessageBox.critical(self, "Lỗi Phân Tích", f"Không thể phân tích: {res.get('error')}")
+                return
+
+            s_db = res["suggested_bgm_volume_db"]
+            # Chuyển đổi dB sang thang slider 5-50%
+            pct = int(round((s_db + 35.0) * 2.0))
+            pct = max(5, min(50, pct))
+
+            msg = (
+                f"📊 <b>KẾT QUẢ PHÂN TÍCH CÂN BẰNG PHÁT THANH:</b><br><br>"
+                f"• Mức năng lượng giọng đọc: <b>{res['voice_rms_dbfs']:.1f} dBFS</b> (LUFS: {res['voice_lufs']:.1f})<br>"
+                f"• Mức năng lượng nhạc nền: <b>{res['bgm_rms_dbfs']:.1f} dBFS</b><br>"
+                f"• Khuyến nghị âm lượng BGM: <b>{s_db:+.1f} dB</b> (khoảng <b>{pct}%</b> slider)<br>"
+                f"• Auto-Ducking khuyến nghị: <b>{res['ducking_attenuation_db']:.0f} dB</b> (Attack: {res['ducking_attack_ms']}ms, Release: {res['ducking_release_ms']}ms)<br><br>"
+                f"<i>{res['explanation']}</i><br><br>"
+                f"Bạn có muốn áp dụng mức âm lượng {pct}% và kích hoạt Auto-Ducking cho chương trình không?"
+            )
+            reply = QMessageBox.question(
+                self,
+                "🧠 Cân Bằng Thông Minh (Smart Broadcast Mixing)",
+                msg,
+                QMessageBox.Yes | QMessageBox.No,
+                QMessageBox.Yes,
+            )
+            if reply == QMessageBox.Yes:
+                self.bg_vol_slider.setValue(pct)
+                self.chk_ducking.setChecked(True)
+                self.chk_enable_bg.setChecked(True)
+                notification_hub.notify_success.emit(
+                    "Cân Bằng Thông Minh",
+                    f"Đã thiết lập âm lượng nhạc nền {pct}% và kích hoạt Auto-Ducking."
+                )
+        except Exception as ex:
+            QMessageBox.critical(self, "Lỗi Phân Tích", f"Đã xảy ra lỗi: {ex}")
 
     # =========================================================================
     # NGHE THỬ TOÀN BỘ CHƯƠNG TRÌNH (PREVIEW FULL PROGRAM)
