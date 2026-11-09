@@ -43,35 +43,23 @@ from PySide6.QtWidgets import (
     QHeaderView,
     QProgressBar,
     QApplication,
+    QCheckBox,
 )
 
 from backend.service import tts_service
 from backend.audio_player import audio_player
+from backend.document_reader import extract_document_text
+from backend.text_processor import TextProcessor
 
 
 def extract_text_from_file(file_path: Path) -> tuple[str, str]:
-    """Trích xuất nội dung văn bản từ tệp .docx hoặc .txt."""
-    ext = file_path.suffix.lower()
-    title = file_path.stem.replace("_", " ")
-
-    if ext == ".docx":
-        try:
-            import docx
-            doc = docx.Document(str(file_path))
-            paras = [p.text.strip() for p in doc.paragraphs if p.text.strip()]
-            content = "\n".join(paras)
-            return title, content
-        except Exception as e:
-            raise ValueError(f"Không thể đọc tệp Word '{file_path.name}': {e}")
-    else:
-        # Tệp txt hoặc các định dạng text khác
-        for enc in ["utf-8", "utf-8-sig", "cp1258", "latin-1"]:
-            try:
-                content = file_path.read_text(encoding=enc).strip()
-                return title, content
-            except Exception:
-                continue
-        raise ValueError(f"Không thể giải mã tệp văn bản '{file_path.name}'.")
+    """Trích xuất nội dung văn bản từ tệp Word (.docx), PDF (.pdf) hoặc Text (.txt)."""
+    res = extract_document_text(file_path)
+    if not res.get("success"):
+        raise ValueError(res.get("error", f"Không thể đọc tệp '{file_path.name}'"))
+    title = res.get("title") or file_path.stem.replace("_", " ")
+    content = (res.get("raw_text") or res.get("text", "")).strip()
+    return title, content
 
 
 class BatchWorker(QThread):
@@ -232,6 +220,11 @@ class PageBatch(QWidget):
         cfg_layout.addWidget(self.radio_wav)
         cfg_layout.addWidget(self.radio_mp3)
 
+        self.chk_normalize = QCheckBox("🧹 Chuẩn hóa văn bản & đọc số")
+        self.chk_normalize.setChecked(True)
+        self.chk_normalize.setToolTip("Tự động chuẩn hóa Unicode, đọc ngày tháng, giờ phút, tiền tệ và số tiếng Việt trước khi TTS")
+        cfg_layout.addWidget(self.chk_normalize)
+
         cfg_layout.addStretch()
 
         self.btn_select_dir = QPushButton("📁 Thư mục lưu...")
@@ -378,9 +371,9 @@ class PageBatch(QWidget):
     def _import_files(self):
         files, _ = QFileDialog.getOpenFileNames(
             self,
-            "Chọn các tệp Word (.docx) hoặc Văn bản (.txt)",
+            "Chọn các tệp Word (.docx), PDF (.pdf) hoặc Văn bản (.txt)",
             "",
-            "Tài liệu Word & Văn bản (*.docx *.txt *.doc);;Word Document (*.docx);;Văn bản Text (*.txt);;Tất cả (*.*)",
+            "Tài liệu (*.docx *.pdf *.txt);;Word Document (*.docx);;Tệp PDF (*.pdf);;Văn bản Text (*.txt);;Tất cả (*.*)",
         )
         if not files:
             return
@@ -571,9 +564,12 @@ class PageBatch(QWidget):
 
         # Thu thập các dòng với giọng đọc và tốc độ riêng của từng dòng
         batch_items = []
+        should_normalize = self.chk_normalize.isChecked()
         for r in range(row_count):
             row_data = self.batch_data[r] if r < len(self.batch_data) else {}
             text = row_data.get("text", "")
+            if should_normalize and text.strip():
+                text = TextProcessor.full_normalize(text)
 
             # Lấy giọng đọc được chọn riêng cho dòng này
             cb_w = self.table.cellWidget(r, 2)

@@ -207,6 +207,8 @@ class PageSynthesize(QWidget):
     """Trang Tạo Giọng Nói Chính (Giao diện Thẻ chuẩn Quân Đội)."""
 
     audio_generated = Signal(dict)
+    send_to_audio_studio = Signal(str)
+    send_to_broadcast = Signal(dict)
 
     def __init__(self, parent: Optional[QWidget] = None):
         super().__init__(parent)
@@ -548,6 +550,18 @@ class PageSynthesize(QWidget):
         btn_save_as.setProperty("class", "SecondaryBtn")
         btn_save_as.clicked.connect(self._save_as_file)
         player_btn_row.addWidget(btn_save_as)
+
+        self.btn_send_studio = QPushButton("🎚️ Mở trong Studio")
+        self.btn_send_studio.setToolTip("Chuyển tệp âm thanh sang Audio Studio để phân tích âm học và xử lý DSP")
+        self.btn_send_studio.setProperty("class", "SecondaryBtn")
+        self.btn_send_studio.clicked.connect(self._send_to_audio_studio)
+        player_btn_row.addWidget(self.btn_send_studio)
+
+        self.btn_send_broadcast = QPushButton("📻 Gửi sang Bản Tin")
+        self.btn_send_broadcast.setToolTip("Thêm tệp âm thanh này thành một phân đoạn mới trong Broadcast Studio")
+        self.btn_send_broadcast.setProperty("class", "SecondaryBtn")
+        self.btn_send_broadcast.clicked.connect(self._send_to_broadcast)
+        player_btn_row.addWidget(self.btn_send_broadcast)
 
         player_btn_row.addStretch()
         pc_layout.addLayout(player_btn_row)
@@ -951,3 +965,27 @@ class PageSynthesize(QWidget):
                 QMessageBox.information(self, "Lưu Thành Công", f"Đã lưu tệp âm thanh vào:\n{dest}")
             except Exception as e:
                 QMessageBox.critical(self, "Lỗi Lưu Tệp", f"Không thể lưu tệp: {e}")
+
+    def _send_to_audio_studio(self):
+        """Chuyển tệp âm thanh vừa tạo sang Audio Studio."""
+        if not self.current_result:
+            return
+        fp = self.current_result.get("file_path") or self.current_result.get("main_file") or self.current_result.get("wav_path") or ""
+        if fp and Path(fp).is_file():
+            self.send_to_audio_studio.emit(str(fp))
+
+    def _send_to_broadcast(self):
+        """Thêm tệp âm thanh vừa tạo thành một phân đoạn tin tức trong Broadcast Studio."""
+        if not self.current_result:
+            return
+        fp = self.current_result.get("file_path") or self.current_result.get("main_file") or self.current_result.get("wav_path") or ""
+        if fp and Path(fp).is_file():
+            p = Path(fp)
+            seg = {
+                "title": f"Bản đọc {self.selected_voice_id} - {p.stem}",
+                "file_path": str(p),
+                "text": self.txt_input.toPlainText()[:120],
+                "duration_sec": self.current_result.get("duration", 0.0),
+                "type": "news",
+            }
+            self.send_to_broadcast.emit(seg)

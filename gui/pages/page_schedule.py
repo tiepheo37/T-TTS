@@ -50,6 +50,7 @@ from backend.project_manager import project_manager
 from backend.audio_utils import get_audio_duration_safe
 from backend.audio_player import audio_player
 from backend.storage import init_storage
+from backend.document_reader import extract_document_text
 from gui.notification_hub import notification_hub
 from gui.task_worker import FunctionTaskWorker
 
@@ -63,25 +64,13 @@ def format_sec_to_time(sec: float) -> str:
 
 
 def extract_text_from_file(file_path: Path) -> tuple[str, str]:
-    """Trích xuất nội dung văn bản từ tệp Word (.docx) hoặc Văn bản (.txt)."""
-    ext = file_path.suffix.lower()
-    title = file_path.stem.replace("_", " ")
-
-    if ext == ".docx":
-        try:
-            import docx
-            doc = docx.Document(str(file_path))
-            paras = [p.text.strip() for p in doc.paragraphs if p.text.strip()]
-            return title, "\n".join(paras)
-        except Exception as e:
-            raise ValueError(f"Không thể đọc tệp Word '{file_path.name}': {e}")
-    else:
-        for enc in ["utf-8", "utf-8-sig", "cp1258", "latin-1"]:
-            try:
-                return title, file_path.read_text(encoding=enc).strip()
-            except Exception:
-                continue
-        raise ValueError(f"Không thể giải mã tệp văn bản '{file_path.name}'.")
+    """Trích xuất nội dung văn bản từ tệp Word (.docx), PDF (.pdf) hoặc Văn bản (.txt)."""
+    res = extract_document_text(file_path)
+    if not res.get("success"):
+        raise ValueError(res.get("error", f"Không thể đọc tệp '{file_path.name}'"))
+    title = res.get("title") or file_path.stem.replace("_", " ")
+    content = (res.get("raw_text") or res.get("text", "")).strip()
+    return title, content
 
 
 # =============================================================================
@@ -218,9 +207,9 @@ class DocumentToTTSDialog(QDialog):
     def _browse_file(self):
         f, _ = QFileDialog.getOpenFileName(
             self,
-            "Chọn tệp tài liệu",
+            "Chọn tệp tài liệu (Word, PDF, Text)",
             "",
-            "Tài liệu (*.docx *.txt);;Word Document (*.docx);;Text File (*.txt);;Tất cả (*.*)",
+            "Tài liệu (*.docx *.pdf *.txt);;Word Document (*.docx);;Tệp PDF (*.pdf);;Text File (*.txt);;Tất cả (*.*)",
         )
         if not f:
             return
@@ -1587,6 +1576,30 @@ class PageSchedule(QWidget):
 
     def _on_add_schedule(self):
         dlg = ScheduleEditorDialog(parent=self)
+        if dlg.exec() == QDialog.Accepted:
+            scheduler_engine.save_schedule(dlg.schedule_dict)
+            notification_hub.notify_success.emit("Tạo Lịch Thành Công", f"Đã thêm lịch: '{dlg.schedule_dict.get('name')}'")
+
+    def add_schedule_for_audio(self, audio_path: str | Path, title: str = ""):
+        """Thêm và mở hộp thoại tạo lịch phát mới với tệp âm thanh được chuyển từ các module khác."""
+        p = Path(audio_path).resolve()
+        if not p.is_file():
+            return
+        sched_data = {
+            "name": title or f"Phát {p.stem}",
+            "task_type": "playlist",
+            "playlist_items": [
+                {
+                    "title": title or p.stem,
+                    "file_path": str(p),
+                    "duration_sec": get_audio_duration_safe(p),
+                    "source": "file",
+                    "pause_after": 2.0,
+                }
+            ],
+            "repeat": "once",
+        }
+        dlg = ScheduleEditorDialog(schedule_dict=sched_data, parent=self)
         if dlg.exec() == QDialog.Accepted:
             scheduler_engine.save_schedule(dlg.schedule_dict)
             notification_hub.notify_success.emit("Tạo Lịch Thành Công", f"Đã thêm lịch: '{dlg.schedule_dict.get('name')}'")

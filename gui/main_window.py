@@ -310,6 +310,10 @@ class MainWindow(QMainWindow):
 
         # Kết nối sự kiện giữa các trang
         self.page_synth.audio_generated.connect(lambda _: self.page_history.reload_history())
+        self.page_synth.send_to_audio_studio.connect(self._on_synth_to_audio_studio)
+        self.page_synth.send_to_broadcast.connect(self._on_synth_to_broadcast)
+        self.page_audio_studio.send_to_broadcast.connect(self._on_audio_studio_to_broadcast)
+        self.page_audio_studio.send_to_schedule.connect(self._on_audio_studio_to_schedule)
         self.page_clone.voice_cloned.connect(self._on_voice_cloned)
         self.page_voices.voices_updated.connect(self._on_voices_updated)
         self.page_about.request_open_activation.connect(self._open_activation_dialog)
@@ -417,6 +421,22 @@ class MainWindow(QMainWindow):
     def _on_transfer_to_broadcast(self, items: list):
         self.page_broadcast.add_batch_items(items)
         self._switch_tab(3)
+
+    def _on_synth_to_audio_studio(self, file_path: str):
+        self._switch_tab(9)
+        self.page_audio_studio.load_audio_file(file_path)
+
+    def _on_synth_to_broadcast(self, seg_dict: dict):
+        self._switch_tab(3)
+        self.page_broadcast.add_segment(seg_dict)
+
+    def _on_audio_studio_to_broadcast(self, seg_dict: dict):
+        self._switch_tab(3)
+        self.page_broadcast.add_segment(seg_dict)
+
+    def _on_audio_studio_to_schedule(self, item_dict: dict):
+        self._switch_tab(8)
+        self.page_schedule.add_schedule_for_audio(item_dict.get("file_path", ""), item_dict.get("title", ""))
 
     def _check_background_update(self):
         """Khởi chạy tiểu trình kiểm tra cập nhật nền (không làm chậm ứng dụng)."""

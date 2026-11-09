@@ -672,3 +672,7 @@ class VietnameseTextProcessor:
             pattern = re.compile(re.escape(query), flags)
             new_text, n = pattern.subn(replacement, text, count=count)
             return new_text, n
+
+
+# Bí danh chuẩn hóa cho hệ thống
+TextProcessor = VietnameseTextProcessor

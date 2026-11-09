@@ -260,6 +260,9 @@ class AudioStudioExportDialog(QDialog):
 class PageAudioStudio(QWidget):
     """Trang Phân Hệ Biên Tập Âm Thanh Chuyên Nghiệp (Audio Studio)."""
 
+    send_to_broadcast = Signal(dict)
+    send_to_schedule = Signal(dict)
+
     def __init__(self, parent: Optional[QWidget] = None):
         super().__init__(parent)
 
@@ -345,6 +348,23 @@ class PageAudioStudio(QWidget):
         self.btn_redo.setProperty("class", "SecondaryBtn")
         self.btn_redo.clicked.connect(self.redo)
         tb_layout.addWidget(self.btn_redo)
+
+        sep2b = QFrame()
+        sep2b.setFrameShape(QFrame.VLine)
+        sep2b.setStyleSheet("color: #27472A;")
+        tb_layout.addWidget(sep2b)
+
+        self.btn_send_broadcast = QPushButton("📻 Gửi sang Bản Tin")
+        self.btn_send_broadcast.setProperty("class", "SecondaryBtn")
+        self.btn_send_broadcast.setToolTip("Gửi âm thanh hiện tại sang Bản Tin Phát Thanh")
+        self.btn_send_broadcast.clicked.connect(self._on_send_to_broadcast)
+        tb_layout.addWidget(self.btn_send_broadcast)
+
+        self.btn_send_schedule = QPushButton("📅 Lập Lịch Phát")
+        self.btn_send_schedule.setProperty("class", "SecondaryBtn")
+        self.btn_send_schedule.setToolTip("Lập lịch phát thanh tự động cho tệp âm thanh này")
+        self.btn_send_schedule.clicked.connect(self._on_send_to_schedule)
+        tb_layout.addWidget(self.btn_send_schedule)
 
         tb_layout.addStretch()
 
@@ -604,6 +624,8 @@ class PageAudioStudio(QWidget):
     def _update_ui_state(self):
         has_audio = self.current_audio is not None
         self.btn_export.setEnabled(has_audio)
+        self.btn_send_broadcast.setEnabled(has_audio)
+        self.btn_send_schedule.setEnabled(has_audio)
         self.btn_save_proj.setEnabled(has_audio)
         self.btn_play.setEnabled(has_audio)
         self.btn_pause.setEnabled(has_audio)
@@ -854,6 +876,36 @@ class PageAudioStudio(QWidget):
             )
         except Exception as e:
             QMessageBox.critical(self, "Lỗi xuất file", f"Không thể xuất file âm thanh:\n\n{e}")
+
+    def _on_send_to_broadcast(self):
+        """Chuyển âm thanh đang biên tập sang phân đoạn Bản Tin Phát Thanh."""
+        if self.current_audio is None:
+            return
+        tmp = Path(tempfile.gettempdir()) / f"studio_broadcast_{int(time.time())}.wav"
+        save_wav(self.current_audio, tmp)
+        dur = len(self.current_audio) / 1000.0
+        seg = {
+            "title": f"Biên tập: {self.current_project_name}",
+            "file_path": str(tmp),
+            "text": f"Dự án Audio Studio: {self.current_project_name}",
+            "duration_sec": dur,
+            "type": "news",
+        }
+        self.send_to_broadcast.emit(seg)
+
+    def _on_send_to_schedule(self):
+        """Chuyển âm thanh đang biên tập sang Lịch Phát Thanh."""
+        if self.current_audio is None:
+            return
+        tmp = Path(tts_service.default_out_dir) / f"{self.current_project_name}_schedule.wav"
+        save_wav(self.current_audio, tmp)
+        dur = len(self.current_audio) / 1000.0
+        item = {
+            "title": self.current_project_name,
+            "file_path": str(tmp),
+            "duration_sec": dur,
+        }
+        self.send_to_schedule.emit(item)
 
     # =========================================================================
     # CÁC THAO TÁC BIÊN TẬP ÂM THANH (EDIT OPERATIONS)
