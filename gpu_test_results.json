@@ -1,0 +1,179 @@
+{
+  "timestamp": "2026-10-11 00:14:31",
+  "runtime": {
+    "status": "ok",
+    "ort_version": "1.31.0",
+    "available_providers": [
+      "AzureExecutionProvider",
+      "CPUExecutionProvider"
+    ],
+    "cuda_available": false,
+    "hardware": {
+      "nvidia_detected": true,
+      "device_name": "NVIDIA GeForce RTX 2060",
+      "vram_total_mb": 6143,
+      "vram_free_mb": 5105,
+      "driver_version": "CUDA 13.0 (13000)",
+      "error": null
+    }
+  },
+  "models": [
+    {
+      "model": "prefill",
+      "path": "C:\\Users\\Minh Dang\\Downloads\\voice-studio-app\\models\\v3turbo_onnx\\vieneu_prefill.onnx",
+      "exists": true,
+      "strict_cuda": {
+        "success": false,
+        "actual_providers": [
+          "CPUExecutionProvider"
+        ],
+        "error": "ORT fallback về ['CPUExecutionProvider'] do thiếu binary CUDAExecutionProvider"
+      },
+      "fallback_cuda": {
+        "success": true,
+        "providers": [
+          "CPUExecutionProvider"
+        ],
+        "has_cuda": false,
+        "error": null
+      },
+      "cpu_baseline": {
+        "success": true,
+        "providers": [
+          "CPUExecutionProvider"
+        ],
+        "error": null
+      }
+    },
+    {
+      "model": "decode_step",
+      "path": "C:\\Users\\Minh Dang\\Downloads\\voice-studio-app\\models\\v3turbo_onnx\\vieneu_decode_step.onnx",
+      "exists": true,
+      "strict_cuda": {
+        "success": false,
+        "actual_providers": [
+          "CPUExecutionProvider"
+        ],
+        "error": "ORT fallback về ['CPUExecutionProvider'] do thiếu binary CUDAExecutionProvider"
+      },
+      "fallback_cuda": {
+        "success": true,
+        "providers": [
+          "CPUExecutionProvider"
+        ],
+        "has_cuda": false,
+        "error": null
+      },
+      "cpu_baseline": {
+        "success": true,
+        "providers": [
+          "CPUExecutionProvider"
+        ],
+        "error": null
+      }
+    },
+    {
+      "model": "acoustic",
+      "path": "C:\\Users\\Minh Dang\\Downloads\\voice-studio-app\\models\\v3turbo_onnx\\vieneu_acoustic_cached.onnx",
+      "exists": true,
+      "strict_cuda": {
+        "success": false,
+        "actual_providers": [
+          "CPUExecutionProvider"
+        ],
+        "error": "ORT fallback về ['CPUExecutionProvider'] do thiếu binary CUDAExecutionProvider"
+      },
+      "fallback_cuda": {
+        "success": true,
+        "providers": [
+          "CPUExecutionProvider"
+        ],
+        "has_cuda": false,
+        "error": null
+      },
+      "cpu_baseline": {
+        "success": true,
+        "providers": [
+          "CPUExecutionProvider"
+        ],
+        "error": null
+      }
+    },
+    {
+      "model": "codec_decode",
+      "path": "C:\\Users\\Minh Dang\\Downloads\\voice-studio-app\\models\\moss_codec\\moss_audio_tokenizer_decode_full.onnx",
+      "exists": true,
+      "strict_cuda": {
+        "success": false,
+        "actual_providers": [
+          "CPUExecutionProvider"
+        ],
+        "error": "ORT fallback về ['CPUExecutionProvider'] do thiếu binary CUDAExecutionProvider"
+      },
+      "fallback_cuda": {
+        "success": true,
+        "providers": [
+          "CPUExecutionProvider"
+        ],
+        "has_cuda": false,
+        "error": null
+      },
+      "cpu_baseline": {
+        "success": true,
+        "providers": [
+          "CPUExecutionProvider"
+        ],
+        "error": null
+      }
+    }
+  ],
+  "tts_inference": {
+    "success": true,
+    "cuda_request_policy": {
+      "requested": "cuda",
+      "allowed": false,
+      "error_or_reason": "ValueError: Phát hiện GPU NVIDIA NVIDIA GeForce RTX 2060 (VRAM 6143 MB, CUDA 13.0 (13000)), nhưng ONNX Runtime hiện tại (v1.31.0) là bản CPU và chưa tích hợp CUDAExecutionProvider."
+    },
+    "load_latency_s": 4.587,
+    "warmup_latency_s": 0.292,
+    "benchmark_runs": [
+      {
+        "run": 1,
+        "latency_s": 1.494,
+        "audio_duration_s": 4.16,
+        "rtf": 0.359
+      },
+      {
+        "run": 2,
+        "latency_s": 1.476,
+        "audio_duration_s": 4.0,
+        "rtf": 0.369
+      },
+      {
+        "run": 3,
+        "latency_s": 1.377,
+        "audio_duration_s": 4.08,
+        "rtf": 0.338
+      }
+    ],
+    "median_latency_s": 1.476,
+    "median_rtf": 0.362,
+    "wav_info": {
+      "valid": true,
+      "channels": 1,
+      "sample_width": 2,
+      "framerate": 48000,
+      "num_frames": 195840,
+      "duration_sec": 4.08,
+      "file_size_bytes": 391724,
+      "max_amplitude": 24349,
+      "rms": 3686.37,
+      "peak_db": -2.58,
+      "rms_db": -18.98,
+      "is_silent": false,
+      "is_clipped": false,
+      "audible": true
+    },
+    "output_path": "C:\\Users\\Minh Dang\\Downloads\\voice-studio-app\\test_gpu_inference_output.wav"
+  }
+}

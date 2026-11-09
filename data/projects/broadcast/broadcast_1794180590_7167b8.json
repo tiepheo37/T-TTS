@@ -1,0 +1,29 @@
+{
+  "name": "Broadcast Phase 5 Project",
+  "type": "broadcast",
+  "title": "Ban_tin_phat_thanh",
+  "default_pause_sec": 1.0,
+  "out_format": "wav",
+  "bg_music_enabled": false,
+  "bg_music_path": "",
+  "bg_music_vol_pct": 15,
+  "bg_music_vol_db": -27.5,
+  "bg_music_loop": true,
+  "bg_music_ducking": true,
+  "intro_music_path": "",
+  "outro_music_path": "",
+  "segments": [
+    {
+      "type": "lead_in",
+      "title": "Dẫn",
+      "text": "Xin chào",
+      "id": "seg_1794180590_fbec",
+      "duration_sec": 0.0,
+      "pause_after": 1.0,
+      "status": "pending"
+    }
+  ],
+  "id": "broadcast_1794180590_7167b8",
+  "updated_at": "2026-11-09 06:29:50",
+  "created_at": "2026-11-09 06:29:50"
+}

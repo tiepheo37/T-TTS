@@ -1,0 +1,304 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/k20_bg_dark"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- HEADER BANNER -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_card"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:padding="14dp"
+            android:layout_marginBottom="14dp">
+
+            <ImageView
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:src="@drawable/logo_quan_doi"
+                android:contentDescription="Logo QĐNDVN" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:layout_marginStart="12dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/title_app"
+                    android:textColor="@color/k20_accent_gold"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/author_name"
+                    android:textColor="@color/k20_text_primary"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:layout_marginTop="2dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/subtitle_tech"
+                    android:textColor="@color/k20_text_secondary"
+                    android:textSize="11sp"
+                    android:layout_marginTop="2dp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- INPUT CARD -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_card"
+            android:orientation="vertical"
+            android:padding="14dp"
+            android:layout_marginBottom="14dp">
+
+            <!-- MACHINE ID -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="1. MÃ MÁY KHÁCH HÀNG (MACHINE ID)"
+                android:textColor="@color/k20_accent_gold"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginTop="6dp">
+
+                <EditText
+                    android:id="@+id/etMachineId"
+                    android:layout_width="0dp"
+                    android:layout_height="44dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_input"
+                    android:hint="Nhập mã máy (TTTS-XXXX-...)"
+                    android:textColor="@color/k20_text_primary"
+                    android:textColorHint="@color/k20_text_secondary"
+                    android:textSize="14sp"
+                    android:fontFamily="monospace"
+                    android:maxLines="1"
+                    android:singleLine="true" />
+
+                <Button
+                    android:id="@+id/btnPaste"
+                    android:layout_width="wrap_content"
+                    android:layout_height="44dp"
+                    android:layout_marginStart="6dp"
+                    android:background="@drawable/bg_button_secondary"
+                    android:text="📋 Dán"
+                    android:textColor="@color/k20_text_primary"
+                    android:textSize="12sp"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp" />
+
+                <Button
+                    android:id="@+id/btnUniversal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="44dp"
+                    android:layout_marginStart="6dp"
+                    android:background="@drawable/bg_button_secondary"
+                    android:text="⭐ Dùng chung"
+                    android:textColor="@color/k20_accent_gold"
+                    android:textSize="12sp"
+                    android:paddingStart="10dp"
+                    android:paddingEnd="10dp" />
+            </LinearLayout>
+
+            <!-- PLANS SELECTION -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="2. GÓI BẢN QUYỀN (6 THỜI HẠN)"
+                android:textColor="@color/k20_accent_gold"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:layout_marginTop="12dp" />
+
+            <RadioGroup
+                android:id="@+id/rgPlans"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp">
+
+                <RadioButton
+                    android:id="@+id/rb1D"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="🎯 1 Ngày (24 giờ dùng thử)"
+                    android:textColor="@color/k20_text_primary"
+                    android:textSize="13sp" />
+
+                <RadioButton
+                    android:id="@+id/rb7D"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="🎯 7 Ngày (168 giờ)"
+                    android:textColor="@color/k20_text_primary"
+                    android:textSize="13sp" />
+
+                <RadioButton
+                    android:id="@+id/rb30D"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="🎯 30 Ngày (720 giờ)"
+                    android:textColor="@color/k20_text_primary"
+                    android:textSize="13sp" />
+
+                <RadioButton
+                    android:id="@+id/rb6M"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="🎯 6 Tháng (Theo lịch)"
+                    android:textColor="@color/k20_text_primary"
+                    android:textSize="13sp" />
+
+                <RadioButton
+                    android:id="@+id/rb1Y"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:checked="true"
+                    android:text="🎯 1 Năm (Theo lịch)"
+                    android:textColor="@color/k20_text_primary"
+                    android:textSize="13sp" />
+
+                <RadioButton
+                    android:id="@+id/rbPerm"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="👑 Vĩnh viễn (Trọn đời)"
+                    android:textColor="@color/k20_accent_gold"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+            </RadioGroup>
+
+            <!-- NOTE -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="3. GHI CHÚ KHÁCH HÀNG (TÙY CHỌN)"
+                android:textColor="@color/k20_accent_gold"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:layout_marginTop="12dp" />
+
+            <EditText
+                android:id="@+id/etNote"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:background="@drawable/bg_input"
+                android:hint="Ví dụ: Anh Nam - Bộ Tư lệnh QK7..."
+                android:textColor="@color/k20_text_primary"
+                android:textColorHint="@color/k20_text_secondary"
+                android:textSize="13sp"
+                android:maxLines="1"
+                android:singleLine="true"
+                android:layout_marginTop="6dp" />
+
+            <!-- GENERATE BUTTON -->
+            <Button
+                android:id="@+id/btnGenerate"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:background="@drawable/bg_button_primary"
+                android:text="⚡ TẠO MÃ KÍCH HOẠT"
+                android:textColor="#ffffff"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:layout_marginTop="16dp" />
+        </LinearLayout>
+
+        <!-- RESULT CARD -->
+        <LinearLayout
+            android:id="@+id/layoutResult"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_card"
+            android:orientation="vertical"
+            android:padding="14dp"
+            android:visibility="gone"
+            android:layout_marginBottom="24dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="MÃ KÍCH HOẠT ĐÃ TẠO:"
+                android:textColor="@color/k20_accent_gold"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvKeyResult"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_input"
+                android:fontFamily="monospace"
+                android:textColor="@color/k20_accent_green"
+                android:textSize="13sp"
+                android:textIsSelectable="true"
+                android:padding="10dp"
+                android:layout_marginTop="6dp" />
+
+            <TextView
+                android:id="@+id/tvSummaryInfo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/k20_text_secondary"
+                android:textSize="12sp"
+                android:layout_marginTop="6dp" />
+
+            <!-- ACTION BUTTONS -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="12dp">
+
+                <Button
+                    android:id="@+id/btnCopyKey"
+                    android:layout_width="0dp"
+                    android:layout_height="48dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_button_secondary"
+                    android:text="📋 Sao Chép Key"
+                    android:textColor="@color/k20_text_primary"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:layout_marginEnd="6dp" />
+
+                <Button
+                    android:id="@+id/btnShareKey"
+                    android:layout_width="0dp"
+                    android:layout_height="48dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_button_gold"
+                    android:text="💬 Gửi Qua Zalo"
+                    android:textColor="#ffffff"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:layout_marginStart="6dp" />
+            </LinearLayout>
+        </LinearLayout>
+
+    </LinearLayout>
+</ScrollView>

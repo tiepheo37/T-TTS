@@ -1,4 +1,4 @@
-"""license_generator.py — CÔNG CỤ CẤP BẢN QUYỀN OFFLINE DÀNH CHO NHÀ PHÁT TRIỂN T-TTS v1.0.1
+"""license_generator.py — CÔNG CỤ CẤP BẢN QUYỀN OFFLINE DÀNH CHO NHÀ PHÁT TRIỂN T-TTS v3.0
 ==========================================================================================
 Công cụ độc lập dành riêng cho Developer để:
 1. Khởi tạo và quản lý cặp khóa số Ed25519 (Private Key & Public Key).
@@ -42,7 +42,7 @@ except ImportError:
     print("      pip install cryptography")
     sys.exit(1)
 
-# Khóa Master Ed25519 chuẩn của Developer (khớp chính xác 100% với backend T-TTS v1.0.1)
+# Khóa Master Ed25519 chuẩn của Developer (khớp chính xác 100% với backend T-TTS v2.0)
 DEFAULT_MASTER_PRIVATE_KEY_PEM = (
     b"-----BEGIN PRIVATE KEY-----\n"
     b"MC4CAQAwBQYDK2VwBCIEIEobGGUvDqwqmsx7Zasc5ysVmegO0hkIAQxzxliWrNcv\n"
@@ -87,6 +87,7 @@ VALID_PLANS = {
     "7d": {"plan": "KEY-7D", "hours": 168, "name": "7 Ngày (168 giờ)", "type": "fixed"},
     "30d": {"plan": "KEY-30D", "hours": 720, "name": "30 Ngày (720 giờ)", "type": "fixed"},
     "6m": {"plan": "KEY-6M", "months": 6, "name": "6 Tháng (Theo lịch)", "type": "calendar"},
+    "1y": {"plan": "KEY-1Y", "years": 1, "name": "1 Năm (Theo lịch)", "type": "calendar"},
     "perm": {"plan": "KEY-PERM", "name": "Vĩnh viễn (Trọn đời)", "type": "permanent"},
 }
 
@@ -298,7 +299,7 @@ def interactive_menu():
     """Giao diện dòng lệnh tương tác cho Developer."""
     while True:
         print("\n" + "=" * 65)
-        print("  🇻🇳 T-TTS v1.0.1 — CÔNG CỤ CẤP BẢN QUYỀN OFFLINE (DEVELOPER)")
+        print("  🇻🇳 T-TTS v2.0 — CÔNG CỤ CẤP BẢN QUYỀN OFFLINE (DEVELOPER)")
         print("=" * 65)
         print("1. Tạo mới cặp khóa Master Ed25519 (Private & Public Key)")
         print("2. Cấp key mới cho người dùng (1 ngày / 7 ngày / 30 ngày)")
@@ -331,19 +332,21 @@ def interactive_menu():
                 continue
 
             print("\nChọn thời hạn cấp phép:")
-            print("  1. 1 Ngày   (KEY-1D   - 24 giờ)")
-            print("  2. 7 Ngày   (KEY-7D   - 168 giờ)")
-            print("  3. 30 Ngày  (KEY-30D  - 720 giờ)")
-            print("  4. 6 Tháng  (KEY-6M   - Theo ngày lịch)")
-            print("  5. Vĩnh viễn (KEY-PERM - Trọn đời không hết hạn)")
-            dur_sel = input("Chọn thời hạn [1-5 hoặc 1d/7d/30d/6m/perm]: ").strip().lower()
+            print("  1. 1 Ngày    (KEY-1D   - 24 giờ)")
+            print("  2. 7 Ngày    (KEY-7D   - 168 giờ)")
+            print("  3. 30 Ngày   (KEY-30D  - 720 giờ)")
+            print("  4. 6 Tháng   (KEY-6M   - Theo ngày lịch)")
+            print("  5. 1 Năm     (KEY-1Y   - Theo ngày lịch)")
+            print("  6. Vĩnh viễn (KEY-PERM - Trọn đời không hết hạn)")
+            dur_sel = input("Chọn thời hạn [1-6 hoặc 1d/7d/30d/6m/1y/perm]: ").strip().lower()
 
             dur_map = {
                 "1": "1d", "1d": "1d",
                 "2": "7d", "7d": "7d",
                 "3": "30d", "30d": "30d",
                 "4": "6m", "6m": "6m",
-                "5": "perm", "perm": "perm",
+                "5": "1y", "1y": "1y",
+                "6": "perm", "perm": "perm",
             }
             dur_code = dur_map.get(dur_sel)
             if not dur_code:
@@ -414,12 +417,12 @@ def interactive_menu():
 
 
 def main():
-    parser = argparse.ArgumentParser(description="T-TTS v1.0.1 Developer License Generator")
+    parser = argparse.ArgumentParser(description="T-TTS v3.0 Developer License Generator")
     parser.add_argument("--gen-keys", action="store_true", help="Khởi tạo cặp khóa Ed25519 mới")
     parser.add_argument("--force", action="store_true", help="Ghi đè khóa cũ nếu đã tồn tại")
     parser.add_argument("--create", action="store_true", help="Tạo key bản quyền mới")
     parser.add_argument("--machine", type=str, help="Mã máy (Machine ID) của khách hàng")
-    parser.add_argument("--duration", type=str, choices=["1d", "7d", "30d", "6m", "perm"], help="Thời hạn (1d, 7d, 30d, 6m, perm)")
+    parser.add_argument("--duration", type=str, choices=["1d", "7d", "30d", "6m", "1y", "perm"], help="Thời hạn (1d, 7d, 30d, 6m, 1y, perm)")
     parser.add_argument("--note", type=str, default="", help="Ghi chú người dùng")
     parser.add_argument("--out", type=str, help="Đường dẫn tệp để xuất key ra đĩa")
     parser.add_argument("--verify", type=str, help="Xác minh một chuỗi key hoặc tệp .lic")

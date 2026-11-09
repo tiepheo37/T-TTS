@@ -1,7 +1,7 @@
 """gui/pages/page_voices.py — TAB 4: QUẢN LÝ GIỌNG ĐỌC ĐƠN GIẢN & TÔN VINH TÁC GIẢ
 ================================================================================
 Thiết kế lại tối giản, trực quan, không còn bảng số liệu phức tạp:
-- Banner tôn vinh tác giả Đại úy Nguyễn Văn Tiệp kèm Quốc huy / Phù hiệu Quân đội Nhân dân Việt Nam.
+- Banner tôn vinh tác giả Nguyễn Văn Tiệp kèm Quốc huy / Phù hiệu Quân đội Nhân dân Việt Nam.
 - Danh mục giọng dạng danh sách thẻ gọn gàng: Tên giọng, Vùng miền, Phong cách và nút Nghe thử.
 - Thao tác xóa an toàn chỉ dành cho các giọng do người dùng tự nhân bản.
 """
@@ -183,8 +183,8 @@ class PageVoices(QWidget):
         lbl_header.setStyleSheet("color: #FFD700; font-weight: 800; font-size: 15px; letter-spacing: 0.5px;")
         author_text_layout.addWidget(lbl_header)
 
-        lbl_author = QLabel("Phát triển bởi: ĐẠI ÚY NGUYỄN VĂN TIỆP")
-        lbl_author.setStyleSheet("color: #FFFFFF; font-size: 13px; font-weight: 700;")
+        lbl_author = QLabel("TÁC GIẢ: NGUYỄN VĂN TIỆP")
+        lbl_author.setStyleSheet("color: #FFFFFF; font-size: 14px; font-weight: 800; letter-spacing: 0.5px;")
         author_text_layout.addWidget(lbl_author)
 
         lbl_desc = QLabel(

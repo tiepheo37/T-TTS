@@ -1,0 +1,2026 @@
+<!DOCTYPE html>
+<html lang="vi" class="notranslate">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="google" content="notranslate">
+<title>T-TTS v1.0.1 — PHẦN MỀM CHUYỂN VĂN BẢN THÀNH GIỌNG NÓI TIẾNG VIỆT</title>
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<style>
+  :root {
+    --army-green-dark: #1F3D16;
+    --army-green-head: #162E10;
+    --army-green-light: #2B4C1E;
+    --flag-red: #DA251D;
+    --star-yellow: #FFDD00;
+    --gold-border: #D4AF37;
+    --bg-main: #F4F6F0;
+    --card-bg: #FFFFFF;
+    --text-dark: #1E241E;
+    --text-mut: #556055;
+    --border-color: #D2D8CF;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: "Segoe UI", Arial, Roboto, sans-serif;
+    background-color: var(--bg-main);
+    color: var(--text-dark);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* HEADER QUÂN ĐỘI TRANG TRỌNG */
+  header {
+    background: linear-gradient(135deg, var(--army-green-head) 0%, var(--army-green-dark) 100%);
+    color: #FFFFFF;
+    padding: 14px 28px;
+    border-bottom: 4px solid var(--flag-red);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  }
+
+  .brand-container {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .star-badge {
+    width: 44px;
+    height: 44px;
+    background-color: var(--flag-red);
+    border: 2px solid var(--star-yellow);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 8px rgba(255, 221, 0, 0.5);
+  }
+
+  .star-badge svg {
+    width: 26px;
+    height: 26px;
+    fill: var(--star-yellow);
+  }
+
+  .brand-text .sub-header {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    color: var(--star-yellow);
+    text-transform: uppercase;
+  }
+
+  .brand-text .app-title {
+    font-family: "Times New Roman", Times, Georgia, serif;
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    color: #FFFFFF;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+  }
+
+  .header-status {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 13px;
+  }
+
+  .status-pill {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,221,0,0.4);
+    color: #FFFFFF;
+    padding: 6px 14px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .status-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background-color: #28a745;
+  }
+
+  .btn-api-docs {
+    background: var(--flag-red);
+    color: var(--star-yellow);
+    border: 1px solid var(--star-yellow);
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-api-docs:hover {
+    background: #b71c1c;
+  }
+
+  /* LAYOUT CHÍNH: SIDEBAR & MAIN PANEL */
+  .app-container {
+    display: flex;
+    flex: 1;
+    max-width: 1400px;
+    width: 100%;
+    margin: 20px auto;
+    padding: 0 20px;
+    gap: 20px;
+  }
+
+  .sidebar {
+    width: 270px;
+    background: var(--army-green-dark);
+    border: 1px solid var(--army-green-light);
+    border-radius: 10px;
+    padding: 16px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+  }
+
+  .nav-group-label {
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--star-yellow);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 10px 12px 4px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    margin-top: 6px;
+  }
+
+  .nav-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    color: #E2E8E0;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    background: transparent;
+    border: none;
+    width: 100%;
+    text-align: left;
+    transition: all 0.2s;
+  }
+
+  .nav-btn:hover {
+    background: rgba(255,255,255,0.08);
+    color: #FFFFFF;
+  }
+
+  .nav-btn.active {
+    background: var(--flag-red);
+    color: var(--star-yellow);
+    font-weight: 700;
+    border-left: 4px solid var(--star-yellow);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  }
+
+  .main-content {
+    flex: 1;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 26px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  }
+
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  .panel-title {
+    font-family: "Times New Roman", Times, serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--army-green-dark);
+    margin-bottom: 18px;
+    border-bottom: 2px solid var(--gold-border);
+    padding-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  /* FORM CONTROLS */
+  label {
+    display: block;
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--text-dark);
+    margin: 14px 0 6px;
+  }
+
+  input[type="text"], input[type="number"], select, textarea {
+    width: 100%;
+    padding: 11px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 14px;
+    background-color: #FAFAFA;
+    transition: border 0.2s;
+  }
+
+  input[type="text"]:focus, select:focus, textarea:focus {
+    border-color: var(--army-green-dark);
+    outline: none;
+    background-color: #FFFFFF;
+  }
+
+  textarea {
+    min-height: 140px;
+    resize: vertical;
+    font-family: inherit;
+    line-height: 1.5;
+  }
+
+  .form-row {
+    display: flex;
+    gap: 14px;
+    align-items: flex-end;
+    flex-wrap: wrap;
+  }
+
+  .form-row > div {
+    flex: 1;
+    min-width: 160px;
+  }
+
+  /* CHỌN GIỌNG CARD LIST (BỐ CỤC THẺ CUỘN DỌC) */
+  .voice-filter-bar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .filter-btn {
+    padding: 6px 16px;
+    border-radius: 20px;
+    border: 1px solid var(--border-color);
+    background: #EFEFE6;
+    color: var(--text-dark);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .filter-btn.active {
+    background: var(--army-green-dark);
+    color: var(--star-yellow);
+    border-color: var(--army-green-dark);
+    font-weight: 700;
+  }
+
+  .voice-cards-container {
+    max-height: 290px;
+    overflow-y: auto;
+    padding-right: 6px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 12px;
+    background: #FAFBF9;
+  }
+
+  .voice-card {
+    background: #FFFFFF;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    padding: 12px 14px;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s;
+  }
+
+  .voice-card:hover {
+    border-color: var(--army-green-light);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+
+  .voice-card.active {
+    border-color: var(--flag-red);
+    background: #F4F7F2;
+    box-shadow: 0 3px 10px rgba(218, 37, 29, 0.15);
+  }
+
+  .vc-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+  }
+
+  .vc-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .vc-icon {
+    font-size: 18px;
+  }
+
+  .vc-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--army-green-dark);
+  }
+
+  .vc-badge {
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+    background: #E8F5E9;
+    color: #2E7D32;
+    border: 1px solid #A5D6A7;
+  }
+
+  .vc-desc {
+    font-size: 12px;
+    color: var(--text-mut);
+    line-height: 1.4;
+  }
+
+  .vc-check {
+    display: none;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 20px;
+    height: 20px;
+    background: var(--flag-red);
+    color: var(--star-yellow);
+    border-radius: 50%;
+    font-size: 12px;
+    font-weight: bold;
+    text-align: center;
+    line-height: 20px;
+  }
+
+  .voice-card.active .vc-check {
+    display: block;
+  }
+
+  /* NÚT PILL CHÈN THẺ CẢM XÚC & THẺ NGHỈ */
+  .tag-pills-bar {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin: 10px 0;
+    align-items: center;
+  }
+
+  .pill-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--army-green-dark);
+  }
+
+  .pill-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    background: #FFFFFF;
+    border: 1px solid var(--army-green-dark);
+    color: var(--army-green-dark);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .pill-btn:hover {
+    background: var(--army-green-dark);
+    color: var(--star-yellow);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  }
+
+  /* BUTTONS */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 11px 22px;
+    font-size: 14px;
+    font-weight: 700;
+    border-radius: 6px;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+  }
+
+  .btn-primary {
+    background: var(--army-green-dark);
+    color: #FFFFFF;
+    border: 1px solid var(--army-green-light);
+  }
+  .btn-primary:hover {
+    background: var(--army-green-light);
+  }
+
+  .btn-flag {
+    background: var(--flag-red);
+    color: var(--star-yellow);
+    border: 1px solid var(--gold-border);
+  }
+  .btn-flag:hover {
+    background: #b71c1c;
+  }
+
+  .btn-secondary {
+    background: #EFEFE6;
+    color: var(--text-dark);
+    border: 1px solid var(--border-color);
+  }
+  .btn-secondary:hover {
+    background: #E2E2D6;
+  }
+
+  .btn-danger {
+    background: #c62828;
+    color: #FFFFFF;
+  }
+
+  .btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  /* TAGS & HINTS */
+  .hint-box {
+    background: #F4F6F0;
+    border-left: 4px solid var(--army-green-dark);
+    padding: 10px 14px;
+    border-radius: 4px;
+    font-size: 13px;
+    color: var(--text-mut);
+    margin: 10px 0;
+  }
+
+  .warn-box {
+    background: #FFF8E1;
+    border: 1px solid #FFE082;
+    border-left: 5px solid #FFB300;
+    padding: 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    color: #5D4037;
+    margin: 14px 0;
+    line-height: 1.5;
+  }
+
+  .warn-box strong { color: #C62828; }
+
+  /* AUDIO PLAYER */
+  .player-box {
+    background: #F4F6F0;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 14px;
+    margin-top: 16px;
+  }
+
+  audio { width: 100%; height: 42px; margin-top: 8px; }
+
+  /* TABLES & LISTS */
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 14px;
+    font-size: 13px;
+  }
+
+  .data-table th, .data-table td {
+    padding: 10px 12px;
+    border: 1px solid var(--border-color);
+    text-align: left;
+  }
+
+  .data-table th {
+    background: var(--army-green-dark);
+    color: #FFFFFF;
+    font-weight: 700;
+  }
+
+  .data-table tr:nth-child(even) { background: #FAFAFA; }
+
+  /* SUB TABS FOR READ FILE & SUBTITLES */
+  .sub-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 8px;
+  }
+
+  .sub-tab {
+    padding: 8px 16px;
+    border-radius: 6px;
+    background: #EFEFE6;
+    color: var(--text-dark);
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+  }
+
+  .sub-tab.active {
+    background: var(--army-green-dark);
+    color: #FFFFFF;
+  }
+
+  .feedback-msg {
+    margin-top: 10px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .feedback-msg.err { color: #c62828; }
+  .feedback-msg.ok { color: #2e7d32; }
+
+  /* MODAL & DIALOG BẢN QUYỀN */
+  .license-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(14, 26, 12, 0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 99999;
+    backdrop-filter: blur(6px);
+    padding: 20px;
+  }
+
+  .license-modal {
+    background: #FFFFFF;
+    border-radius: 12px;
+    max-width: 640px;
+    width: 100%;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    border: 2px solid var(--gold-border);
+    overflow: hidden;
+    position: relative;
+    animation: fadeInModal 0.25s ease-out;
+  }
+
+  @keyframes fadeInModal {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  .license-modal-head {
+    background: linear-gradient(135deg, var(--army-green-head) 0%, var(--army-green-dark) 100%);
+    color: #FFFFFF;
+    padding: 16px 22px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 3px solid var(--flag-red);
+  }
+
+  .license-modal-title {
+    font-family: "Times New Roman", Times, serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--star-yellow);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .btn-close-modal {
+    background: transparent;
+    border: none;
+    color: #FFFFFF;
+    font-size: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    line-height: 1;
+    padding: 4px 8px;
+    border-radius: 4px;
+  }
+  .btn-close-modal:hover {
+    background: rgba(255,255,255,0.2);
+  }
+
+  .license-modal-body {
+    padding: 22px;
+  }
+
+  .lic-status-banner {
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    line-height: 1.5;
+    margin-bottom: 16px;
+    font-weight: 600;
+  }
+  .lic-status-banner.unactivated {
+    background: #FFF8E1;
+    border: 1px solid #FFE082;
+    color: #795548;
+  }
+  .lic-status-banner.expired {
+    background: #FFEBEE;
+    border: 1px solid #FFCDD2;
+    color: #C62828;
+  }
+  .lic-status-banner.rollback {
+    background: #FFEBEE;
+    border: 2px solid #D32F2F;
+    color: #B71C1C;
+  }
+  .lic-status-banner.active {
+    background: #E8F5E9;
+    border: 1px solid #C8E6C9;
+    color: #2E7D32;
+  }
+
+  .machine-id-card {
+    background: #F4F6F0;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 14px;
+    margin: 12px 0 16px;
+  }
+  .machine-id-label {
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--army-green-dark);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+  }
+  .machine-id-row {
+    display: flex;
+    gap: 8px;
+  }
+  .machine-id-input {
+    font-family: Consolas, monospace;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    color: var(--army-green-dark);
+    background: #FFFFFF !important;
+    text-align: center;
+  }
+  .btn-copy {
+    background: var(--army-green-dark);
+    color: #FFFFFF;
+    border: 1px solid var(--army-green-light);
+    border-radius: 6px;
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+  }
+  .btn-copy:hover {
+    background: var(--army-green-light);
+  }
+
+  footer {
+    background: var(--army-green-head);
+    color: rgba(255,255,255,0.85);
+    font-size: 12px;
+    text-align: center;
+    padding: 14px 20px;
+    margin-top: auto;
+    border-top: 2px solid var(--flag-red);
+    line-height: 1.6;
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER TRANG TRỌNG -->
+<header>
+  <div class="brand-container">
+    <div class="star-badge">
+      <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+    </div>
+    <div class="brand-text">
+      <div class="sub-header">PHẦN MỀM CHUYỂN VĂN BẢN THÀNH GIỌNG NÓI TIẾNG VIỆT</div>
+      <div class="app-title">T-TTS v1.0.1</div>
+    </div>
+  </div>
+  <div class="header-status">
+    <div class="status-pill" id="license-pill" onclick="openLicenseModal(true)" style="cursor: pointer; user-select: none;" title="Nhấp để xem chi tiết bản quyền">
+      <span class="status-dot" id="license-dot" style="background-color: #ffc107;"></span>
+      <span id="license-text">Bản quyền: Đang kiểm tra...</span>
+    </div>
+    <div class="status-pill" id="status-pill">
+      <span class="status-dot" id="status-dot"></span>
+      <span id="status-text">Đang kết nối mô hình...</span>
+    </div>
+    <button type="button" onclick="openOutputFolder()" style="padding: 4px 10px; font-size: 12px; cursor: pointer; color: #fff; background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.3); border-radius: 6px;">📂 Thư mục File Output</button>
+    <a href="/docs" target="_blank" class="btn-api-docs">📖 Tài liệu API (/docs)</a>
+  </div>
+</header>
+
+<!-- CHÍNH CONTAINER -->
+<div class="app-container">
+  <!-- SIDEBAR NAVIGATION -->
+  <nav class="sidebar">
+    <div class="nav-group-label">Chức năng chính</div>
+    <button class="nav-btn active" data-p="p-create">🎙️ Tạo giọng nói</button>
+    <button class="nav-btn" data-p="p-batch">📦 Tạo hàng loạt</button>
+    <button class="nav-btn" data-p="p-file-sub">📄 Đọc file & Phụ đề</button>
+    <button class="nav-btn" data-p="p-podcast">🎭 Hội thoại / Podcast</button>
+
+    <div class="nav-group-label">Nâng cao & Quản lý</div>
+    <button class="nav-btn" data-p="p-clone">🎤 Nhân bản giọng</button>
+    <button class="nav-btn" data-p="p-history">📜 Lịch sử tạo</button>
+    <button class="nav-btn" data-p="p-dict">📖 Từ điển phát âm</button>
+    <button class="nav-btn" data-p="p-model">⚙️ Mô hình & GPU</button>
+    <button class="nav-btn" data-p="p-license" id="nav-btn-license">🛡️ Bản quyền & Giấy phép</button>
+  </nav>
+
+  <!-- MAIN CONTENT AREA -->
+  <main class="main-content">
+
+    <!-- TAB 1: TẠO GIỌNG NÓI -->
+    <section class="panel active" id="p-create">
+      <div class="panel-title">
+        <span>🎙️ Tạo giọng nói từ văn bản</span>
+        <button class="btn btn-secondary" id="btn-preview-voice">🔊 Nghe thử giọng mẫu</button>
+      </div>
+
+      <!-- CHỌN GIỌNG BẰNG CARD LIST CUỘN DỌC -->
+      <label>Chọn giọng đọc từ danh sách (25 giọng VieNeu Preset cho phép)</label>
+      <div class="voice-filter-bar">
+        <button class="filter-btn active" data-filter="all">Tất cả</button>
+        <button class="filter-btn" data-filter="Nữ">👩 Nữ</button>
+        <button class="filter-btn" data-filter="Nam">👨 Nam</button>
+      </div>
+
+      <div class="voice-cards-container" id="voice-cards-list"></div>
+
+      <!-- Ô VĂN BẢN VÀ NÚT PILL CHÈN THẺ CẢM XÚC / NGHỈ -->
+      <label for="create-text">Văn bản cần chuyển sang giọng nói</label>
+
+      <div class="tag-pills-bar">
+        <span class="pill-label">Chèn nhanh thẻ:</span>
+        <button type="button" class="pill-btn" onclick="insertTag('[cười]')">😊 Cười</button>
+        <button type="button" class="pill-btn" onclick="insertTag('[hắng giọng]')">🗣️ Hắng giọng</button>
+        <button type="button" class="pill-btn" onclick="insertTag('[thở dài]')">😮💨 Thở dài</button>
+        <button type="button" class="pill-btn" onclick="insertTag('[nghỉ 500ms]')">⏸ Nghỉ 500ms</button>
+        <button type="button" class="pill-btn" onclick="insertTag('[nghỉ 2s]')">⏸ Nghỉ 2s</button>
+      </div>
+
+      <textarea id="create-text" placeholder="Nhập văn bản tiếng Việt tại đây... Bấm các nút icon ở trên để chèn nhanh mốc [cười], [nghỉ 2s] vào vị trí con trỏ."></textarea>
+
+      <div class="form-row">
+        <div>
+          <label for="create-speed">Tốc độ đọc (WSOLA 0.75x – 1.50x)</label>
+          <input type="number" id="create-speed" value="1.0" min="0.75" max="1.50" step="0.05">
+        </div>
+        <div>
+          <label for="create-fmt">Định dạng file xuất</label>
+          <select id="create-fmt">
+            <option value="wav">WAV 48kHz 16-bit PCM (Chất lượng gốc)</option>
+            <option value="mp3">MP3 192kbps (Dung lượng nhẹ)</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="margin-top: 18px; display: flex; gap: 12px; align-items: center;">
+        <button class="btn btn-flag" id="btn-generate">▶ Tạo giọng nói</button>
+      </div>
+
+      <div class="feedback-msg err" id="err-create"></div>
+
+      <div class="player-box" id="player-box-create" style="display: none;">
+        <div style="font-weight: 700; font-size: 14px; margin-bottom: 6px; color: var(--army-green-dark);" id="player-label-create">Kết quả phát audio:</div>
+        <audio id="player-create" controls></audio>
+        <div id="download-link-create" style="margin-top: 10px;"></div>
+      </div>
+    </section>
+
+    <!-- TAB 2: TẠO HÀNG LOẠT -->
+    <section class="panel" id="p-batch">
+      <div class="panel-title">
+        <span>📦 Tạo giọng nói hàng loạt theo mốc [P1], [P2]...</span>
+        <button class="btn btn-secondary" id="btn-download-sample-batch" style="padding: 4px 12px; font-size: 12px;">📄 Tải file mẫu TXT</button>
+      </div>
+
+      <label for="batch-text">Nhập văn bản hàng loạt hoặc tải file .txt (Mỗi mốc [P1], [P2]... xuất thành 1 file riêng)</label>
+      <textarea id="batch-text" placeholder="[P1] Kính chào các đồng chí và toàn thể quý vị.&#10;[P2] Đây là đoạn âm thanh số hai được xuất ra file riêng biệt."></textarea>
+
+      <div class="form-row">
+        <div>
+          <label>Nhập từ file TXT</label>
+          <input type="file" id="batch-file-input" accept=".txt">
+        </div>
+        <div>
+          <label for="batch-voice">Giọng đọc</label>
+          <select id="batch-voice"></select>
+        </div>
+        <div>
+          <label for="batch-speed">Tốc độ</label>
+          <input type="number" id="batch-speed" value="1.0" min="0.75" max="1.50" step="0.05">
+        </div>
+      </div>
+
+      <button class="btn btn-flag" id="btn-batch" style="margin-top: 16px;">▶ Tạo hàng loạt & Tải trọn bộ .ZIP</button>
+      <div class="feedback-msg err" id="err-batch"></div>
+      <div class="feedback-msg ok" id="ok-batch"></div>
+    </section>
+
+    <!-- TAB 3: ĐỌC FILE & PHỤ ĐỀ & LỒNG TIẾNG -->
+    <section class="panel" id="p-file-sub">
+      <div class="panel-title"><span>📄 Đọc file văn bản, Phụ đề & Lồng tiếng</span></div>
+
+      <div class="sub-tabs">
+        <div class="sub-tab active" data-st="st-read">1. Đọc file (PDF/DOCX/TXT)</div>
+        <div class="sub-tab" data-st="st-sub">2. Tạo Phụ đề (.SRT)</div>
+        <div class="sub-tab" data-st="st-dub">3. Lồng tiếng theo Phụ đề</div>
+      </div>
+
+      <!-- SUB-TAB 1: ĐỌC FILE -->
+      <div class="sub-panel" id="st-read">
+        <label>Chọn file tài liệu (.pdf, .docx, .txt)</label>
+        <div class="form-row">
+          <div style="flex: 3;"><input type="file" id="doc-file-input" accept=".pdf,.docx,.txt"></div>
+          <div><button class="btn btn-primary" id="btn-read-doc">📖 Đọc nội dung file</button></div>
+          <div><button class="btn btn-secondary" id="btn-clean-text">✨ Làm sạch văn bản</button></div>
+        </div>
+        <label for="doc-text-output">Văn bản trích xuất được</label>
+        <textarea id="doc-text-output" placeholder="Nội dung từ file sẽ hiển thị ở đây... Bạn có thể bấm 'Làm sạch văn bản' để xóa khoảng trắng thừa mà vẫn giữ nguyên công thức toán."></textarea>
+        <button class="btn btn-flag" id="btn-send-to-tts" style="margin-top: 12px;">➡️ Chuyển sang Tạo giọng nói</button>
+      </div>
+
+      <!-- SUB-TAB 2: TẠO PHỤ ĐỀ -->
+      <div class="sub-panel" id="st-sub" style="display: none;">
+        <label for="sub-text-input">Văn bản để tạo audio kèm file phụ đề .SRT</label>
+        <textarea id="sub-text-input" placeholder="Nhập văn bản... Mỗi câu kết thúc bằng dấu chấm sẽ tự động tạo mốc thời gian phụ đề khớp từng giây."></textarea>
+        <button class="btn btn-flag" id="btn-gen-sub" style="margin-top: 12px;">🎬 Tạo Audio + File Phụ đề .SRT</button>
+        <div class="feedback-msg err" id="err-sub"></div>
+      </div>
+
+      <!-- SUB-TAB 3: LỒNG TIẾNG -->
+      <div class="sub-panel" id="st-dub" style="display: none;">
+        <div class="hint-box">
+          💡 <b>Lồng tiếng theo mốc thời gian:</b> Kéo thả file <code>.srt</code> hoặc <code>.vtt</code>. Hệ thống sẽ đọc từng câu theo đúng mốc thời gian. Nếu câu quá dài, hệ thống tự động tăng tốc độ đọc (tối đa 1.5x) mà <b>KHÔNG BAO GIỜ cắt chữ</b>.
+        </div>
+        <label>Chọn file phụ đề (.srt hoặc .vtt)</label>
+        <input type="file" id="dub-file-input" accept=".srt,.vtt">
+        <button class="btn btn-flag" id="btn-gen-dubbing" style="margin-top: 14px;">🎙️ Bắt đầu lồng tiếng & Tải .ZIP</button>
+        <div class="feedback-msg err" id="err-dub"></div>
+      </div>
+    </section>
+
+    <!-- TAB 4: HỘI THOẠI / PODCAST -->
+    <section class="panel" id="p-podcast">
+      <div class="panel-title"><span>🎭 Kịch bản Hội thoại nhiều nhân vật / Podcast</span></div>
+      <p class="hint-box">Tạo cuộc hội thoại nhiều giọng đọc khác nhau ghép thành một bản audio hoàn chỉnh.</p>
+
+      <div id="dialog-lines-container"></div>
+      <button class="btn btn-secondary" id="btn-add-line" style="margin-top: 10px;">➕ Thêm câu thoại</button>
+      <div style="margin-top: 20px;">
+        <button class="btn btn-flag" id="btn-gen-podcast">🎙️ Ghép thành Audio Hội thoại</button>
+      </div>
+      <div class="feedback-msg err" id="err-podcast"></div>
+    </section>
+
+    <!-- TAB 5: NHÂN BẢN GIỌNG NÓI -->
+    <section class="panel" id="p-clone">
+      <div class="panel-title"><span>🎤 Nhân bản giọng nói cá nhân</span></div>
+
+      <div class="warn-box">
+        <strong>CẢNH BÁO PHÁP LÝ & ĐẠO ĐỨC:</strong><br>
+        1. Ứng dụng <b>chỉ cho phép thu âm TRỰC TIẾP từ micro</b> để nhân bản giọng nói của CHÍNH BẠN.<br>
+        2. TUYỆT ĐỐI KHÔNG giả mạo giọng nói của người khác khi chưa có sự đồng ý.<br>
+        3. Mọi dữ liệu nhân bản lưu hoàn toàn cục bộ trên máy tính của bạn.
+      </div>
+
+      <label>Câu xác nhận đồng ý (Đọc to câu dưới đây khi thu âm ~8 giây)</label>
+      <div id="consent-display" style="background:#EFEFE6; border-radius:6px; padding:14px; font-weight:700; font-size:16px; color:var(--army-green-dark); border:1px dashed var(--gold-border);">
+        “Tôi đồng ý cho ứng dụng tạo giọng đọc mô phỏng giọng nói của chính tôi.”
+      </div>
+
+      <label for="clone-name-input">Tên giọng nhân bản</label>
+      <input type="text" id="clone-name-input" placeholder="VD: Giọng của Nam">
+
+      <div style="margin-top: 14px; display: flex; gap: 12px; align-items: center;">
+        <button class="btn btn-flag" id="btn-start-rec">⏺ Bắt đầu thu âm Micro</button>
+        <button class="btn btn-secondary" id="btn-stop-rec" disabled>⏹ Dừng & Lưu giọng</button>
+      </div>
+
+      <label style="margin-top: 14px; cursor: pointer;">
+        <input type="checkbox" id="consent-check" style="width: auto;"> Tôi xác nhận đây là giọng nói của chính tôi và đồng ý khởi tạo giọng AI.
+      </label>
+
+      <div class="feedback-msg err" id="err-clone"></div>
+      <div class="feedback-msg ok" id="ok-clone"></div>
+    </section>
+
+    <!-- TAB 6: LỊCH SỬ -->
+    <section class="panel" id="p-history">
+      <div class="panel-title">
+        <span>📜 Lịch sử tạo giọng nói</span>
+        <div>
+          <button class="btn btn-primary" onclick="openOutputFolder()" style="padding: 6px 12px; font-size: 12px;">📂 Mở thư mục chứa file</button>
+          <button class="btn btn-secondary" id="btn-reload-hist">↻ Tải lại</button>
+          <button class="btn btn-danger" id="btn-clear-hist" style="padding: 6px 12px; font-size: 12px;">🗑️ Xóa toàn bộ</button>
+        </div>
+      </div>
+
+      <div id="storage-stats-bar" style="background: #F4F6F0; padding: 12px; border-radius: 6px; font-size: 13px; font-weight: 600; margin-bottom: 14px;">
+        Đang tải thông tin dung lượng...
+      </div>
+
+      <div id="hist-list"></div>
+    </section>
+
+    <!-- TAB 7: TỪ ĐIỂN PHÁT ÂM -->
+    <section class="panel" id="p-dict">
+      <div class="panel-title"><span>📖 Từ điển phát âm người dùng</span></div>
+      <p class="hint-box">Định nghĩa cách đọc cho từ viết tắt, tên riêng hoặc thuật ngữ chuyên ngành (Lưu persistent trên máy).</p>
+
+      <div class="form-row">
+        <div><input type="text" id="dict-word" placeholder="Từ viết tắt (VD: KTX)"></div>
+        <div><input type="text" id="dict-reading" placeholder="Cách đọc thay thế (VD: ký túc xá)"></div>
+        <div style="flex: 0;"><button class="btn btn-primary" id="btn-add-dict">Lưu từ điển</button></div>
+      </div>
+
+      <div id="dict-table-container" style="margin-top: 16px;"></div>
+    </section>
+
+    <!-- TAB 8: MÔ HÌNH & GPU -->
+    <section class="panel" id="p-model">
+      <div class="panel-title"><span>⚙️ Quản lý Mô hình & Cấu hình Phần cứng (CPU/GPU)</span></div>
+
+      <div class="hint-box">
+        Mặc định mô hình chạy chế độ <b>CPU High-Speed INT8</b> tối ưu cho mọi máy tính Windows offline. Nếu máy có Card màn hình NVIDIA CUDA, bạn có thể chuyển sang chế độ GPU để tăng tốc.
+      </div>
+
+      <label>Cấu hình thiết bị & Lượng tử hóa mô hình</label>
+      <div class="form-row">
+        <div>
+          <label for="model-device-select">Thiết bị xử lý (Device)</label>
+          <select id="model-device-select">
+            <option value="cpu">CPU (Mặc định - Tương thích mọi máy tính)</option>
+            <option value="cuda">GPU NVIDIA (Tăng tốc CUDA Execution)</option>
+          </select>
+        </div>
+        <div>
+          <label for="model-precision-select">Độ chính xác / Lượng tử hóa</label>
+          <select id="model-precision-select">
+            <option value="int8">VieNeu v3 Turbo INT8 (Nhanh nhất cho CPU - Mặc định)</option>
+            <option value="fp32">VieNeu v3 Turbo FP32 (Chất lượng cao nhất)</option>
+          </select>
+        </div>
+        <div>
+          <button class="btn btn-primary" id="btn-apply-model" style="margin-top: 24px;">Áp dụng cấu hình</button>
+        </div>
+      </div>
+
+      <div class="warn-box" id="gpu-info-box" style="margin-top: 20px;">
+        Đang kiểm tra phần cứng CPU/GPU...
+      </div>
+    <!-- TAB BẢN QUYỀN & GIẤY PHÉP -->
+    <section class="panel" id="p-license">
+      <div class="panel-title">
+        <span>🛡️ Quản lý Bản quyền & Giấy phép Sử dụng</span>
+        <button class="btn btn-secondary" onclick="fetchLicenseStatus()" style="padding: 4px 12px; font-size: 12px;">🔄 Làm mới trạng thái</button>
+      </div>
+
+      <div class="lic-status-banner" id="panel-lic-banner">
+        Đang nạp thông tin giấy phép...
+      </div>
+
+      <div class="machine-id-card">
+        <div class="machine-id-label">Mã máy tính của bạn (Device Fingerprint):</div>
+        <div class="machine-id-row">
+          <input type="text" id="panel-machine-id" class="machine-id-input" readonly value="Đang tải...">
+          <button type="button" class="btn-copy" onclick="copyMachineId('panel-machine-id')">📋 Sao chép mã máy</button>
+        </div>
+        <div style="font-size: 12px; color: var(--text-mut); margin-top: 6px;">
+          Gửi mã máy này cho nhà phát triển để nhận key dùng thử (1 ngày, 7 ngày hoặc 30 ngày).
+        </div>
+      </div>
+
+      <div style="background: #FAFAFA; border: 1px solid var(--border-color); border-radius: 8px; padding: 18px; margin-bottom: 20px;">
+        <h3 style="font-size: 15px; color: var(--army-green-dark); margin-bottom: 12px;">Chi tiết giấy phép hiện tại:</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; font-size: 13px;">
+          <div><b>Trạng thái:</b> <span id="lic-detail-status">---</span></div>
+          <div><b>Gói bản quyền:</b> <span id="lic-detail-plan">---</span></div>
+          <div><b>Thời gian còn lại:</b> <span id="lic-detail-rem" style="font-weight: 700; color: #2e7d32;">---</span></div>
+          <div><b>Ngày kích hoạt đầu tiên:</b> <span id="lic-detail-first">---</span></div>
+          <div><b>Thời điểm hết hạn:</b> <span id="lic-detail-exp">---</span></div>
+          <div><b>Mã giấy phép (License ID):</b> <span id="lic-detail-lid" style="font-family: monospace;">---</span></div>
+        </div>
+      </div>
+
+      <div style="border: 2px dashed var(--gold-border); border-radius: 8px; padding: 18px; background: #FFFDF7;">
+        <h3 style="font-size: 15px; color: var(--flag-red); margin-bottom: 8px;">🔑 Nhập mã bản quyền mới (Kích hoạt hoặc Gia hạn):</h3>
+        <p style="font-size: 13px; color: var(--text-mut); margin-bottom: 10px;">
+          Khi hết hạn hoặc muốn nâng cấp gói, hãy dán chuỗi key mới do nhà phát triển cấp vào ô dưới đây:
+        </p>
+        <textarea id="panel-license-input" rows="3" placeholder="Dán mã bản quyền bắt đầu bằng TTTS-LIC1-... vào đây"></textarea>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; flex-wrap: wrap; gap: 10px;">
+          <div>
+            <label for="panel-lic-file" class="btn btn-secondary" style="margin: 0; font-size: 13px; cursor: pointer;">📁 Chọn file .lic từ máy tính</label>
+            <input type="file" id="panel-lic-file" accept=".lic,.txt" style="display: none;" onchange="loadLicFile(this, 'panel-license-input')">
+          </div>
+          <button type="button" class="btn btn-flag" onclick="submitActivation('panel-license-input', 'panel-lic-feedback')">🔓 Xác nhận kích hoạt</button>
+        </div>
+        <div id="panel-lic-feedback" class="feedback-msg"></div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <b>T-TTS v1.0.1</b> — PHẦN MỀM CHUYỂN VĂN BẢN THÀNH GIỌNG NÓI TIẾNG VIỆT<br>
+  <span style="font-size: 11px; opacity: 0.9;">T-TTS do Tiệp Nguyễn phát triển. Sử dụng mô hình giọng nói VieNeu-TTS của tác giả Phạm Nguyễn Ngọc Bảo.</span>
+</footer>
+
+<!-- MODAL OVERLAY KHÓA ỨNG DỤNG KHI CHƯA KÍCH HOẠT / HẾT HẠN / LÙI GIỜ -->
+<div class="license-overlay" id="license-modal-overlay" style="display: none;">
+  <div class="license-modal">
+    <div class="license-modal-head">
+      <div class="license-modal-title">
+        <span>🛡️</span>
+        <span id="modal-title-text">KÍCH HOẠT BẢN QUYỀN T-TTS v1.0.1</span>
+      </div>
+      <button type="button" class="btn-close-modal" id="btn-modal-close" onclick="closeLicenseModal()" title="Đóng">&times;</button>
+    </div>
+    <div class="license-modal-body">
+      <div class="lic-status-banner unactivated" id="modal-status-banner">
+        Đang kiểm tra bản quyền...
+      </div>
+
+      <div class="machine-id-card">
+        <div class="machine-id-label">MÃ MÁY TÍNH CỦA BẠN (GỬI MÃ NÀY CHO NHÀ PHÁT TRIỂN):</div>
+        <div class="machine-id-row">
+          <input type="text" id="modal-machine-id" class="machine-id-input" readonly value="...">
+          <button type="button" class="btn-copy" onclick="copyMachineId('modal-machine-id')">📋 Sao chép mã máy</button>
+        </div>
+        <div style="font-size: 11px; color: var(--text-mut); margin-top: 6px;">
+          Mã máy ổn định, định danh duy nhất thiết bị của bạn. Không chứa thông tin cá nhân.
+        </div>
+      </div>
+
+      <label for="modal-license-input" style="font-weight: 700; font-size: 13px; color: var(--army-green-dark); margin: 12px 0 6px;">
+        Nhập hoặc dán mã bản quyền (Key kích hoạt):
+      </label>
+      <textarea id="modal-license-input" rows="3" placeholder="Dán chuỗi mã bản quyền bắt đầu bằng TTTS-LIC1-... vào đây hoặc chọn tệp .lic"></textarea>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; flex-wrap: wrap; gap: 10px;">
+        <div>
+          <label for="modal-lic-file" class="btn btn-secondary" style="margin: 0; font-size: 12px; cursor: pointer; padding: 7px 14px;">📁 Chọn tệp .lic</label>
+          <input type="file" id="modal-lic-file" accept=".lic,.txt" style="display: none;" onchange="loadLicFile(this, 'modal-license-input')">
+        </div>
+        <button type="button" class="btn btn-flag" id="btn-modal-submit" onclick="submitActivation('modal-license-input', 'modal-lic-feedback')">🔓 Kích hoạt ngay</button>
+      </div>
+
+      <div id="modal-lic-feedback" class="feedback-msg"></div>
+
+      <div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--border-color); font-size: 12px; color: #666; line-height: 1.5;">
+        ℹ️ <b>Ghi chú:</b> Hỗ trợ chính xác 3 thời hạn: <b>1 ngày, 7 ngày và 30 ngày</b> tính từ lần kích hoạt đầu tiên. Hoạt động hoàn toàn <b>offline</b> không cần kết nối mạng Internet.
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+let globalVoicesList = [];
+let selectedVoiceId = null;
+let currentGenderFilter = 'all';
+
+function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+// Chuyển Tab chính
+document.querySelectorAll('.nav-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    const pId = btn.dataset.p;
+    $(pId).classList.add('active');
+
+    if (pId === 'p-history') loadHistory();
+    if (pId === 'p-dict') loadDict();
+    if (pId === 'p-model') loadModelStatus();
+    if (pId === 'p-license') fetchLicenseStatus();
+  });
+});
+
+let currentLicenseInfo = null;
+window._licenseModalManuallyOpened = false;
+
+// Global Fetch Interceptor tự động phát hiện mã 403 License Locked
+const _origFetch = window.fetch;
+window.fetch = async function(...args) {
+  const res = await _origFetch(...args);
+  if (res.status === 403) {
+    try {
+      const cloned = res.clone();
+      const body = await cloned.json();
+      if (body && body.license_locked) {
+        fetchLicenseStatus();
+      }
+    } catch (_) {}
+  }
+  return res;
+};
+
+// QUẢN LÝ BẢN QUYỀN OFFLINE
+async function fetchLicenseStatus() {
+  try {
+    const res = await fetch('/api/license/status');
+    const d = await res.json();
+    currentLicenseInfo = d;
+    renderLicenseUI(d);
+    return d;
+  } catch (e) {
+    console.error('Lỗi nạp trạng thái bản quyền:', e);
+    return null;
+  }
+}
+
+function renderLicenseUI(d) {
+  if (!d) return;
+
+  // Cập nhật Header Pill
+  const pill = $('license-pill');
+  const dot = $('license-dot');
+  const text = $('license-text');
+
+  if (d.is_active) {
+    dot.style.backgroundColor = '#28a745';
+    text.textContent = `🛡️ Bản quyền: Còn ${d.remaining_formatted} (${d.plan || 'KEY'})`;
+    pill.style.borderColor = 'rgba(76, 175, 80, 0.6)';
+    pill.style.background = 'rgba(46, 125, 50, 0.2)';
+  } else {
+    dot.style.backgroundColor = '#dc3545';
+    text.textContent = `⚠️ Bản quyền: ${getShortStatusName(d.status)} (Bấm mở)`;
+    pill.style.borderColor = 'rgba(220, 53, 69, 0.7)';
+    pill.style.background = 'rgba(198, 40, 40, 0.25)';
+  }
+
+  // Cập nhật Panel Bản quyền trong Tab
+  if ($('panel-machine-id')) $('panel-machine-id').value = d.machine_id || '';
+  if ($('modal-machine-id')) $('modal-machine-id').value = d.machine_id || '';
+
+  if ($('panel-lic-banner')) {
+    const banner = $('panel-lic-banner');
+    banner.className = `lic-status-banner ${getBannerClass(d.status)}`;
+    banner.innerHTML = `<b>${getStatusTitle(d.status)}:</b> ${escapeHtml(d.status_message || '')}`;
+  }
+
+  if ($('lic-detail-status')) $('lic-detail-status').innerHTML = `<span style="font-weight:700; color:${d.is_active ? '#2e7d32' : '#c62828'}">${getStatusTitle(d.status)}</span>`;
+  if ($('lic-detail-plan')) $('lic-detail-plan').textContent = d.plan ? `${d.plan} (${d.duration_hours} giờ)` : 'Chưa có';
+  if ($('lic-detail-rem')) $('lic-detail-rem').textContent = d.remaining_formatted || '0 phút';
+  if ($('lic-detail-first')) $('lic-detail-first').textContent = d.first_activated_readable || 'Chưa kích hoạt';
+  if ($('lic-detail-exp')) $('lic-detail-exp').textContent = d.expires_readable || 'Chưa xác định';
+  if ($('lic-detail-lid')) $('lic-detail-lid').textContent = d.license_id || 'Chưa có';
+
+  // Điều khiển Modal Khóa nếu chưa kích hoạt hoặc hết hạn/bị khóa
+  if (d.is_locked) {
+    openLicenseModal(false);
+  } else {
+    if (!window._licenseModalManuallyOpened) {
+      closeLicenseModal();
+    }
+  }
+}
+
+function getShortStatusName(status) {
+  switch (status) {
+    case 'active': return 'Hợp lệ';
+    case 'expired': return 'Hết hạn';
+    case 'rollback_detected': return 'Lùi giờ';
+    case 'tampered': return 'Lỗi can thiệp';
+    case 'machine_mismatch': return 'Sai mã máy';
+    default: return 'Chưa kích hoạt';
+  }
+}
+
+function getStatusTitle(status) {
+  switch (status) {
+    case 'active': return '✅ ĐANG HOẠT ĐỘNG HỢP LỆ';
+    case 'expired': return '⏰ GIẤY PHÉP ĐÃ HẾT HẠN';
+    case 'rollback_detected': return '⚠️ PHÁT HIỆN LÙI THỜI GIAN HỆ THỐNG';
+    case 'tampered': return '❌ DỮ LIỆU BẢN QUYỀN BỊ CAN THIỆP';
+    case 'machine_mismatch': return '❌ MÃ MÁY KHÔNG KHỚP';
+    default: return 'ℹ️ CHƯA KÍCH HOẠT BẢN QUYỀN';
+  }
+}
+
+function getBannerClass(status) {
+  switch (status) {
+    case 'active': return 'active';
+    case 'expired': return 'expired';
+    case 'rollback_detected': return 'rollback';
+    case 'tampered': return 'expired';
+    default: return 'unactivated';
+  }
+}
+
+function openLicenseModal(manual = false) {
+  window._licenseModalManuallyOpened = manual;
+  const overlay = $('license-modal-overlay');
+  if (!overlay) return;
+  overlay.style.display = 'flex';
+
+  const d = currentLicenseInfo || {};
+  if ($('modal-machine-id')) $('modal-machine-id').value = d.machine_id || '';
+
+  const mbanner = $('modal-status-banner');
+  if (mbanner) {
+    mbanner.className = `lic-status-banner ${getBannerClass(d.status)}`;
+    mbanner.innerHTML = `<b>${getStatusTitle(d.status)}:</b><br>${escapeHtml(d.status_message || 'Vui lòng nhập key để mở khóa.')}`;
+  }
+
+  // Ẩn nút đóng modal nếu đang bị khóa
+  const closeBtn = $('btn-modal-close');
+  if (closeBtn) {
+    if (d.is_locked) {
+      closeBtn.style.display = 'none';
+    } else {
+      closeBtn.style.display = 'block';
+    }
+  }
+}
+
+function closeLicenseModal() {
+  window._licenseModalManuallyOpened = false;
+  const overlay = $('license-modal-overlay');
+  if (overlay) overlay.style.display = 'none';
+}
+
+function copyMachineId(inputId) {
+  const inp = $(inputId);
+  if (!inp || !inp.value) return;
+  inp.select();
+  inp.setSelectionRange(0, 99999);
+  navigator.clipboard.writeText(inp.value).then(() => {
+    alert(`✅ Đã sao chép Mã Máy vào bộ nhớ đệm!\n\nMã máy: ${inp.value}\n\nHãy gửi mã này cho nhà phát triển để nhận key kích hoạt.`);
+  }).catch(() => {
+    inp.select();
+    document.execCommand('copy');
+    alert(`✅ Đã sao chép: ${inp.value}`);
+  });
+}
+
+function loadLicFile(fileInput, targetTextareaId) {
+  const f = fileInput.files[0];
+  if (!f) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const val = (ev.target.result || '').trim();
+    if ($(targetTextareaId)) $(targetTextareaId).value = val;
+  };
+  reader.readAsText(f);
+}
+
+async function submitActivation(inputId, feedbackId) {
+  const fb = $(feedbackId);
+  fb.className = 'feedback-msg';
+  fb.textContent = 'Đang xác minh bản quyền...';
+
+  let keyVal = ($(inputId).value || '').trim();
+  // Loại bỏ toàn bộ dấu cách, ngắt dòng do copy-paste gây ra
+  keyVal = keyVal.replace(/\s+/g, '');
+  if (!keyVal) {
+    fb.className = 'feedback-msg err';
+    fb.textContent = 'Vui lòng dán chuỗi key bản quyền do nhà phát triển cung cấp.';
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/license/activate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key: keyVal })
+    });
+    const d = await res.json();
+    if (res.ok && d.success) {
+      fb.className = 'feedback-msg ok';
+      fb.textContent = '✅ ' + d.message;
+      alert(`🎉 ${d.message}`);
+      await fetchLicenseStatus();
+      closeLicenseModal();
+    } else {
+      fb.className = 'feedback-msg err';
+      fb.textContent = '❌ ' + (d.message || d.error || 'Kích hoạt không thành công.');
+    }
+  } catch (e) {
+    fb.className = 'feedback-msg err';
+    fb.textContent = '❌ Lỗi kết nối máy chủ: ' + e.message;
+  }
+}
+
+// Chuyển Sub-tab Đọc file & Phụ đề
+document.querySelectorAll('.sub-tab').forEach(st => {
+  st.addEventListener('click', () => {
+    document.querySelectorAll('.sub-tab').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.sub-panel').forEach(sp => sp.style.display = 'none');
+    st.classList.add('active');
+    $(st.dataset.st).style.display = 'block';
+  });
+});
+
+// CHÈN NỔI BẬT THẺ CẢM XÚC / THẺ NGHỈ VÀO Ô VĂN BẢN VÀO VỊ TRÍ CON TRỎ
+function insertTag(tag) {
+  const ta = $('create-text');
+  const start = ta.selectionStart || 0;
+  const end = ta.selectionEnd || 0;
+  const val = ta.value;
+
+  ta.value = val.substring(0, start) + ' ' + tag + ' ' + val.substring(end);
+  ta.focus();
+  const newPos = start + tag.length + 2;
+  ta.setSelectionRange(newPos, newPos);
+}
+
+// KHỞI TẠO HỆ THỐNG
+async function init() {
+  try {
+    // 1. Kiểm tra trạng thái bản quyền offline trước tiên
+    await fetchLicenseStatus();
+    setInterval(fetchLicenseStatus, 20000);
+
+    const h = await (await fetch('/health')).json();
+    if (h.model_loaded) {
+      $('status-text').textContent = `Sẵn sàng — ${h.model} (${(h.backend || 'ONNX').toUpperCase()})`;
+      $('status-dot').style.backgroundColor = '#28a745';
+    } else {
+      $('status-text').textContent = `Đang tải mô hình...`;
+      $('status-dot').style.backgroundColor = '#ffc107';
+    }
+
+    const v = await (await fetch('/voices')).json();
+    globalVoicesList = v.voices || [];
+
+    if (globalVoicesList.length > 0) {
+      selectedVoiceId = globalVoicesList[0].id;
+    }
+
+    // Nạp dropdown cho Tab Tạo hàng loạt bằng DOM an toàn
+    const batchSelect = $('batch-voice');
+    batchSelect.innerHTML = '';
+    globalVoicesList.forEach(x => {
+      const opt = document.createElement('option');
+      opt.value = x.id;
+      opt.textContent = `${x.name || x.id} (${x.gender || 'Bắc'} · ${x.region || 'Toàn quốc'})`;
+      batchSelect.appendChild(opt);
+    });
+
+    // Hiển thị danh sách card chọn giọng
+    renderVoiceCards();
+
+    // Khởi tạo kịch bản hội thoại mẫu
+    initPodcastLines(globalVoicesList);
+  } catch (e) {
+    $('status-text').textContent = 'Không kết nối được Local Server';
+    $('status-dot').style.backgroundColor = '#dc3545';
+  }
+}
+
+// RENDER DANH SÁCH THẺ CARD CHỌN GIỌNG
+function renderVoiceCards() {
+  const container = $('voice-cards-list');
+  container.innerHTML = '';
+
+  const filtered = globalVoicesList.filter(v => {
+    if (currentGenderFilter === 'all') return true;
+    return (v.gender || '').toLowerCase() === currentGenderFilter.toLowerCase();
+  });
+
+  if (!filtered.length) {
+    container.innerHTML = '<div class="hint-box" style="grid-column: 1/-1;">Không tìm thấy giọng đọc phù hợp với bộ lọc.</div>';
+    return;
+  }
+
+  if (!filtered.some(v => v.id === selectedVoiceId) && filtered.length > 0) {
+    selectedVoiceId = filtered[0].id;
+  }
+
+  filtered.forEach(v => {
+    const card = document.createElement('div');
+    card.className = `voice-card ${v.id === selectedVoiceId ? 'active' : ''}`;
+    card.setAttribute('data-voice-id', v.id);
+
+    const icon = v.gender === 'Nữ' ? '👩' : '👨';
+    const descStr = v.description || `${v.gender || 'Nam'} · ${v.region || 'Bắc'} · ${v.style || 'Tự nhiên'} · 48 kHz`;
+
+    card.innerHTML = `
+      <div class="vc-header">
+        <div class="vc-title">
+          <span class="vc-icon">${icon}</span>
+          <strong class="vc-name">${escapeHtml(v.name || v.id)}</strong>
+        </div>
+        <div class="vc-badge">${escapeHtml(v.region || 'Bắc')}</div>
+      </div>
+      <div class="vc-desc">${escapeHtml(descStr)}</div>
+      <div class="vc-check">✔</div>
+    `;
+
+    card.addEventListener('click', () => {
+      selectedVoiceId = v.id;
+      document.querySelectorAll('.voice-card').forEach(c => c.classList.remove('active'));
+      card.classList.add('active');
+    });
+
+    container.appendChild(card);
+  });
+}
+
+// BỘ LỌC TẤT CẢ / NỮ / NAM
+document.querySelectorAll('.filter-btn').forEach(fBtn => {
+  fBtn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    fBtn.classList.add('active');
+    currentGenderFilter = fBtn.dataset.filter;
+    renderVoiceCards();
+  });
+});
+
+// NGHE THỬ GIỌNG MẪU
+$('btn-preview-voice').onclick = async () => {
+  $('err-create').textContent = '';
+  try {
+    const r = await fetch('/api/tts/preview', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ voice_id: selectedVoiceId, speed: parseFloat($('create-speed').value) || 1.0 })
+    });
+    const d = await r.json();
+    if (!r.ok || !d.success) throw new Error(d.error || 'Lỗi nghe thử.');
+    const player = $('player-create');
+    $('player-box-create').style.display = 'block';
+    player.src = 'data:audio/wav;base64,' + d.audio_b64;
+    player.play();
+  } catch (e) {
+    $('err-create').textContent = e.message;
+  }
+};
+
+// TẠO GIỌNG NÓI SINGLE
+$('btn-generate').onclick = async () => {
+  const btn = $('btn-generate');
+  btn.disabled = true;
+  $('err-create').textContent = '';
+  try {
+    const r = await fetch('/api/tts/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        text: $('create-text').value,
+        voice_id: selectedVoiceId,
+        speed: parseFloat($('create-speed').value) || 1.0,
+        format: $('create-fmt').value
+      })
+    });
+    const d = await r.json();
+    if (!r.ok || !d.success) throw new Error(d.error || 'Lỗi tạo giọng nói.');
+
+    // 1. Phát trực tiếp từ dữ liệu Base64: Tuyệt đối không kích hoạt IDM hay hộp thoại tải xuống
+    const player = $('player-create');
+    $('player-box-create').style.display = 'block';
+    player.src = `data:audio/${d.format || 'wav'};base64,${d.audio_b64}`;
+    player.play();
+
+    // 2. Hiển thị thông tin file đã lưu trực tiếp trên ổ cứng máy tính
+    $('download-link-create').innerHTML = `
+      <div style="background: #EBF3E8; border: 1px solid #7cb342; border-radius: 6px; padding: 12px 14px; margin-top: 8px;">
+        <div style="font-weight: 700; color: var(--army-green-dark); font-size: 13px;">
+          ✅ Đã tạo và lưu file thành công: <code>${escapeHtml(d.filename)}</code> (${d.duration}s · ${(d.size_bytes/1024).toFixed(1)} KB)
+        </div>
+        <div style="font-size: 12px; color: #333; margin: 4px 0 10px 0; word-break: break-all;">
+          <b>Vị trí lưu trên máy:</b> <code>${escapeHtml(d.filepath)}</code>
+        </div>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <button type="button" class="btn btn-primary" style="padding: 6px 14px; font-size: 12px;" onclick="openOutputFolder()">📂 Mở thư mục chứa file</button>
+          <button type="button" class="btn btn-secondary" style="padding: 6px 14px; font-size: 12px;" onclick="saveFileAs('${d.item_id}', '${escapeHtml(d.filename)}')">💾 Chọn nơi lưu khác (Save As...)</button>
+        </div>
+      </div>
+    `;
+  } catch (e) {
+    $('err-create').textContent = e.message;
+  }
+  btn.disabled = false;
+};
+
+// TẠO HÀNG LOẠT & FILE MẪU
+$('btn-download-sample-batch').onclick = () => {
+  const sample = `[P1] Kính chào quý vị và các bạn.\n[P2] Đây là đoạn âm thanh số hai được xuất ra file riêng biệt.\n[P3] T-TTS v1.0.1 giúp tự động hóa tạo file âm thanh hàng loạt.`;
+  const blob = new Blob([sample], { type: 'text/plain;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'sample_batch_t_tts.txt';
+  a.click();
+};
+
+$('batch-file-input').onchange = e => {
+  const f = e.target.files[0];
+  if (f) {
+    const reader = new FileReader();
+    reader.onload = ev => $('batch-text').value = ev.target.result;
+    reader.readAsText(f);
+  }
+};
+
+$('btn-batch').onclick = async () => {
+  const btn = $('btn-batch');
+  btn.disabled = true;
+  $('err-batch').textContent = '';
+  $('ok-batch').textContent = '';
+  try {
+    const r = await fetch('/api/tts/batch', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        text: $('batch-text').value,
+        voice_id: $('batch-voice').value,
+        speed: parseFloat($('batch-speed').value) || 1.0
+      })
+    });
+    if (!r.ok) throw new Error((await r.json()).error || 'Lỗi tạo hàng loạt.');
+    const blob = await r.blob();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 't-tts-batch.zip';
+    a.click();
+    $('ok-batch').textContent = '✅ Đã tạo thành công bộ file hàng loạt .ZIP!';
+  } catch (e) {
+    $('err-batch').textContent = e.message;
+  }
+  btn.disabled = false;
+};
+
+// ĐỌC FILE & LÀM SẠCH VĂN BẢN
+$('btn-read-doc').onclick = async () => {
+  const f = $('doc-file-input').files[0];
+  if (!f) return alert('Vui lòng chọn file .pdf, .docx hoặc .txt');
+  const fd = new FormData();
+  fd.append('file', f);
+  const r = await fetch('/api/file/read', { method: 'POST', body: fd });
+  const d = await r.json();
+  if (r.ok) $('doc-text-output').value = d.cleaned || d.text;
+  else alert(d.error || 'Lỗi đọc file');
+};
+
+$('btn-clean-text').onclick = async () => {
+  const r = await fetch('/api/text/clean', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text: $('doc-text-output').value })
+  });
+  const d = await r.json();
+  $('doc-text-output').value = d.cleaned;
+};
+
+$('btn-send-to-tts').onclick = () => {
+  $('create-text').value = $('doc-text-output').value;
+  document.querySelectorAll('.nav-btn')[0].click();
+};
+
+// TẠO PHỤ ĐỀ (.SRT)
+$('btn-gen-sub').onclick = async () => {
+  const btn = $('btn-gen-sub');
+  btn.disabled = true;
+  $('err-sub').textContent = '';
+  try {
+    const r = await fetch('/api/tts/generate-with-subtitles', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        text: $('sub-text-input').value,
+        voice_id: selectedVoiceId,
+        speed: 1.0
+      })
+    });
+    if (!r.ok) throw new Error((await r.json()).error || 'Lỗi tạo phụ đề.');
+    const blob = await r.blob();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 't-tts-subtitles.zip';
+    a.click();
+  } catch (e) {
+    $('err-sub').textContent = e.message;
+  }
+  btn.disabled = false;
+};
+
+// LỒNG TIẾNG THEO PHỤ ĐỀ
+$('btn-gen-dubbing').onclick = async () => {
+  const f = $('dub-file-input').files[0];
+  if (!f) return alert('Vui lòng chọn file .srt hoặc .vtt');
+  const btn = $('btn-gen-dubbing');
+  btn.disabled = true;
+  $('err-dub').textContent = '';
+  try {
+    const fd = new FormData();
+    fd.append('subtitle_file', f);
+    fd.append('voice_id', selectedVoiceId);
+    const r = await fetch('/api/tts/dubbing', { method: 'POST', body: fd });
+    if (!r.ok) throw new Error((await r.json()).error || 'Lỗi lồng tiếng.');
+    const blob = await r.blob();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 't-tts-dubbing.zip';
+    a.click();
+  } catch (e) {
+    $('err-dub').textContent = e.message;
+  }
+  btn.disabled = false;
+};
+
+// HỘI THOẠI / PODCAST
+let podcastLineCount = 0;
+function initPodcastLines(voices) {
+  const container = $('dialog-lines-container');
+  container.innerHTML = '';
+  podcastLineCount = 0;
+  const v1 = voices.length > 0 ? voices[0].id : '';
+  const v2 = voices.length > 1 ? voices[1].id : v1;
+  addPodcastLine(voices, 'Nhân vật 1', v1, 'Báo cáo chỉ huy, đơn vị đã hoàn thành công tác chuẩn bị.');
+  addPodcastLine(voices, 'Nhân vật 2', v2, 'Tốt lắm, đề nghị các đồng chí duy trì nghiêm chế độ trực chiến.');
+}
+
+function addPodcastLine(voices, defaultSpeaker, defaultVoice, defaultText) {
+  podcastLineCount++;
+  const container = $('dialog-lines-container');
+  const div = document.createElement('div');
+  div.className = 'form-row';
+  div.style.marginBottom = '10px';
+
+  const vOpts = (voices || []).map(x => `<option value="${escapeHtml(x.id)}" ${x.id === defaultVoice ? 'selected' : ''}>${escapeHtml(x.name || x.id)} (${escapeHtml(x.gender)})</option>`).join('');
+
+  div.innerHTML = `
+    <div style="flex:1;"><input type="text" class="pc-speaker" value="${escapeHtml(defaultSpeaker)}" placeholder="Nhân vật"></div>
+    <div style="flex:2;"><select class="pc-voice">${vOpts}</select></div>
+    <div style="flex:4;"><input type="text" class="pc-text" value="${escapeHtml(defaultText || '')}" placeholder="Nội dung thoại"></div>
+    <div style="flex:0;"><button class="btn btn-secondary" onclick="this.parentElement.parentElement.remove()">❌</button></div>
+  `;
+  container.appendChild(div);
+}
+
+$('btn-add-line').onclick = async () => {
+  const v = await (await fetch('/voices')).json();
+  const voices = v.voices || [];
+  const defaultV = voices.length > 0 ? voices[0].id : '';
+  addPodcastLine(voices, `Nhân vật ${podcastLineCount + 1}`, defaultV, '');
+};
+
+$('btn-gen-podcast').onclick = async () => {
+  const btn = $('btn-gen-podcast');
+  btn.disabled = true;
+  $('err-podcast').textContent = '';
+  const lines = [];
+  document.querySelectorAll('#dialog-lines-container .form-row').forEach(row => {
+    lines.push({
+      speaker: row.querySelector('.pc-speaker').value,
+      voice_id: row.querySelector('.pc-voice').value,
+      text: row.querySelector('.pc-text').value,
+      pause_after: 0.5
+    });
+  });
+
+  try {
+    const r = await fetch('/api/tts/conversation', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ lines })
+    });
+    if (!r.ok) throw new Error((await r.json()).error || 'Lỗi ghép hội thoại.');
+    const blob = await r.blob();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'podcast_t_tts.wav';
+    a.click();
+  } catch (e) {
+    $('err-podcast').textContent = e.message;
+  }
+  btn.disabled = false;
+};
+
+// NHÂN BẢN GIỌNG NÓI MICRO
+let mediaRecorder = null, audioChunks = [], recTimer = null, recStartTime = 0, currentStream = null;
+
+function formatRecTime(sec) {
+  const m = Math.floor(sec / 60).toString().padStart(2, '0');
+  const s = (sec % 60).toString().padStart(2, '0');
+  return `${m}:${s}`;
+}
+
+$('btn-start-rec').onclick = async () => {
+  if (!$('consent-check').checked) {
+    return alert('Bạn phải tích chọn đồng ý và xác nhận đây là giọng của chính bạn!');
+  }
+  const nameVal = ($('clone-name-input').value || '').trim();
+  if (!nameVal) {
+    return alert('Vui lòng nhập Tên giọng nhân bản!');
+  }
+  try {
+    currentStream = await navigator.mediaDevices.getUserMedia({
+      audio: { channelCount: 1, sampleRate: 44100, echoCancellation: true, noiseSuppression: true }
+    });
+    const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+      ? 'audio/webm;codecs=opus'
+      : (MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : '');
+    mediaRecorder = mimeType ? new MediaRecorder(currentStream, { mimeType }) : new MediaRecorder(currentStream);
+    audioChunks = [];
+    mediaRecorder.ondataavailable = e => {
+      if (e.data && e.data.size > 0) audioChunks.push(e.data);
+    };
+    mediaRecorder.start(250);
+    recStartTime = Date.now();
+
+    $('btn-start-rec').disabled = true;
+    $('btn-stop-rec').disabled = false;
+    $('err-clone').textContent = '';
+    $('ok-clone').textContent = '🔴 Đang thu âm (00:00)... Hãy đọc to câu xác nhận ở trên (khuyến nghị ~8 giây).';
+
+    clearInterval(recTimer);
+    recTimer = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - recStartTime) / 1000);
+      $('ok-clone').textContent = `🔴 Đang thu âm (${formatRecTime(elapsed)})... Hãy đọc to câu xác nhận ở trên (khuyến nghị ~8 giây).`;
+    }, 500);
+  } catch (e) {
+    $('err-clone').textContent = 'Không thể mở Micro: ' + e.message;
+    $('ok-clone').textContent = '';
+  }
+};
+
+$('btn-stop-rec').onclick = async () => {
+  if (!mediaRecorder) return;
+  clearInterval(recTimer);
+  const elapsed = Math.floor((Date.now() - recStartTime) / 1000);
+  if (elapsed < 3) {
+    if (!confirm(`Thời lượng thu âm mới chỉ được ${elapsed} giây (khuyến nghị tối thiểu 3 giây và tốt nhất 8 giây). Bạn có chắc chắn muốn dừng và lưu không?`)) {
+      return;
+    }
+  }
+
+  $('btn-stop-rec').disabled = true;
+  $('ok-clone').textContent = '⏳ Đang xử lý & chuẩn hóa dữ liệu âm thanh...';
+
+  mediaRecorder.onstop = async () => {
+    try {
+      if (!audioChunks.length) {
+        throw new Error('Không nhận được dữ liệu âm thanh nào từ micro.');
+      }
+      const mime = mediaRecorder.mimeType || 'audio/webm';
+      const audioBlob = new Blob(audioChunks, { type: mime });
+      if (audioBlob.size < 500) {
+        throw new Error('Dữ liệu thu âm quá nhỏ hoặc micro bị mất tín hiệu.');
+      }
+
+      const fd = new FormData();
+      fd.append('name', $('clone-name-input').value.trim());
+      fd.append('consent', $('consent-check').checked ? 'yes' : 'no');
+      fd.append('audio', audioBlob, 'mic_recording.webm');
+
+      $('ok-clone').textContent = '⏳ Đang phân tích âm sắc giọng & lưu trữ vào mô hình...';
+      const r = await fetch('/api/voice-clone', { method: 'POST', body: fd });
+      const d = await r.json();
+
+      if (!r.ok) {
+        $('err-clone').textContent = d.error || 'Lỗi nhân bản giọng.';
+        $('ok-clone').textContent = '';
+      } else {
+        $('err-clone').textContent = '';
+        $('ok-clone').textContent = `✅ Đã lưu thành công giọng nhân bản "${escapeHtml(d.voice_id)}"! Giọng đã sẵn sàng sử dụng.`;
+        await init();
+        selectedVoiceId = d.voice_id;
+        renderVoiceCards();
+      }
+    } catch (e) {
+      $('err-clone').textContent = e.message;
+      $('ok-clone').textContent = '';
+    } finally {
+      $('btn-start-rec').disabled = false;
+      $('btn-stop-rec').disabled = true;
+      if (currentStream) {
+        currentStream.getTracks().forEach(t => t.stop());
+        currentStream = null;
+      }
+      mediaRecorder = null;
+    }
+  };
+
+  try {
+    mediaRecorder.stop();
+  } catch (err) {
+    mediaRecorder.onstop();
+  }
+};
+
+// LỊCH SỬ & DỌN DẸP Ổ ĐĨA
+async function loadHistory() {
+  const d = await (await fetch('/api/history')).json();
+  const stats = d.stats || {};
+
+  let statsHtml = `📊 Tổng số bản đã tạo: <b>${escapeHtml(stats.count)}</b> | Dung lượng chiếm dụng: <b>${escapeHtml(stats.size_mb)} MB</b>`;
+  if (stats.warn_cleanup) {
+    statsHtml += ` <span style="color: #c62828; font-weight:700;">⚠️ Ổ đĩa chiếm trên 1GB, hãy dọn dẹp!</span>`;
+  }
+  $('storage-stats-bar').innerHTML = statsHtml;
+
+  const items = d.items || [];
+  if (!items.length) {
+    $('hist-list').innerHTML = '<p class="hint-box">Chưa có bản ghi lịch sử nào.</p>';
+    return;
+  }
+
+  $('hist-list').innerHTML = items.map(it => `
+    <div style="border-bottom:1px solid var(--border-color); padding: 12px 0;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div><b>${escapeHtml(it.voice)}</b> <span style="font-size:12px; color:var(--text-mut);">[${escapeHtml(it.created_at)}]</span></div>
+        <div><button class="btn btn-secondary" style="padding:2px 8px; font-size:11px;" onclick="deleteHistItem('${escapeHtml(it.id)}')">❌ Xóa</button></div>
+      </div>
+      <div style="font-size:13px; margin: 4px 0; color:var(--text-dark);">${escapeHtml(it.text)}</div>
+      <div style="display:flex; gap:8px; margin-top:6px;">
+        <a href="/api/history/${escapeHtml(it.id)}/download?fmt=wav" download class="btn btn-secondary" style="padding:3px 10px; font-size:12px;">⬇ WAV</a>
+        ${it.mp3 ? `<a href="/api/history/${escapeHtml(it.id)}/download?fmt=mp3" download class="btn btn-secondary" style="padding:3px 10px; font-size:12px;">⬇ MP3</a>` : ''}
+        ${it.srt ? `<a href="/api/history/${escapeHtml(it.id)}/download?fmt=srt" download class="btn btn-secondary" style="padding:3px 10px; font-size:12px;">⬇ SRT</a>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+window.deleteHistItem = async id => {
+  await fetch('/api/history/' + encodeURIComponent(id), { method: 'DELETE' });
+  loadHistory();
+};
+
+$('btn-clear-hist').onclick = async () => {
+  if (confirm('Bạn có chắc chắn muốn xóa TOÀN BỘ lịch sử và giải phóng dung lượng ổ đĩa?')) {
+    await fetch('/api/history/clear', { method: 'POST' });
+    loadHistory();
+  }
+};
+$('btn-reload-hist').onclick = loadHistory;
+
+// TỪ ĐIỂN PHÁT ÂM
+async function loadDict() {
+  const d = await (await fetch('/api/pron-dict')).json();
+  const entries = Object.entries(d.dict || {});
+  if (!entries.length) {
+    $('dict-table-container').innerHTML = '<p class="hint-box">Từ điển hiện đang rỗng.</p>';
+    return;
+  }
+
+  let html = `<table class="data-table"><thead><tr><th>Từ viết tắt / Thuật ngữ</th><th>Cách đọc thay thế</th><th>Thao tác</th></tr></thead><tbody>`;
+  for (let [w, r] of entries) {
+    html += `<tr><td><b>${escapeHtml(w)}</b></td><td>${escapeHtml(r)}</td><td><button class="btn btn-secondary" style="padding:2px 8px; font-size:11px;" onclick="delDict('${escapeHtml(w)}')">Xóa</button></td></tr>`;
+  }
+  html += `</tbody></table>`;
+  $('dict-table-container').innerHTML = html;
+}
+
+window.delDict = async w => {
+  await fetch('/api/pron-dict/' + encodeURIComponent(w), { method: 'DELETE' });
+  loadDict();
+};
+
+$('btn-add-dict').onclick = async () => {
+  const word = $('dict-word').value;
+  const reading = $('dict-reading').value;
+  if (!word || !reading) return alert('Vui lòng nhập đủ Từ và Cách đọc');
+
+  await fetch('/api/pron-dict', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ word, reading })
+  });
+  $('dict-word').value = '';
+  $('dict-reading').value = '';
+  loadDict();
+};
+
+// QUẢN LÝ MÔ HÌNH & GPU
+async function loadModelStatus() {
+  try {
+    const res = await fetch('/api/model/status');
+    const d = await res.json();
+    const hw = d.hardware || {};
+    const config = d.config || {};
+
+    let gpuStatusText = '';
+    if (hw.cuda_available) {
+      gpuStatusText = `✅ Đã phát hiện NVIDIA CUDA GPU (${escapeHtml(hw.device_name || 'CUDA Device')})`;
+    } else {
+      gpuStatusText = `ℹ️ CPU High-Speed Mode (Không phát hiện CUDA GPU)`;
+    }
+
+    $('gpu-info-box').innerHTML = `
+      <b>Trạng thái phần cứng & Mô hình TTS:</b><br>
+      - Phiên bản ứng dụng: <b>T-TTS v1.0.1</b><br>
+      - Mô hình đang chạy: <b>${escapeHtml(config.mode || 'v3turbo')} (${escapeHtml((config.precision || 'int8').toUpperCase())})</b><br>
+      - Thiết bị thực tế: <b>${escapeHtml((config.device || 'cpu').toUpperCase())}</b><br>
+      - Backend Inference: <b>${escapeHtml(d.backend || 'CPU Execution')}</b><br>
+      - Trạng thái GPU: <b>${gpuStatusText}</b><br>
+      <br>
+      <b>Ghi chú:</b> Bạn có thể thay đổi thiết bị (CPU/GPU) và mức lượng tử hóa rồi bấm <i>"Áp dụng cấu hình"</i> bên trên.
+    `;
+
+    // Đồng bộ giá trị chọn trên giao diện
+    if ($('model-device-select')) $('model-device-select').value = config.device || 'cpu';
+    if ($('model-precision-select')) $('model-precision-select').value = config.precision || 'int8';
+  } catch (e) {
+    $('gpu-info-box').innerHTML = '<span style="color:red">Không thể tải thông tin phần cứng.</span>';
+  }
+}
+
+$('btn-apply-model').onclick = async () => {
+  const btn = $('btn-apply-model');
+  btn.disabled = true;
+  const device = $('model-device-select').value;
+  const precision = $('model-precision-select').value;
+  const mode = 'v3turbo';
+
+  try {
+    const r = await fetch('/api/model/configure', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mode, precision, device })
+    });
+    const d = await r.json();
+    if (r.ok && d.success) {
+      alert(`Đã cập nhật cấu hình mô hình thành công!\nThiết bị: ${(d.status?.device || device).toUpperCase()}\nĐộ chính xác: ${(d.status?.precision || precision).toUpperCase()}`);
+      init();
+      loadModelStatus();
+    } else {
+      alert('Lỗi cập nhật cấu hình mô hình: ' + (d.error || 'Cấu hình không khả dụng'));
+    }
+  } catch (e) {
+    alert('Không thể cập nhật cấu hình: ' + e.message);
+  }
+  btn.disabled = false;
+};
+
+async function openOutputFolder() {
+  try {
+    const r = await fetch('/api/storage/open-output', { method: 'POST' });
+    const d = await r.json();
+    if (!r.ok) {
+      alert(d.error || 'Không thể mở thư mục output');
+    }
+  } catch (e) {
+    alert('Không thể kết nối đến ứng dụng để mở thư mục: ' + e.message);
+  }
+}
+
+async function saveFileAs(itemId, filename) {
+  try {
+    const r = await fetch('/api/storage/save-as', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ item_id: itemId, filename: filename })
+    });
+    const d = await r.json();
+    if (!r.ok) {
+      alert(d.error || 'Lỗi lưu file');
+      return;
+    }
+    if (d.cancelled) {
+      return; // Người dùng chủ động hủy hộp thoại Save As
+    }
+    alert(d.message || `Đã lưu file thành công ra:\n${d.path}`);
+  } catch (e) {
+    alert('Không thể thực hiện lưu file: ' + e.message);
+  }
+}
+
+init();
+</script>
+</body>
+</html>

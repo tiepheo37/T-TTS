@@ -16,9 +16,10 @@ import subprocess
 from pathlib import Path
 from typing import Optional, List, Dict
 
-from PySide6.QtCore import Qt, QThread, Signal, QTimer
+from PySide6.QtCore import Qt, QThread, Signal, QTimer, QMimeData, QUrl
 from PySide6.QtGui import QFont, QCursor
 from PySide6.QtWidgets import (
+    QApplication,
     QWidget,
     QVBoxLayout,
     QHBoxLayout,
@@ -401,14 +402,30 @@ class PageSynthesize(QWidget):
         # Nút chọn thư mục lưu
         dir_box = QVBoxLayout()
         dir_box.setSpacing(4)
-        lbl_dir = QLabel("Thư mục lưu:")
+        lbl_dir = QLabel("Thư mục lưu file:")
         lbl_dir.setStyleSheet("font-weight: 600; color: #E2ECE1;")
         dir_box.addWidget(lbl_dir)
+
+        dir_btn_row = QHBoxLayout()
+        dir_btn_row.setSpacing(6)
 
         btn_select_dir = QPushButton("📁 Chọn thư mục...")
         btn_select_dir.setProperty("class", "SecondaryBtn")
         btn_select_dir.clicked.connect(self._select_output_dir)
-        dir_box.addWidget(btn_select_dir)
+        dir_btn_row.addWidget(btn_select_dir)
+
+        btn_quick_open_dir = QPushButton("📂 Mở")
+        btn_quick_open_dir.setProperty("class", "SecondaryBtn")
+        btn_quick_open_dir.setToolTip("Mở thư mục lưu âm thanh hiện tại")
+        btn_quick_open_dir.clicked.connect(self._open_output_folder)
+        dir_btn_row.addWidget(btn_quick_open_dir)
+        dir_box.addLayout(dir_btn_row)
+
+        self.lbl_current_out_dir = QLabel(str(tts_service.default_out_dir))
+        self.lbl_current_out_dir.setStyleSheet("color: #94A3B8; font-size: 11px;")
+        self.lbl_current_out_dir.setWordWrap(True)
+        dir_box.addWidget(self.lbl_current_out_dir)
+
         sc_layout.addLayout(dir_box, 1)
 
         layout.addWidget(settings_card)
@@ -459,7 +476,10 @@ class PageSynthesize(QWidget):
         pc_layout.addWidget(pc_title)
 
         self.lbl_result_info = QLabel("")
-        self.lbl_result_info.setStyleSheet("color: #E2ECE1; font-size: 12px;")
+        self.lbl_result_info.setStyleSheet("color: #E2ECE1; font-size: 12px; line-height: 1.5;")
+        self.lbl_result_info.setTextFormat(Qt.RichText)
+        self.lbl_result_info.setTextInteractionFlags(Qt.TextBrowserInteraction)
+        self.lbl_result_info.linkActivated.connect(self._on_result_link_clicked)
         pc_layout.addWidget(self.lbl_result_info)
 
         player_btn_row = QHBoxLayout()
@@ -475,15 +495,28 @@ class PageSynthesize(QWidget):
         self.btn_stop.clicked.connect(self._stop_playback)
         player_btn_row.addWidget(self.btn_stop)
 
-        btn_open_file = QPushButton("📂 Mở file")
+        btn_open_file = QPushButton("📂 Xem file")
+        btn_open_file.setToolTip("Mở thư mục và chọn đúng file này trong Windows Explorer")
         btn_open_file.setProperty("class", "SecondaryBtn")
         btn_open_file.clicked.connect(self._open_file_in_explorer)
         player_btn_row.addWidget(btn_open_file)
 
-        btn_open_folder = QPushButton("📁 Mở thư mục chứa")
+        btn_open_folder = QPushButton("📁 Mở thư mục")
         btn_open_folder.setProperty("class", "SecondaryBtn")
         btn_open_folder.clicked.connect(self._open_output_folder)
         player_btn_row.addWidget(btn_open_folder)
+
+        btn_copy_file = QPushButton("📋 Sao chép file")
+        btn_copy_file.setToolTip("Sao chép file vào Clipboard để dán (Ctrl+V) vào thư mục khác hoặc gửi qua Zalo")
+        btn_copy_file.setProperty("class", "SecondaryBtn")
+        btn_copy_file.clicked.connect(self._copy_file_to_clipboard)
+        player_btn_row.addWidget(btn_copy_file)
+
+        btn_save_as = QPushButton("💾 Lưu thành...")
+        btn_save_as.setToolTip("Lưu file ra vị trí khác (Desktop, USB, v.v.)")
+        btn_save_as.setProperty("class", "SecondaryBtn")
+        btn_save_as.clicked.connect(self._save_as_file)
+        player_btn_row.addWidget(btn_save_as)
 
         player_btn_row.addStretch()
         pc_layout.addLayout(player_btn_row)
@@ -519,9 +552,13 @@ class PageSynthesize(QWidget):
         self.lbl_speed.setText(f"Tốc độ đọc: {speed:.2f}x")
 
     def _select_output_dir(self):
-        chosen = QFileDialog.getExistingDirectory(self, "Chọn Thư Mục Lưu Âm Thanh", str(Path.cwd()))
+        curr = str(self.custom_output_dir or tts_service.default_out_dir)
+        chosen = QFileDialog.getExistingDirectory(self, "Chọn Thư Mục Lưu Âm Thanh", curr)
         if chosen:
             self.custom_output_dir = Path(chosen)
+            tts_service.set_default_out_dir(chosen)
+            if hasattr(self, "lbl_current_out_dir"):
+                self.lbl_current_out_dir.setText(str(chosen))
             QMessageBox.information(self, "Đã Đổi Thư Mục", f"Các file âm thanh tiếp theo sẽ được lưu vào:\n{chosen}")
 
     def refresh_voices(self):
@@ -672,16 +709,18 @@ class PageSynthesize(QWidget):
 
         self.current_result = result
         file_path = result.get("file_path") or result.get("main_file") or result.get("wav_path") or ""
+        p_file = Path(file_path).resolve()
         duration = float(result.get("duration") or result.get("duration_sec") or 0.0)
         size_bytes = int(result.get("size_bytes") or result.get("file_size_bytes") or 0)
-        fmt = result.get("format", "wav").upper()
+        fmt = str(result.get("format") or "wav").upper()
 
         self.lbl_status.setStyleSheet("color: #4ADE80;")
         self.lbl_status.setText(f"✅ Tạo giọng nói thành công! Thời lượng: {duration:.2f}s | Kích thước: {size_bytes / 1024:.1f} KB")
 
         self.player_card.setVisible(True)
         self.lbl_result_info.setText(
-            f"File: <b>{Path(file_path).name}</b> ({fmt} | {size_bytes / 1024:.1f} KB)"
+            f"🎵 File: <b>{p_file.name}</b> ({fmt} | {size_bytes / 1024:.1f} KB)<br>"
+            f"📁 Lưu tại: <a href='open_folder' style='color: #EAB308; text-decoration: underline;'><b>{p_file.parent}</b></a>"
         )
 
         # Tự động phát âm thanh vừa sinh ra
@@ -689,6 +728,10 @@ class PageSynthesize(QWidget):
             audio_player.play(file_path)
             self.btn_play_pause.setText("⏸ Tạm dừng")
         self.audio_generated.emit(result)
+
+    def _on_result_link_clicked(self, link: str):
+        if link == "open_folder":
+            self._open_output_folder()
 
     def _on_synthesis_error(self, err: str):
         self.btn_generate.setEnabled(True)
@@ -723,11 +766,64 @@ class PageSynthesize(QWidget):
         if not self.current_result:
             return
         fp = self.current_result.get("file_path") or self.current_result.get("main_file") or self.current_result.get("wav_path") or ""
-        if fp and Path(fp).exists():
-            if os.name == "nt":
-                subprocess.Popen(f'explorer /select,"{Path(fp).resolve()}"')
+        if fp:
+            ok = tts_service.open_file_in_explorer(fp)
+            if not ok:
+                QMessageBox.warning(self, "Thông báo", f"Không tìm thấy file trên ổ cứng:\n{fp}")
 
     def _open_output_folder(self):
-        out_dir = self.custom_output_dir or tts_service.output_dir
-        if out_dir.exists() and os.name == "nt":
-            subprocess.Popen(f'explorer "{out_dir.resolve()}"')
+        out_dir = self.custom_output_dir or tts_service.default_out_dir
+        ok = tts_service.open_output_folder(out_dir)
+        if not ok:
+            QMessageBox.warning(self, "Thông báo", f"Không thể mở thư mục:\n{out_dir}")
+
+    def _copy_file_to_clipboard(self):
+        """Sao chép tệp âm thanh thực tế vào Clipboard để dán trực tiếp vào thư mục hoặc Zalo/Telegram."""
+        if not self.current_result:
+            return
+        fp = self.current_result.get("file_path") or self.current_result.get("main_file") or self.current_result.get("wav_path") or ""
+        if not fp:
+            return
+        p = Path(fp).resolve()
+        if not p.exists():
+            QMessageBox.warning(self, "Không tìm thấy file", f"Tệp không tồn tại:\n{p}")
+            return
+
+        mime = QMimeData()
+        mime.setUrls([QUrl.fromLocalFile(str(p))])
+        mime.setText(str(p))
+        QApplication.clipboard().setMimeData(mime)
+        QMessageBox.information(
+            self,
+            "Đã Sao Chép File",
+            f"✅ Đã sao chép file '{p.name}' vào bộ nhớ tạm!\n\n"
+            "Bạn có thể mở bất kỳ thư mục nào trên máy tính, hoặc mở Zalo / Telegram và nhấn Ctrl + V để dán file trực tiếp.",
+        )
+
+    def _save_as_file(self):
+        """Cho phép người dùng lưu file sang vị trí khác (Desktop, USB, Downloads, v.v.)."""
+        if not self.current_result:
+            return
+        fp = self.current_result.get("file_path") or self.current_result.get("main_file") or self.current_result.get("wav_path") or ""
+        if not fp:
+            return
+        src = Path(fp).resolve()
+        if not src.exists():
+            QMessageBox.warning(self, "Không tìm thấy file", f"Tệp nguồn không tồn tại:\n{src}")
+            return
+
+        fmt = src.suffix.lower()
+        filter_str = f"Tệp {fmt.upper()} (*{fmt});;Tất cả tệp (*.*)"
+        dest, _ = QFileDialog.getSaveFileName(
+            self,
+            "Lưu tệp âm thanh thành...",
+            str(Path.home() / "Desktop" / src.name),
+            filter_str,
+        )
+        if dest:
+            try:
+                import shutil
+                shutil.copy2(str(src), dest)
+                QMessageBox.information(self, "Lưu Thành Công", f"Đã lưu tệp âm thanh vào:\n{dest}")
+            except Exception as e:
+                QMessageBox.critical(self, "Lỗi Lưu Tệp", f"Không thể lưu tệp: {e}")

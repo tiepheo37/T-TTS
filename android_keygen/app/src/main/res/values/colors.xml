@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="k20_bg_dark">#121613</color>
+    <color name="k20_card_bg">#1a221c</color>
+    <color name="k20_card_border">#2e3d30</color>
+    <color name="k20_input_bg">#151c16</color>
+    <color name="k20_accent_green">#4caf50</color>
+    <color name="k20_accent_gold">#e6c875</color>
+    <color name="k20_text_primary">#e8f0e9</color>
+    <color name="k20_text_secondary">#9eb3a1</color>
+    <color name="k20_button_primary">#2e7d32</color>
+    <color name="k20_button_gold">#b8860b</color>
+    <color name="k20_key_bg">#0d140e</color>
+</resources>

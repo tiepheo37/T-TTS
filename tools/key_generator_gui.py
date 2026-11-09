@@ -1,4 +1,4 @@
-"""tools/key_generator_gui.py — ỨNG DỤNG GIAO DIỆN CẤP KEY & QUẢN LÝ BẢN QUYỀN T-TTS v1.0.1
+"""tools/key_generator_gui.py — ỨNG DỤNG GIAO DIỆN CẤP KEY & QUẢN LÝ BẢN QUYỀN T-TTS v2.0
 ========================================================================================
 Bộ công cụ chuyên nghiệp nội bộ dành riêng cho Nhà phát triển (Developer):
 1. CẤP KEY CHO KHÁCH HÀNG:
@@ -169,7 +169,7 @@ def extract_machine_id(raw_text: str) -> str:
 class KeyGeneratorApp(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.title("T-TTS v1.0.1 — CÔNG CỤ CẤP BẢN QUYỀN & QUẢN LÝ KHÁCH HÀNG")
+        self.title("T-TTS v3.0 — CÔNG CỤ CẤP BẢN QUYỀN & QUẢN LÝ KHÁCH HÀNG")
         self.geometry("920x820")
         self.minsize(850, 720)
         self.configure(bg="#F4F6F0")
@@ -230,7 +230,7 @@ class KeyGeneratorApp(tk.Tk):
 
         title_lbl = tk.Label(
             header_frame,
-            text="🇻🇳 T-TTS v1.0.1 — HỆ THỐNG CẤP BẢN QUYỀN KHÁCH HÀNG",
+            text="🇻🇳 T-TTS v3.0 — HỆ THỐNG CẤP BẢN QUYỀN KHÁCH HÀNG",
             bg=self.c_army_head,
             fg="#FFFFFF",
             font=("Times New Roman", 16, "bold"),
@@ -348,10 +348,11 @@ class KeyGeneratorApp(tk.Tk):
         dur_frame = tk.Frame(card_cust, bg=self.c_card)
         dur_frame.pack(fill="x", pady=(0, 6))
 
-        tk.Radiobutton(dur_frame, text="⚡ 1 Ngày (24h)", variable=self.duration_var, value="1d", bg=self.c_card, fg="#333333", font=("Segoe UI", 9, "bold"), cursor="hand2").pack(side="left", padx=(0, 12))
-        tk.Radiobutton(dur_frame, text="🌟 7 Ngày (168h)", variable=self.duration_var, value="7d", bg=self.c_card, fg=self.c_army_dark, font=("Segoe UI", 9, "bold"), cursor="hand2").pack(side="left", padx=(0, 12))
-        tk.Radiobutton(dur_frame, text="💎 30 Ngày (720h)", variable=self.duration_var, value="30d", bg=self.c_card, fg="#333333", font=("Segoe UI", 9, "bold"), cursor="hand2").pack(side="left", padx=(0, 12))
-        tk.Radiobutton(dur_frame, text="📅 6 Tháng (Lịch)", variable=self.duration_var, value="6m", bg=self.c_card, fg="#1E40AF", font=("Segoe UI", 9, "bold"), cursor="hand2").pack(side="left", padx=(0, 12))
+        tk.Radiobutton(dur_frame, text="⚡ 1 Ngày (24h)", variable=self.duration_var, value="1d", bg=self.c_card, fg="#333333", font=("Segoe UI", 9, "bold"), cursor="hand2").pack(side="left", padx=(0, 10))
+        tk.Radiobutton(dur_frame, text="🌟 7 Ngày (168h)", variable=self.duration_var, value="7d", bg=self.c_card, fg=self.c_army_dark, font=("Segoe UI", 9, "bold"), cursor="hand2").pack(side="left", padx=(0, 10))
+        tk.Radiobutton(dur_frame, text="💎 30 Ngày (720h)", variable=self.duration_var, value="30d", bg=self.c_card, fg="#333333", font=("Segoe UI", 9, "bold"), cursor="hand2").pack(side="left", padx=(0, 10))
+        tk.Radiobutton(dur_frame, text="📅 6 Tháng (Lịch)", variable=self.duration_var, value="6m", bg=self.c_card, fg="#1E40AF", font=("Segoe UI", 9, "bold"), cursor="hand2").pack(side="left", padx=(0, 10))
+        tk.Radiobutton(dur_frame, text="🎯 1 Năm (Lịch)", variable=self.duration_var, value="1y", bg=self.c_card, fg="#D97706", font=("Segoe UI", 9, "bold"), cursor="hand2").pack(side="left", padx=(0, 10))
         tk.Radiobutton(dur_frame, text="👑 Vĩnh Viễn", variable=self.duration_var, value="perm", bg=self.c_card, fg="#991B1B", font=("Segoe UI", 9, "bold"), cursor="hand2").pack(side="left")
 
         # Dòng: Thư mục lưu file key xuất ra
@@ -389,7 +390,7 @@ class KeyGeneratorApp(tk.Tk):
         tk.Label(card_cust, text="Ghi chú nội bộ (Mục đích cấp):", bg=self.c_card, fg="#666666", font=("Segoe UI", 8)).pack(anchor="w", pady=(2, 0))
         self.note_entry = tk.Entry(card_cust, font=("Segoe UI", 9), bg="#FAFAFA", relief="solid", bd=1)
         self.note_entry.pack(fill="x", pady=(1, 2), ipady=2)
-        self.note_entry.insert(0, "Cấp key trải nghiệm tính năng giọng đọc T-TTS v1.0.1")
+        self.note_entry.insert(0, "Cấp key trải nghiệm tính năng giọng đọc T-TTS v3.0")
 
         # NÚT BẤM CHÍNH: TẠO KEY
         btn_generate = tk.Button(
@@ -685,7 +686,7 @@ class KeyGeneratorApp(tk.Tk):
         try:
             load_private_key()
             self.key_status_lbl.configure(
-                text="✅ Khóa Master Ed25519: Đã nạp thành công & Đồng bộ 100% với bản quyền T-TTS v1.0.1",
+                text="✅ Khóa Master Ed25519: Đã nạp thành công & Đồng bộ 100% với bản quyền T-TTS v2.0",
                 fg="#2E7D32",
             )
         except Exception as e:

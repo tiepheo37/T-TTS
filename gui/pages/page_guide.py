@@ -1,4 +1,4 @@
-"""gui/pages/page_guide.py — TAB 8: HƯỚNG DẪN SỬ DỤNG T-TTS v1.0.1
+"""gui/pages/page_guide.py — TAB 8: HƯỚNG DẪN SỬ DỤNG T-TTS v2.0
 ===================================================================
 Hướng dẫn sử dụng toàn diện, trực quan bằng giao diện native:
 - Hướng dẫn nhập văn bản và chèn thẻ nghỉ đọc tự nhiên.
@@ -21,6 +21,8 @@ from PySide6.QtWidgets import (
     QScrollArea,
 )
 
+from backend.version import APP_VERSION, APP_NAME
+
 
 class PageGuide(QWidget):
     """Trang Hướng Dẫn Sử Dụng."""
@@ -40,7 +42,7 @@ class PageGuide(QWidget):
         layout.setContentsMargins(18, 16, 18, 16)
         layout.setSpacing(14)
 
-        title = QLabel("📖 HƯỚNG DẪN SỬ DỤNG PHẦN MỀM T-TTS v1.0.1")
+        title = QLabel(f"📖 HƯỚNG DẪN SỬ DỤNG PHẦN MỀM {APP_NAME} v{APP_VERSION}")
         title.setProperty("class", "CardTitle")
         title.setStyleSheet("color: #22D3EE; font-size: 16px; font-weight: bold;")
         layout.addWidget(title)
@@ -68,33 +70,53 @@ class PageGuide(QWidget):
 
         # MỤC 3: NHÂN BẢN GIỌNG NÓI TỐI ƯU
         c3 = self._create_section_card(
-            "3. BÍ QUYẾT NHÂN BẢN GIỌNG NÓI ĐẠT CHẤT LƯỢNG CAO",
-            "• Chuẩn bị một đoạn âm thanh mẫu (WAV hoặc MP3) dài từ <b>5 đến 15 giây</b>.<br>"
-            "• Giọng nói trong file mẫu cần rõ tiếng, tròn vành rõ chữ, không có tiếng ồn nền (tiếng quạt, tiếng còi xe) và tuyệt đối không có nhạc nền.<br>"
-            "• Vào tab <b>Nhân Bản Giọng</b>, chọn file âm thanh mẫu và nhập tên định danh.<br>"
-            "• VieNeu-TTS v3 Turbo sẽ tự động khử ồn và tạo vector đặc trưng. Sau khi nhân bản xong, giọng sẽ tự động xuất hiện ở tab Tạo Giọng Nói."
+            "3. THU ÂM TRỰC TIẾP QUA MICRO HOẶC CHỌN TỆP ĐỂ NHÂN BẢN GIỌNG",
+            "• <b>Thu âm trực tiếp:</b> Chọn tab <i>Thu Âm Trực Tiếp Qua Micro</i>, bấm <b>Bắt đầu thu âm</b> và đọc to câu xác nhận mẫu (từ 5 đến 15 giây). Sau khi dừng, bạn có thể bấm <b>Nghe lại bản ghi</b> để kiểm tra chất lượng trước khi nhân bản.<br>"
+            "• <b>Tải tệp có sẵn:</b> Chọn tab <i>Tải Lên Tệp Âm Thanh Có Sẵn</i>, nạp file WAV/MP3 từ điện thoại hoặc máy ghi âm.<br>"
+            "• Đặt tên giọng và bấm <b>BẮT ĐẦU NHÂN BẢN GIỌNG NÓI</b>. Sau khi hoàn tất, giọng đọc cá nhân sẽ xuất hiện ngay lập tức trong toàn bộ hệ thống."
         )
         layout.addWidget(c3)
 
-        # MỤC 4: XỬ LÝ HÀNG LOẠT SÁCH NÓI / BÁO CÁO
+        # MỤC 4: XỬ LÝ HÀNG LOẠT VÀ CHUYỂN VÀO BẢN TIN
         c4 = self._create_section_card(
-            "4. QUY TRÌNH XỬ LÝ HÀNG LOẠT (BATCH TTS)",
-            "• Khi bạn có một danh sách các câu thông báo hoặc các chương sách cần đọc:<br>"
-            "• Vào tab <b>Xử Lý Hàng Loạt</b>, dán toàn bộ danh sách (mỗi dòng một câu/đoạn).<br>"
-            "• Bấm <b>BẮT ĐẦU XỬ LÝ HÀNG LOẠT</b>. Hệ thống xử lý độc lập từng dòng, có thanh tiến độ trực quan.<br>"
-            "• Nếu một dòng xảy ra lỗi, hệ thống vẫn tiếp tục đọc các dòng còn lại bình thường."
+            "4. QUY TRÌNH XỬ LÝ HÀNG LOẠT & CHUYỂN VÀO BẢN TIN",
+            "• Dán danh sách các câu/đoạn văn bản vào tab <b>Xử Lý Hàng Loạt</b> (hoặc nạp nhiều file .txt).<br>"
+            "• Bấm <b>BẮT ĐẦU XỬ LÝ HÀNG LOẠT</b> để hệ thống tự động xuất các tệp âm thanh độc lập.<br>"
+            "• Sau khi hoàn thành, bạn có 2 lựa chọn xuất sắc:<br>"
+            "  - Bấm <b>💾 Tải tệp nén .ZIP</b> để lưu toàn bộ các tệp âm thanh về máy.<br>"
+            "  - Bấm <b>📻 Chuyển vào Bản Tin</b> để đưa toàn bộ các đoạn vừa đọc sang tab <b>Bản Tin Phát Thanh</b> để ghép nhạc và xuất chương trình hoàn chỉnh."
         )
         layout.addWidget(c4)
 
-        # MỤC 5: BẢN QUYỀN OFFLINE
+        # MỤC 5: TẠO BẢN TIN PHÁT THANH HOÀN CHỈNH
         c5 = self._create_section_card(
-            "5. BẢN QUYỀN OFFLINE & KÍCH HOẠT THỜI HẠN",
-            "• Phần mềm cấp key hoàn toàn offline dựa trên mã phần cứng máy tính (Machine ID).<br>"
-            "• Hỗ trợ 5 gói thời hạn: <b>1 Ngày, 7 Ngày, 30 Ngày, 6 Tháng và Vĩnh Viễn</b>.<br>"
-            "• Thời hạn của key bắt đầu tính từ lần đầu tiên kích hoạt thành công trên máy bạn.<br>"
-            "• Khi hết hạn, toàn bộ file âm thanh, lịch sử và giọng nhân bản của bạn vẫn được lưu nguyên vẹn."
+            "5. TẠO BẢN TIN PHÁT THANH & GHÉP NHẠC HIỆU, NHẠC NỀN",
+            "• Tại tab <b>Bản Tin Phát Thanh</b>, bạn có thể sắp xếp các phân đoạn theo thứ tự phát thanh chuẩn mực.<br>"
+            "• Thêm nhạc hiệu mở đầu (Jingle Intro), nhạc hiệu chuyển mục, bài hát nhạc nền chạy ngầm (Background Music).<br>"
+            "• Âm lượng nhạc nền được tự động tinh chỉnh dịu nhẹ để không lấn át giọng phát thanh viên.<br>"
+            "• Tùy chỉnh thời gian nghỉ giữa các đoạn (0.5s - 2.0s) và bấm <b>XUẤT BẢN TIN PHÁT THANH HOÀN CHỈNH</b> để nhận một tệp WAV/MP3 duy nhất."
         )
         layout.addWidget(c5)
+
+        # MỤC 6: KỊCH BẢN PODCAST & HỘI THOẠI ĐA NHÂN VẬT
+        c6 = self._create_section_card(
+            "6. KỊCH BẢN PODCAST & HỘI THOẠI ĐA NHÂN VẬT",
+            "• Dành cho các chương trình phỏng vấn, kịch truyền thanh, đối thoại giữa nhiều nhân vật.<br>"
+            "• Mỗi câu thoại được gán cho một nhân vật riêng với giọng đọc độc lập (Bắc, Trung, Nam hoặc giọng nhân bản).<br>"
+            "• Có nút <b>▶ Nghe thử</b> từng câu thoại riêng biệt và nút <b>📑 Kịch bản mẫu</b> để thử nghiệm nhanh chóng.<br>"
+            "• Bấm <b>GHÉP THÀNH AUDIO HỘI THOẠI / PODCAST</b> để tổng hợp toàn bộ kịch bản thành một tệp âm thanh đồng nhất."
+        )
+        layout.addWidget(c6)
+
+        # MỤC 7: BẢN QUYỀN OFFLINE
+        c7 = self._create_section_card(
+            "7. BẢN QUYỀN OFFLINE & KÍCH HOẠT THỜI HẠN",
+            "• Phần mềm cấp key hoàn toàn offline dựa trên mã phần cứng máy tính (Machine ID).<br>"
+            "• Hỗ trợ 6 gói thời hạn linh hoạt: <b>1 Ngày, 7 Ngày, 30 Ngày, 6 Tháng, 1 Năm và Vĩnh Viễn</b>.<br>"
+            "• Thời hạn của key bắt đầu tính từ lần đầu tiên kích hoạt thành công trên máy bạn.<br>"
+            "• Tác giả phần mềm: <b>Nguyễn Văn Tiệp</b>."
+        )
+        layout.addWidget(c7)
 
         layout.addStretch()
 

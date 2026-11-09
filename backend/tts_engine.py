@@ -19,7 +19,7 @@ except ImportError:
 
 DEFAULT_VOICE = "Hải Đăng"
 
-# Allowlist chính thức 25 giọng đọc được phép của T-TTS v1.0.1
+# Allowlist chính thức 25 giọng đọc được phép của T-TTS v2.0
 ALLOWLIST_25_VOICES = [
     "Adam bựa",
     "Trúc Ly",

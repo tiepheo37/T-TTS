@@ -30,5 +30,11 @@ data/system_state.json.bak*
 
 # OS and Temporary
 *.log
+*.zip
+backups/
+backup_code_v3.0/
 .vscode/
 .idea/
+scratch/
+temp/
+test_install_v2/

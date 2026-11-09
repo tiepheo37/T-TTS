@@ -1,0 +1,36 @@
+{
+  "timestamp": "2026-10-11 08:22:25",
+  "hardware": {
+    "hardware_detected": true,
+    "gpu_name": "NVIDIA GeForce RTX 2060",
+    "vram_total_mb": 6143,
+    "vram_free_mb": 4652,
+    "driver_version": "582.53",
+    "cuda_driver_version": "13.0 (raw: 13000)",
+    "nvcuda_dll_exists": true
+  },
+  "onnxruntime": {
+    "ort_installed": true,
+    "ort_version": "1.31.0",
+    "ort_file_location": "C:\\Users\\Minh Dang\\Downloads\\voice-studio-app\\venv\\Lib\\site-packages\\onnxruntime",
+    "available_providers": [
+      "AzureExecutionProvider",
+      "CPUExecutionProvider"
+    ],
+    "has_cuda_provider": false
+  },
+  "cuda_runtime_dlls": {
+    "cudart64_12.dll": false,
+    "cudart64_110.dll": false,
+    "cublas64_12.dll": false,
+    "cublasLt64_12.dll": false,
+    "cudnn64_9.dll": false,
+    "cudnn64_8.dll": false,
+    "cufft64_11.dll": false,
+    "curand64_10.dll": false
+  },
+  "session_tests": {},
+  "inference_test": null,
+  "classification": "GPU chưa chạy do thiếu thư viện hoặc không tương thích",
+  "summary": "Dừng kiểm thử vì onnxruntime hiện tại (v1.31.0) là bản CPU thuần, không có CUDAExecutionProvider và thiếu các DLL runtime CUDA/cuDNN trên Windows."
+}

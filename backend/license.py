@@ -1,4 +1,4 @@
-"""backend/license.py — HỆ THỐNG XÁC MINH VÀ QUẢN LÝ BẢN QUYỀN OFFLINE T-TTS v1.0.1
+"""backend/license.py — HỆ THỐNG XÁC MINH VÀ QUẢN LÝ BẢN QUYỀN OFFLINE T-TTS v2.0
 ===================================================================================
 Tính năng cốt lõi:
 1. Xác minh chữ ký số Ed25519 hoàn toàn offline (chỉ chứa Public Key, không có Private Key).
@@ -73,12 +73,32 @@ def calculate_6_months_expiration(start_timestamp: float) -> float:
     return target_dt.timestamp()
 
 
-# 5 loại key bản quyền được hỗ trợ chính thức
+def calculate_1_year_expiration(start_timestamp: float) -> float:
+    """Tính mốc thời gian hết hạn sau đúng 1 năm theo ngày lịch từ mốc kích hoạt.
+
+    Quy tắc:
+    - Bắt đầu tính từ thời điểm kích hoạt thành công đầu tiên.
+    - Chuyển sang ngày theo múi giờ địa phương.
+    - Cộng 1 năm vào trường năm.
+    - Nếu ngày là 29/02 mà năm sau không nhuận, lấy ngày 28/02.
+    - Giữ nguyên giờ, phút, giây của thời điểm kích hoạt.
+    """
+    dt = datetime.datetime.fromtimestamp(start_timestamp)
+    target_year = dt.year + 1
+    target_month = dt.month
+    max_days_in_target = calendar.monthrange(target_year, target_month)[1]
+    target_day = min(dt.day, max_days_in_target)
+    target_dt = dt.replace(year=target_year, month=target_month, day=target_day)
+    return target_dt.timestamp()
+
+
+# 6 loại key bản quyền được hỗ trợ chính thức
 VALID_PLANS = {
     "KEY-1D": {"hours": 24, "seconds": 24 * 3600, "name": "1 Ngày (24 giờ)", "type": "fixed_seconds"},
     "KEY-7D": {"hours": 168, "seconds": 168 * 3600, "name": "7 Ngày (168 giờ)", "type": "fixed_seconds"},
     "KEY-30D": {"hours": 720, "seconds": 720 * 3600, "name": "30 Ngày (720 giờ)", "type": "fixed_seconds"},
     "KEY-6M": {"months": 6, "name": "6 Tháng (Theo lịch)", "type": "calendar_6m"},
+    "KEY-1Y": {"years": 1, "name": "1 Năm (Theo lịch)", "type": "calendar_1y"},
     "KEY-PERM": {"name": "Vĩnh viễn (Trọn đời)", "type": "permanent"},
 }
 
@@ -223,7 +243,7 @@ def _load_from_registry() -> str | None:
 # 5. LỚP ĐIỀU PHỐI XÁC MINH VÀ QUẢN LÝ BẢN QUYỀN (LICENSE MANAGER)
 # ==============================================================================
 class LicenseManager:
-    """Bộ quản lý bản quyền offline cho T-TTS v1.0.1."""
+    """Bộ quản lý bản quyền offline cho T-TTS v2.0."""
 
     def __init__(self, public_key_b64: str = MASTER_PUBLIC_KEY_B64, simulated_time_offset: float = 0.0) -> None:
         self.public_key_b64 = public_key_b64
@@ -533,7 +553,7 @@ class LicenseManager:
             "is_locked": (status_code != STATUS_ACTIVE),
             "status_message": STATUS_MESSAGES.get(status_code, "Trạng thái không xác định."),
             "license_id": st.get("license_id"),
-            "plan": st.get("plan"),
+            "plan": st.get("plan") or "",
             "duration_hours": st.get("duration_hours"),
             "first_activated_at": st.get("first_activated_at"),
             "first_activated_readable": first_act_readable,
@@ -595,18 +615,18 @@ class LicenseManager:
         target_mid = (payload.get("mid") or "").strip().upper()
         current_mid = self.machine_id.strip().upper()
 
-        # 4. Kiểm tra mã máy (Hardware Lock)
-        if target_mid != current_mid:
+        # 4. Kiểm tra mã máy (Hardware Lock hoặc Key dùng chung)
+        if target_mid not in (current_mid, "*", "ALL", "GLOBAL", "UNIVERSAL"):
             return (
                 False,
                 f"Key này được cấp riêng cho máy [{target_mid}], không khớp với máy của bạn [{current_mid}].",
                 {"expected_mid": current_mid, "license_mid": target_mid},
             )
 
-        # 5. Kiểm tra thời hạn cấp phép (1D, 7D, 30D, 6M, PERM)
+        # 5. Kiểm tra thời hạn cấp phép (1D, 7D, 30D, 6M, 1Y, PERM)
         plan_code = (payload.get("plan") or "").strip().upper()
         if plan_code not in VALID_PLANS:
-            return False, f"Gói bản quyền '{plan_code}' không hợp lệ. Hỗ trợ: KEY-1D, KEY-7D, KEY-30D, KEY-6M, KEY-PERM.", {}
+            return False, f"Gói bản quyền '{plan_code}' không hợp lệ. Hỗ trợ: KEY-1D, KEY-7D, KEY-30D, KEY-6M, KEY-1Y, KEY-PERM.", {}
 
         plan_info = VALID_PLANS[plan_code]
         lic_id = payload.get("lid") or ""
@@ -640,6 +660,9 @@ class LicenseManager:
                     expires_at = first_activated_at + duration_seconds
                 elif plan_info["type"] == "calendar_6m":
                     expires_at = calculate_6_months_expiration(first_activated_at)
+                    duration_hours = int(round((expires_at - first_activated_at) / 3600))
+                elif plan_info["type"] == "calendar_1y":
+                    expires_at = calculate_1_year_expiration(first_activated_at)
                     duration_hours = int(round((expires_at - first_activated_at) / 3600))
                 elif plan_info["type"] == "permanent":
                     expires_at = None

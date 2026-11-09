@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.TTTSKeyGen" parent="Theme.AppCompat.NoActionBar">
+        <item name="android:windowBackground">@color/k20_bg_dark</item>
+        <item name="android:statusBarColor">#0e120f</item>
+        <item name="android:navigationBarColor">#0e120f</item>
+        <item name="colorPrimary">@color/k20_accent_green</item>
+        <item name="colorAccent">@color/k20_accent_gold</item>
+    </style>
+</resources>

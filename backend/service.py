@@ -1,4 +1,4 @@
-"""backend/service.py — LỚP DỊCH VỤ NGHIỆP VỤ PYTHON CHO T-TTS v1.0.1 DESKTOP
+"""backend/service.py — LỚP DỊCH VỤ NGHIỆP VỤ PYTHON CHO T-TTS v2.0 DESKTOP
 =============================================================================
 Đóng gói toàn bộ logic TTS, nhân bản giọng, xử lý âm thanh, lịch sử và bản quyền.
 Cho phép giao diện Desktop (PySide6) gọi trực tiếp qua hàm nội bộ, hoàn toàn
@@ -69,10 +69,94 @@ class TTSService:
         self.pron = PronDict()
         self.history = History(out_dir=self.default_out_dir)
 
+        self._settings_path = self.data_dir / "settings.json"
+        self._load_persistent_settings()
+
         self._model_state = "unloaded"  # 'unloaded' | 'loading' | 'ready' | 'error'
         self._model_error = ""
         self._infer_lock = threading.Lock()
         self._init_lock = threading.Lock()
+
+    @property
+    def output_dir(self) -> Path:
+        """Thư mục xuất file âm thanh đang hoạt động (bí danh đồng bộ cho default_out_dir)."""
+        return self.default_out_dir
+
+    @output_dir.setter
+    def output_dir(self, val: Union[str, Path]):
+        self.set_default_out_dir(val)
+
+    def _load_persistent_settings(self):
+        try:
+            if self._settings_path.exists():
+                import json
+                data = json.loads(self._settings_path.read_text(encoding="utf-8"))
+                custom_out = data.get("default_out_dir")
+                if custom_out:
+                    p = Path(custom_out)
+                    if p.exists() or p.parent.exists():
+                        p.mkdir(parents=True, exist_ok=True)
+                        self.default_out_dir = p
+                        self.history.out_dir = p
+        except Exception:
+            pass
+
+    def set_default_out_dir(self, new_dir: Union[str, Path]) -> bool:
+        """Thiết lập và lưu vĩnh viễn thư mục lưu âm thanh mặc định."""
+        p = Path(new_dir).resolve()
+        try:
+            p.mkdir(parents=True, exist_ok=True)
+            self.default_out_dir = p
+            self.history.out_dir = p
+            cfg = {}
+            if self._settings_path.exists():
+                try:
+                    import json
+                    cfg = json.loads(self._settings_path.read_text(encoding="utf-8"))
+                except Exception:
+                    pass
+            cfg["default_out_dir"] = str(p)
+            import json
+            self._settings_path.write_text(json.dumps(cfg, indent=2, ensure_ascii=False), encoding="utf-8")
+            return True
+        except Exception:
+            return False
+
+    def open_output_folder(self, folder: Optional[Union[str, Path]] = None) -> bool:
+        """Mở thư mục chứa file âm thanh trong Windows Explorer an toàn."""
+        target = Path(folder or self.default_out_dir).resolve()
+        target.mkdir(parents=True, exist_ok=True)
+        try:
+            if sys.platform == "win32":
+                os.startfile(str(target))
+                return True
+            else:
+                import subprocess
+                subprocess.Popen(["xdg-open", str(target)])
+                return True
+        except Exception:
+            return False
+
+    def open_file_in_explorer(self, file_path: Union[str, Path]) -> bool:
+        """Mở Windows Explorer và highlight chính xác tệp âm thanh vừa tạo."""
+        fp = Path(file_path).resolve()
+        if not fp.exists():
+            return False
+        try:
+            if sys.platform == "win32":
+                import subprocess
+                subprocess.run(f'explorer /select,"{str(fp)}"', shell=True)
+                return True
+            else:
+                import subprocess
+                subprocess.Popen(["xdg-open", str(fp.parent)])
+                return True
+        except Exception:
+            try:
+                os.startfile(str(fp.parent))
+                return True
+            except Exception:
+                return False
 
     # =========================================================================
     # 1. KHỞI TẠO VÀ TRẠNG THÁI MÔ HÌNH (MODEL LIFECYCLE)
@@ -244,6 +328,9 @@ class TTSService:
             "history_id": hist_item.get("id"),
         }
 
+    # Bí danh tương thích ngược
+    synthesize = synthesize_text
+
     # =========================================================================
     # 4. NHÂN BẢN GIỌNG NÓI (VOICE CLONING)
     # =========================================================================
@@ -377,6 +464,198 @@ class TTSService:
         }
 
     # =========================================================================
+    # 5B. TẠO BẢN TIN PHÁT THANH (BROADCAST STUDIO)
+    # =========================================================================
+    def stitch_broadcast(
+        self,
+        segments: List[Dict[str, Any]],
+        title: str = "Ban_tin_phat_thanh",
+        out_format: str = "wav",
+        default_pause_sec: float = 1.0,
+        bg_music_path: Optional[str | Path] = None,
+        bg_music_volume_db: float = -18.0,
+        bg_music_loop: bool = True,
+        bg_music_ducking: bool = True,
+        bg_music_fade_in_ms: int = 1500,
+        bg_music_fade_out_ms: int = 2000,
+        intro_music_path: Optional[str | Path] = None,
+        intro_music_vol_db: float = 0.0,
+        outro_music_path: Optional[str | Path] = None,
+        outro_music_vol_db: float = 0.0,
+        custom_out_dir: Optional[Path] = None,
+    ) -> Dict[str, Any]:
+        """Ghép nhiều đoạn đọc và nhạc thành bản tin phát thanh hoàn chỉnh."""
+        if not license_manager.is_active():
+            info = license_manager.get_status_info()
+            return {
+                "success": False,
+                "error": f"Chức năng tạo bản tin bị khóa: {info['status_message']}",
+                "license_locked": True,
+            }
+
+        from .audio_utils import stitch_broadcast_project
+        out_dir = custom_out_dir or self.default_out_dir
+        out_dir.mkdir(parents=True, exist_ok=True)
+        stamp = int(time.time() * 1000)
+        clean_title = safe_filename(title, "Ban_tin_phat_thanh")
+        out_file = out_dir / f"{clean_title}_{stamp}.{out_format.lower()}"
+
+        res = stitch_broadcast_project(
+            segments=segments,
+            output_path=out_file,
+            out_format=out_format,
+            default_pause_sec=default_pause_sec,
+            bg_music_path=bg_music_path,
+            bg_music_volume_db=bg_music_volume_db,
+            bg_music_loop=bg_music_loop,
+            bg_music_ducking=bg_music_ducking,
+            bg_music_fade_in_ms=bg_music_fade_in_ms,
+            bg_music_fade_out_ms=bg_music_fade_out_ms,
+            intro_music_path=intro_music_path,
+            intro_music_vol_db=intro_music_vol_db,
+            outro_music_path=outro_music_path,
+            outro_music_vol_db=outro_music_vol_db,
+        )
+
+        # Log vào lịch sử
+        summary = f"Bản tin phát thanh: {title} ({len(segments)} đoạn)"
+        wav_p = out_file if out_format.lower() == "wav" else None
+        mp3_p = out_file if out_format.lower() == "mp3" else None
+        hist_item = self.history.add(
+            text=summary,
+            voice="Bản tin tổng hợp",
+            speed=1.0,
+            wav_path=wav_p,
+            mp3_path=mp3_p,
+            kind="broadcast",
+        )
+        res["history_id"] = hist_item.get("id")
+        res["title"] = title
+        return res
+
+    # =========================================================================
+    # 5C. TỔNG HỢP KỊCH BẢN PODCAST / HỘI THOẠI ĐA NHÂN VẬT
+    # =========================================================================
+    def synthesize_podcast(
+        self,
+        lines: List[Dict[str, Any]],
+        title: str = "Kich_ban_podcast",
+        out_format: str = "wav",
+        custom_out_dir: Optional[Path] = None,
+        on_progress: Optional[Callable[[int, int, str], None]] = None,
+        should_cancel: Optional[Callable[[], bool]] = None,
+    ) -> Dict[str, Any]:
+        """Tổng hợp kịch bản nhiều nhân vật thành một tệp podcast duy nhất."""
+        if not license_manager.is_active():
+            info = license_manager.get_status_info()
+            return {
+                "success": False,
+                "error": f"Chức năng tạo podcast bị khóa: {info['status_message']}",
+                "license_locked": True,
+            }
+
+        if not lines:
+            return {"success": False, "error": "Kịch bản rỗng, chưa có câu thoại nào."}
+
+        out_dir = custom_out_dir or self.default_out_dir
+        out_dir.mkdir(parents=True, exist_ok=True)
+        stamp = int(time.time() * 1000)
+        temp_segments = []
+        summary_lines = []
+
+        total = len(lines)
+        for idx, line in enumerate(lines):
+            if should_cancel and should_cancel():
+                return {"success": False, "error": "Người dùng đã hủy tiến trình podcast."}
+
+            spk = line.get("speaker", f"Nhân vật {idx+1}")
+            txt = (line.get("text") or "").strip()
+            v_id = line.get("voice_id") or "Hải Đăng"
+            spd = float(line.get("speed", 1.0))
+            pause_after = float(line.get("pause_after", 0.5))
+
+            if not txt:
+                continue
+
+            summary_lines.append(f"{spk}: {txt}")
+            if on_progress:
+                on_progress(idx + 1, total, f"Đang đọc: {spk}...")
+
+            # Synthesize line to temp wav
+            line_res = self.synthesize_text(
+                text=txt,
+                voice_id=v_id,
+                speed=spd,
+                out_format="wav",
+                filename_prefix=f"_temp_pc_{idx}",
+                custom_out_dir=self.upload_dir,
+            )
+            if line_res.get("success"):
+                temp_segments.append({
+                    "file_path": line_res["main_file"],
+                    "pause_after": pause_after,
+                    "title": f"{spk}: {txt[:30]}",
+                })
+
+        if not temp_segments:
+            return {"success": False, "error": "Không thể tổng hợp bất kỳ câu thoại nào trong kịch bản."}
+
+        from .audio_utils import stitch_broadcast_project
+        clean_title = safe_filename(title, "Kich_ban_podcast")
+        out_file = out_dir / f"{clean_title}_{stamp}.{out_format.lower()}"
+
+        res = stitch_broadcast_project(
+            segments=temp_segments,
+            output_path=out_file,
+            out_format=out_format,
+            default_pause_sec=0.5,
+        )
+
+        # Dọn dẹp tệp tạm
+        for ts in temp_segments:
+            try:
+                Path(ts["file_path"]).unlink(missing_ok=True)
+            except Exception:
+                pass
+
+        # Log vào lịch sử
+        summary = "\n".join(summary_lines[:5])
+        wav_p = out_file if out_format.lower() == "wav" else None
+        mp3_p = out_file if out_format.lower() == "mp3" else None
+        hist_item = self.history.add(
+            text=summary,
+            voice="Nhiều giọng đọc (Podcast)",
+            speed=1.0,
+            wav_path=wav_p,
+            mp3_path=mp3_p,
+            kind="podcast",
+        )
+        res["history_id"] = hist_item.get("id")
+        res["title"] = title
+        return res
+
+    # =========================================================================
+    # 5D. THIẾT BỊ MICROPHONE & THU ÂM TRỰC TIẾP
+    # =========================================================================
+    def get_microphone_devices(self) -> List[Dict[str, Any]]:
+        """Lấy danh sách các thiết bị thu âm Micro có sẵn trên máy tính."""
+        try:
+            import sounddevice as sd
+            devices = sd.query_devices()
+            mic_list = []
+            for idx, dev in enumerate(devices):
+                if dev.get("max_input_channels", 0) > 0:
+                    mic_list.append({
+                        "index": idx,
+                        "name": dev.get("name", f"Microphone {idx}"),
+                        "channels": dev.get("max_input_channels", 1),
+                        "default_sr": dev.get("default_samplerate", 44100),
+                    })
+            return mic_list
+        except Exception:
+            return []
+
+    # =========================================================================
     # 6. QUẢN LÝ LỊCH SỬ & DỮ LIỆU
     # =========================================================================
     def get_history(self) -> List[Dict[str, Any]]:
@@ -402,6 +681,29 @@ class TTSService:
 
     def activate_license(self, raw_key: str) -> Tuple[bool, str, Dict[str, Any]]:
         return license_manager.activate(raw_key)
+
+    # =========================================================================
+    # 8. QUẢN LÝ TỪ ĐIỂN PHÁT ÂM (PRONUNCIATION DICTIONARY)
+    # =========================================================================
+    def get_pron_dict(self) -> Dict[str, str]:
+        return self.pron.all()
+
+    def set_pron_dict_entry(self, word: str, reading: str) -> Dict[str, str]:
+        self.pron.set(word, reading)
+        return self.pron.all()
+
+    def delete_pron_dict_entry(self, word: str) -> Dict[str, str]:
+        self.pron.delete(word)
+        return self.pron.all()
+
+    def clear_pron_dict(self) -> Dict[str, str]:
+        for k in list(self.pron.all().keys()):
+            self.pron.delete(k)
+        return self.pron.all()
+
+    def preview_pron_text(self, text: str) -> str:
+        from .audio_utils import apply_pron_dict
+        return apply_pron_dict(text, self.pron.all())
 
 
 # Khởi tạo singleton dùng xuyên suốt toàn ứng dụng Desktop

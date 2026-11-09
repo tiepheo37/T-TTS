@@ -1,0 +1,413 @@
+{
+  "name": "Lịch Phát Thanh Sức Bền 50 Bản Tin",
+  "task_type": "playlist",
+  "playlist": [
+    {
+      "id": "item_000",
+      "title": "Bản tin ca phát thanh số 1",
+      "file_path": "C:\\Users\\MINHDA~1\\AppData\\Local\\Temp\\ttts_p710_endurance_ulc7_s8s\\sched_endurance_base.wav",
+      "duration_sec": 1.0,
+      "pause_after": 0.2,
+      "status": "pending"
+    },
+    {
+      "id": "item_001",
+      "title": "Bản tin ca phát thanh số 2",
+      "file_path": "C:\\Users\\MINHDA~1\\AppData\\Local\\Temp\\ttts_p710_endurance_ulc7_s8s\\sched_endurance_base.wav",
+      "duration_sec": 1.0,
+      "pause_after": 0.2,
+      "status": "pending"
+    },
+    {
+      "id": "item_002",
+      "title": "Bản tin ca phát thanh số 3",
+      "file_path": "C:\\Users\\MINHDA~1\\AppData\\Local\\Temp\\ttts_p710_endurance_ulc7_s8s\\sched_endurance_base.wav",
+      "duration_sec": 1.0,
+      "pause_after": 0.2,
+      "status": "pending"
+    },
+    {
+      "id": "item_003",
+      "title": "Bản tin ca phát thanh số 4",
+      "file_path": "C:\\Users\\MINHDA~1\\AppData\\Local\\Temp\\ttts_p710_endurance_ulc7_s8s\\sched_endurance_base.wav",
+      "duration_sec": 1.0,
+      "pause_after": 0.2,
+      "status": "pending"
+    },
+    {
+      "id": "item_004",
+      "title": "Bản tin ca phát thanh số 5",
+      "file_path": "C:\\Users\\MINHDA~1\\AppData\\Local\\Temp\\ttts_p710_endurance_ulc7_s8s\\sched_endurance_base.wav",
+      "duration_sec": 1.0,
+      "pause_after": 0.2,
+      "status": "pending"
+    },
+    {
+      "id": "item_005",
+      "title": "Bản tin ca phát thanh số 6",
+      "file_path": "C:\\Users\\MINHDA~1\\AppData\\Local\\Temp\\ttts_p710_endurance_ulc7_s8s\\sched_endurance_base.wav",
+      "duration_sec": 1.0,
+      "pause_after": 0.2,
+      "status": "pending"
+    },
+    {
+      "id": "item_006",
+      "title": "Bản tin ca phát thanh số 7",
+      "file_path": "C:\\Users\\MINHDA~1\\AppData\\Local\\Temp\\ttts_p710_endurance_ulc7_s8s\\sched_endurance_base.wav",
+      "duration_sec": 1.0,
+      "pause_after": 0.2,
+      "status": "pending"
+    },
+    {
+      "id": "item_007",
+      "title": "Bản tin ca phát thanh số 8",
+      "file_path": "C:\\Users\\MINHDA~1\\AppData\\Local\\Temp\\ttts_p710_endurance_ulc7_s8s\\sched_endurance_base.wav",
+      "duration_sec": 1.0,
+      "pause_after": 0.2,
+      "status": "pending"
+    },
+    {
+      "id": "item_008",
+      "title": "Bản tin ca phát thanh số 9",
+      "file_path": "C:\\Users\\MINHDA~1\\AppData\\Local\\Temp\\ttts_p710_endurance_ulc7_s8s\\sched_endurance_base.wav",
+      "duration_sec": 1.0,
+      "pause_after": 0.2,
+      "status": "pending"
+    },
+    {
+      "id": "item_009",
+      "title": "Bản tin ca phát thanh số 10",
+      "file_path": "C:\\Users\\MINHDA~1\\AppData\\Local\\Temp\\ttts_p710_endurance_ulc7_s8s\\sched_endurance_base.wav",
+      "duration_sec": 1.0,
+      "pause_after": 0.2,
+      "status": "pending"
+    },
+    {
+      "id": "item_010",
+      "title": "Bản tin ca phát thanh số 11",
+      "file_path": "C:\\Users\\MINHDA~1\\AppData\\Local\\Temp\\ttts_p710_endurance_ulc7_s8s\\sched_endurance_base.wav",
+      "duration_sec": 1.0,
+      "pause_after": 0.2,
+      "status": "pending"
+    },
+    {
+      "id": "item_011",
+      "title": "Bản tin ca phát thanh số 12",
+      "file_path": "C:\\Users\\MINHDA~1\\AppData\\Local\\Temp\\ttts_p710_endurance_ulc7_s8s\\sched_endurance_base.wav",
+      "duration_sec": 1.0,
+      "pause_after": 0.2,
+      "status": "pending"
+    },
+    {
+      "id": "item_012",
+      "title": "Bản tin ca phát thanh số 13",
+      "file_path": "C:\\Users\\MINHDA~1\\AppData\\Local\\Temp\\ttts_p710_endurance_ulc7_s8s\\sched_endurance_base.wav",
+      "duration_sec": 1.0,
+      "pause_after": 0.2,
+      "status": "pending"
+    },
+    {
+      "id": "item_013",
+      "title": "Bản tin ca phát thanh số 14",
+      "file_path": "C:\\Users\\MINHDA~1\\AppData\\Local\\Temp\\ttts_p710_endurance_ulc7_s8s\\sched_endurance_base.wav",
+      "duration_sec": 1.0,
+      "pause_after": 0.2,
+      "status": "pending"
+    },
+    {
+      "id": "item_014",
+      "title": "Bản tin ca phát thanh số 15",
+      "file_path": "C:\\Users\\MINHDA~1\\AppData\\Local\\Temp\\ttts_p710_endurance_ulc7_s8s\\sched_endurance_base.wav",
+      "duration_sec": 1.0,
+      "pause_after": 0.2,
+      "status": "pending"
+    },
+    {
+      "id": "item_015",
+      "title": "Bản tin ca phát thanh số 16",
+      "file_path": "C:\\Users\\MINHDA~1\\AppData\\Local\\Temp\\ttts_p710_endurance_ulc7_s8s\\sched_endurance_base.wav",
+      "duration_sec": 1.0,
+      "pause_after": 0.2,
+      "status": "pending"
+    },
+    {
+      "id": "item_016",
+      "title": "Bản tin ca phát thanh số 17",
+      "file_path": "C:\\Users\\MINHDA~1\\AppData\\Local\\Temp\\ttts_p710_endurance_ulc7_s8s\\sched_endurance_base.wav",
+      "duration_sec": 1.0,
+      "pause_after": 0.2,
+      "status": "pending"
+    },
+    {
+      "id": "item_017",
+      "title": "Bản tin ca phát thanh số 18",
+      "file_path": "C:\\Users\\MINHDA~1\\AppData\\Local\\Temp\\ttts_p710_endurance_ulc7_s8s\\sched_endurance_base.wav",
+      "duration_sec": 1.0,
+      "pause_after": 0.2,
+      "status": "pending"
+    },
+    {
+      "id": "item_018",
+      "title": "Bản tin ca phát thanh số 19",
+      "file_path": "C:\\Users\\MINHDA~1\\AppData\\Local\\Temp\\ttts_p710_endurance_ulc7_s8s\\sched_endurance_base.wav",
+      "duration_sec": 1.0,
+      "pause_after": 0.2,
+      "status": "pending"
+    },
+    {
+      "id": "item_019",
+      "title": "Bản tin ca phát thanh số 20",
+      "file_path": "C:\\Users\\MINHDA~1\\AppData\\Local\\Temp\\ttts_p710_endurance_ulc7_s8s\\sched_endurance_base.wav",
+      "duration_sec": 1.0,
+      "pause_after": 0.2,
+      "status": "pending"
+    },
+    {
+      "id": "item_020",
+      "title": "Bản tin ca phát thanh số 21",
+      "file_path": "C:\\Users\\MINHDA~1\\AppData\\Local\\Temp\\ttts_p710_endurance_ulc7_s8s\\sched_endurance_base.wav",
+      "duration_sec": 1.0,
+      "pause_after": 0.2,
+      "status": "pending"
+    },
+    {
+      "id": "item_021",
+      "title": "Bản tin ca phát thanh số 22",
+      "file_path": "C:\\Users\\MINHDA~1\\AppData\\Local\\Temp\\ttts_p710_endurance_ulc7_s8s\\sched_endurance_base.wav",
+      "duration_sec": 1.0,
+      "pause_after": 0.2,
+      "status": "pending"
+    },
+    {
+      "id": "item_022",
+      "title": "Bản tin ca phát thanh số 23",
+      "file_path": "C:\\Users\\MINHDA~1\\AppData\\Local\\Temp\\ttts_p710_endurance_ulc7_s8s\\sched_endurance_base.wav",
+      "duration_sec": 1.0,
+      "pause_after": 0.2,
+      "status": "pending"
+    },
+    {
+      "id": "item_023",
+      "title": "Bản tin ca phát thanh số 24",
+      "file_path": "C:\\Users\\MINHDA~1\\AppData\\Local\\Temp\\ttts_p710_endurance_ulc7_s8s\\sched_endurance_base.wav",
+      "duration_sec": 1.0,
+      "pause_after": 0.2,
+      "status": "pending"
+    },
+    {
+      "id": "item_024",
+      "title": "Bản tin ca phát thanh số 25",
+      "file_path": "C:\\Users\\MINHDA~1\\AppData\\Local\\Temp\\ttts_p710_endurance_ulc7_s8s\\sched_endurance_base.wav",
+      "duration_sec": 1.0,
+      "pause_after": 0.2,
+      "status": "pending"
+    },
+    {
+      "id": "item_025",
+      "title": "Bản tin ca phát thanh số 26",
+      "file_path": "C:\\Users\\MINHDA~1\\AppData\\Local\\Temp\\ttts_p710_endurance_ulc7_s8s\\sched_endurance_base.wav",
+      "duration_sec": 1.0,
+      "pause_after": 0.2,
+      "status": "pending"
+    },
+    {
+      "id": "item_026",
+      "title": "Bản tin ca phát thanh số 27",
+      "file_path": "C:\\Users\\MINHDA~1\\AppData\\Local\\Temp\\ttts_p710_endurance_ulc7_s8s\\sched_endurance_base.wav",
+      "duration_sec": 1.0,
+      "pause_after": 0.2,
+      "status": "pending"
+    },
+    {
+      "id": "item_027",
+      "title": "Bản tin ca phát thanh số 28",
+      "file_path": "C:\\Users\\MINHDA~1\\AppData\\Local\\Temp\\ttts_p710_endurance_ulc7_s8s\\sched_endurance_base.wav",
+      "duration_sec": 1.0,
+      "pause_after": 0.2,
+      "status": "pending"
+    },
+    {
+      "id": "item_028",
+      "title": "Bản tin ca phát thanh số 29",
+      "file_path": "C:\\Users\\MINHDA~1\\AppData\\Local\\Temp\\ttts_p710_endurance_ulc7_s8s\\sched_endurance_base.wav",
+      "duration_sec": 1.0,
+      "pause_after": 0.2,
+      "status": "pending"
+    },
+    {
+      "id": "item_029",
+      "title": "Bản tin ca phát thanh số 30",
+      "file_path": "C:\\Users\\MINHDA~1\\AppData\\Local\\Temp\\ttts_p710_endurance_ulc7_s8s\\sched_endurance_base.wav",
+      "duration_sec": 1.0,
+      "pause_after": 0.2,
+      "status": "pending"
+    },
+    {
+      "id": "item_030",
+      "title": "Bản tin ca phát thanh số 31",
+      "file_path": "C:\\Users\\MINHDA~1\\AppData\\Local\\Temp\\ttts_p710_endurance_ulc7_s8s\\sched_endurance_base.wav",
+      "duration_sec": 1.0,
+      "pause_after": 0.2,
+      "status": "pending"
+    },
+    {
+      "id": "item_031",
+      "title": "Bản tin ca phát thanh số 32",
+      "file_path": "C:\\Users\\MINHDA~1\\AppData\\Local\\Temp\\ttts_p710_endurance_ulc7_s8s\\sched_endurance_base.wav",
+      "duration_sec": 1.0,
+      "pause_after": 0.2,
+      "status": "pending"
+    },
+    {
+      "id": "item_032",
+      "title": "Bản tin ca phát thanh số 33",
+      "file_path": "C:\\Users\\MINHDA~1\\AppData\\Local\\Temp\\ttts_p710_endurance_ulc7_s8s\\sched_endurance_base.wav",
+      "duration_sec": 1.0,
+      "pause_after": 0.2,
+      "status": "pending"
+    },
+    {
+      "id": "item_033",
+      "title": "Bản tin ca phát thanh số 34",
+      "file_path": "C:\\Users\\MINHDA~1\\AppData\\Local\\Temp\\ttts_p710_endurance_ulc7_s8s\\sched_endurance_base.wav",
+      "duration_sec": 1.0,
+      "pause_after": 0.2,
+      "status": "pending"
+    },
+    {
+      "id": "item_034",
+      "title": "Bản tin ca phát thanh số 35",
+      "file_path": "C:\\Users\\MINHDA~1\\AppData\\Local\\Temp\\ttts_p710_endurance_ulc7_s8s\\sched_endurance_base.wav",
+      "duration_sec": 1.0,
+      "pause_after": 0.2,
+      "status": "pending"
+    },
+    {
+      "id": "item_035",
+      "title": "Bản tin ca phát thanh số 36",
+      "file_path": "C:\\Users\\MINHDA~1\\AppData\\Local\\Temp\\ttts_p710_endurance_ulc7_s8s\\sched_endurance_base.wav",
+      "duration_sec": 1.0,
+      "pause_after": 0.2,
+      "status": "pending"
+    },
+    {
+      "id": "item_036",
+      "title": "Bản tin ca phát thanh số 37",
+      "file_path": "C:\\Users\\MINHDA~1\\AppData\\Local\\Temp\\ttts_p710_endurance_ulc7_s8s\\sched_endurance_base.wav",
+      "duration_sec": 1.0,
+      "pause_after": 0.2,
+      "status": "pending"
+    },
+    {
+      "id": "item_037",
+      "title": "Bản tin ca phát thanh số 38",
+      "file_path": "C:\\Users\\MINHDA~1\\AppData\\Local\\Temp\\ttts_p710_endurance_ulc7_s8s\\sched_endurance_base.wav",
+      "duration_sec": 1.0,
+      "pause_after": 0.2,
+      "status": "pending"
+    },
+    {
+      "id": "item_038",
+      "title": "Bản tin ca phát thanh số 39",
+      "file_path": "C:\\Users\\MINHDA~1\\AppData\\Local\\Temp\\ttts_p710_endurance_ulc7_s8s\\sched_endurance_base.wav",
+      "duration_sec": 1.0,
+      "pause_after": 0.2,
+      "status": "pending"
+    },
+    {
+      "id": "item_039",
+      "title": "Bản tin ca phát thanh số 40",
+      "file_path": "C:\\Users\\MINHDA~1\\AppData\\Local\\Temp\\ttts_p710_endurance_ulc7_s8s\\sched_endurance_base.wav",
+      "duration_sec": 1.0,
+      "pause_after": 0.2,
+      "status": "pending"
+    },
+    {
+      "id": "item_040",
+      "title": "Bản tin ca phát thanh số 41",
+      "file_path": "C:\\Users\\MINHDA~1\\AppData\\Local\\Temp\\ttts_p710_endurance_ulc7_s8s\\sched_endurance_base.wav",
+      "duration_sec": 1.0,
+      "pause_after": 0.2,
+      "status": "pending"
+    },
+    {
+      "id": "item_041",
+      "title": "Bản tin ca phát thanh số 42",
+      "file_path": "C:\\Users\\MINHDA~1\\AppData\\Local\\Temp\\ttts_p710_endurance_ulc7_s8s\\sched_endurance_base.wav",
+      "duration_sec": 1.0,
+      "pause_after": 0.2,
+      "status": "pending"
+    },
+    {
+      "id": "item_042",
+      "title": "Bản tin ca phát thanh số 43",
+      "file_path": "C:\\Users\\MINHDA~1\\AppData\\Local\\Temp\\ttts_p710_endurance_ulc7_s8s\\sched_endurance_base.wav",
+      "duration_sec": 1.0,
+      "pause_after": 0.2,
+      "status": "pending"
+    },
+    {
+      "id": "item_043",
+      "title": "Bản tin ca phát thanh số 44",
+      "file_path": "C:\\Users\\MINHDA~1\\AppData\\Local\\Temp\\ttts_p710_endurance_ulc7_s8s\\sched_endurance_base.wav",
+      "duration_sec": 1.0,
+      "pause_after": 0.2,
+      "status": "pending"
+    },
+    {
+      "id": "item_044",
+      "title": "Bản tin ca phát thanh số 45",
+      "file_path": "C:\\Users\\MINHDA~1\\AppData\\Local\\Temp\\ttts_p710_endurance_ulc7_s8s\\sched_endurance_base.wav",
+      "duration_sec": 1.0,
+      "pause_after": 0.2,
+      "status": "pending"
+    },
+    {
+      "id": "item_045",
+      "title": "Bản tin ca phát thanh số 46",
+      "file_path": "C:\\Users\\MINHDA~1\\AppData\\Local\\Temp\\ttts_p710_endurance_ulc7_s8s\\sched_endurance_base.wav",
+      "duration_sec": 1.0,
+      "pause_after": 0.2,
+      "status": "pending"
+    },
+    {
+      "id": "item_046",
+      "title": "Bản tin ca phát thanh số 47",
+      "file_path": "C:\\Users\\MINHDA~1\\AppData\\Local\\Temp\\ttts_p710_endurance_ulc7_s8s\\sched_endurance_base.wav",
+      "duration_sec": 1.0,
+      "pause_after": 0.2,
+      "status": "pending"
+    },
+    {
+      "id": "item_047",
+      "title": "Bản tin ca phát thanh số 48",
+      "file_path": "C:\\Users\\MINHDA~1\\AppData\\Local\\Temp\\ttts_p710_endurance_ulc7_s8s\\sched_endurance_base.wav",
+      "duration_sec": 1.0,
+      "pause_after": 0.2,
+      "status": "pending"
+    },
+    {
+      "id": "item_048",
+      "title": "Bản tin ca phát thanh số 49",
+      "file_path": "C:\\Users\\MINHDA~1\\AppData\\Local\\Temp\\ttts_p710_endurance_ulc7_s8s\\sched_endurance_base.wav",
+      "duration_sec": 1.0,
+      "pause_after": 0.2,
+      "status": "pending"
+    },
+    {
+      "id": "item_049",
+      "title": "Bản tin ca phát thanh số 50",
+      "file_path": "C:\\Users\\MINHDA~1\\AppData\\Local\\Temp\\ttts_p710_endurance_ulc7_s8s\\sched_endurance_base.wav",
+      "duration_sec": 1.0,
+      "pause_after": 0.2,
+      "status": "pending"
+    }
+  ],
+  "repeat_type": "daily",
+  "target_time": "06:30:00",
+  "is_enabled": true,
+  "id": "sched_1794189919_d79649",
+  "next_run": "2026-11-10 06:30:00",
+  "updated_at": "2026-11-09 09:05:19",
+  "created_at": "2026-11-09 09:05:19"
+}

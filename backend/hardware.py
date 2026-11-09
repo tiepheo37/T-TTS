@@ -1,4 +1,4 @@
-"""Chẩn đoán phần cứng, môi trường inference và lựa chọn thiết bị CPU/GPU cho T-TTS v1.0.1.
+"""Chẩn đoán phần cứng, môi trường inference và lựa chọn thiết bị CPU/GPU cho T-TTS v2.0.
 
 Phân định 3 tầng thông tin độc lập:
 A. Phần cứng (Hardware): Phát hiện GPU NVIDIA, tên card, dung lượng VRAM, phiên bản Driver qua nvcuda.dll.

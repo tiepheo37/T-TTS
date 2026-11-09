@@ -1,4 +1,4 @@
-"""desktop_main.py — ĐIỀU PHỐI KHỞI CHẠY ỨNG DỤNG WINDOWS DESKTOP NATIVE T-TTS v1.0.1
+"""desktop_main.py — ĐIỀU PHỐI KHỞI CHẠY ỨNG DỤNG WINDOWS DESKTOP NATIVE T-TTS v2.0
 =====================================================================================
 KIẾN TRÚC THUẦN DESKTOP NATIVE (PYSIDE6):
 - Khởi chạy trực tiếp cửa sổ ứng dụng Modern Dark bằng PySide6.
@@ -34,6 +34,20 @@ else:
 for p in [str(APP_ROOT), str(INTERNAL_DIR), str(APP_ROOT / "backend"), str(INTERNAL_DIR / "backend"), str(APP_ROOT / "gui"), str(INTERNAL_DIR / "gui")]:
     if p not in sys.path:
         sys.path.insert(0, p)
+
+# Khởi tạo môi trường âm thanh FFmpeg tập trung trước khi import GUI hoặc Audio
+try:
+    from backend.ffmpeg_bootstrap import initialize_ffmpeg
+    initialize_ffmpeg()
+except Exception as e:
+    pass
+
+# Khởi tạo hook vòng đời VelopPack (hỗ trợ Auto Update native)
+try:
+    import velopack
+    velopack.App().run()
+except Exception:
+    pass
 
 # Xử lý stdout/stderr an toàn khi chạy chế độ Windows GUI (noconsole / console=False)
 if sys.stdout is None or sys.stderr is None:
@@ -91,7 +105,7 @@ def show_fatal_error_dialog(title: str, message: str) -> None:
 
 def main():
     logger.info("====================================================================")
-    logger.info("KHỞI ĐỘNG T-TTS v1.0.1 — NATIVE DESKTOP WINDOWS (OFFLINE)")
+    logger.info("KHỞI ĐỘNG T-TTS v2.0 — NATIVE DESKTOP WINDOWS (OFFLINE)")
     logger.info("====================================================================")
 
     setup_windows_dpi()
@@ -110,7 +124,7 @@ def main():
     # Khởi tạo đối tượng ứng dụng PySide6
     app = QApplication(sys.argv)
     app.setApplicationName("T-TTS")
-    app.setApplicationDisplayName("T-TTS v1.0.1 — Chuyển Văn Bản Thành Giọng Nói Tiếng Việt")
+    app.setApplicationDisplayName("T-TTS v3.0 — Hệ Thống Trợ Lý Giọng Nói Quân Đội (Tác giả: Nguyễn Văn Tiệp)")
     app.setOrganizationName("NguyenVanTiep")
 
     # Đặt icon cho toàn bộ ứng dụng

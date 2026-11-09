@@ -1,0 +1,23 @@
+================================================================================
+🇻🇳 T-TTS v3.0.1 — HỆ THỐNG TRỢ LÝ GIỌNG NÓI QUÂN ĐỘI
+PHẦN MỀM CHUYỂN VĂN BẢN THÀNH GIỌNG NÓI TIẾNG VIỆT (NATIVE WINDOWS DESKTOP)
+================================================================================
+
+★ TÁC GIẢ PHẦN MỀM:
+  NGUYỄN VĂN TIỆP
+
+★ CÔNG NGHỆ CỐT LÕI & ENGINE:
+  • Mô hình giọng nói: VieNeu-TTS v3 Turbo (Tác giả: Phạm Nguyễn Ngọc Bảo)
+  • Công nghệ suy luận: ONNX Runtime Lite CPU (Quantized INT8)
+  • Chất lượng âm thanh: Chuẩn phát thanh Studio 48,000 Hz 16-bit
+  • Kiến trúc: Desktop Windows Native (PySide6) — Bỏ hoàn toàn Localhost,
+    không chạy Flask server ngầm, không mở trình duyệt Chrome/Edge
+  • Hoạt động 100% Offline độc lập trên máy tính cá nhân, không cần Internet
+
+★ BẢN QUYỀN & GIẤY PHÉP:
+  • Cơ chế xác minh chữ ký số mật mã Ed25519 hoàn toàn Offline
+  • Hỗ trợ 6 gói thời hạn: 1 Ngày, 7 Ngày, 30 Ngày, 6 Tháng, 1 Năm và Vĩnh Viễn
+  • Kích hoạt bản quyền an toàn qua Mã máy (Machine ID) do tác giả cung cấp
+
+Nhấn "Tiếp tục" để tiến hành cài đặt phần mềm vào máy tính của bạn.
+================================================================================

@@ -1,0 +1,36 @@
+================================================================================
+HƯỚNG DẪN CÀI ĐẶT VÀ SỬ DỤNG CÔNG CỤ CẤP KEY T-TTS v3.0 TRÊN ANDROID (.APK)
+Tác giả: Nguyễn Văn Tiệp
+================================================================================
+
+1. GIỚI THIỆU:
+   Ứng dụng "T-TTS KeyGen v3.0" chạy độc lập 100% trên điện thoại Android,
+   cho phép tác giả cấp mã bản quyền có chữ ký số Ed25519 cho khách hàng mọi lúc,
+   mọi nơi ngay trên điện thoại mà không cần phải mở máy tính hay mang theo laptop.
+   Hoạt động 100% Offline, không cần kết nối mạng Internet.
+
+2. CÁCH CHUYỂN VÀ CÀI ĐẶT VÀO ĐIỆN THOẠI ANDROID:
+   - Vị trí tệp cài đặt: dist/T-TTS_KeyGenerator_v3.0.apk (hoặc tools/T-TTS_KeyGenerator_v3.0.apk)
+   - Bước 1: Gửi tệp .apk này vào điện thoại của bạn (qua Zalo gửi dạng Tệp tin,
+             qua Telegram, Google Drive, hoặc cắm cáp USB chép vào bộ nhớ máy).
+   - Bước 2: Trên điện thoại, mở tệp T-TTS_KeyGenerator_v3.0.apk lên.
+   - Bước 3: Nếu điện thoại hỏi quyền "Cho phép cài đặt ứng dụng từ nguồn này",
+             hãy bấm "Cài đặt/Cho phép".
+   - Bước 4: Nhấn "Cài đặt" -> Hoàn tất. Ứng dụng sẽ xuất hiện trên màn hình chính
+             với icon biểu trưng Quân đội.
+
+3. HƯỚNG DẪN CẤP KEY CHO KHÁCH HÀNG:
+   - Bước 1: Khi khách hàng gửi Mã máy (Machine ID) qua Zalo/Tin nhắn,
+             bạn chỉ cần Sao chép (Copy) mã đó.
+   - Bước 2: Mở app "T-TTS KeyGen v3.0" trên điện thoại -> Bấm nút [📋 Dán].
+   - Bước 3: Chọn 1 trong 6 gói bản quyền:
+             + 1 Ngày (24 giờ dùng thử)
+             + 7 Ngày (168 giờ)
+             + 30 Ngày (720 giờ)
+             + 6 Tháng (Theo lịch)
+             + 1 Năm (Theo lịch)
+             + Vĩnh viễn (Trọn đời)
+   - Bước 4: Điền Ghi chú tên khách/đơn vị (nếu muốn) -> Bấm [⚡ TẠO MÃ KÍCH HOẠT].
+   - Bước 5: Bấm nút [💬 Gửi Qua Zalo] để app tự động chuyển tiếp tin nhắn bàn giao
+             kèm mã bản quyền sang Zalo của khách hàng trong 1 giây!
+================================================================================

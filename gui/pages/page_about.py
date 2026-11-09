@@ -2,7 +2,7 @@
 ========================================================================
 Thiết kế trang trọng, sạch sẽ, bỏ hoàn toàn các viền hộp (ô vuông) quanh chữ:
 - Phù hiệu chính thức của QUÂN ĐỘI NHÂN DÂN VIỆT NAM (đã tách nền trong suốt).
-- Tôn vinh tác giả ĐẠI ÚY NGUYỄN VĂN TIỆP rõ ràng, trang nghiêm.
+- Tôn vinh tác giả NGUYỄN VĂN TIỆP rõ ràng, trang nghiêm.
 - Ghi nhận tác giả mô hình âm thanh lõi PHẠM NGUYỄN NGỌC BẢO.
 """
 
@@ -26,6 +26,7 @@ from PySide6.QtWidgets import (
 )
 
 from backend.service import tts_service
+from backend.version import APP_VERSION, APP_NAME
 
 
 class PageAbout(QWidget):
@@ -84,7 +85,7 @@ class PageAbout(QWidget):
         badge_row = QHBoxLayout()
         badge_row.setSpacing(10)
 
-        app_tag = QLabel("T-TTS v1.0.1")
+        app_tag = QLabel(f"{APP_NAME} v{APP_VERSION}")
         app_tag.setStyleSheet(
             "background-color: #C92A2A; color: #FFFFFF; font-weight: 800; "
             "padding: 3px 10px; border-radius: 4px; font-size: 12px; border: none;"
@@ -106,21 +107,17 @@ class PageAbout(QWidget):
         lbl_intro.setStyleSheet("color: #C5DFC3; font-size: 13px; font-weight: 500; border: none;")
         ac_layout.addWidget(lbl_intro)
 
-        # TÁC GIẢ CHÍNH (Chữ vàng lớn, trang nghiêm, không ô vuông)
-        author_title_lbl = QLabel("TÁC GIẢ & KIẾN TRÚC SƯ PHẦN MỀM:")
-        author_title_lbl.setStyleSheet("color: #FFD700; font-size: 12px; font-weight: bold; margin-top: 6px; border: none;")
+        # TÁC GIẢ (Chữ vàng lớn, trang nghiêm)
+        author_title_lbl = QLabel("TÁC GIẢ:")
+        author_title_lbl.setStyleSheet("color: #FFD700; font-size: 13px; font-weight: 800; margin-top: 6px; letter-spacing: 0.5px; border: none;")
         ac_layout.addWidget(author_title_lbl)
 
-        author_name_lbl = QLabel("Đại úy Nguyễn Văn Tiệp")
+        author_name_lbl = QLabel("Nguyễn Văn Tiệp")
         author_name_lbl.setStyleSheet(
-            "color: #FFFFFF; font-size: 28px; font-weight: 800; "
+            "color: #FFFFFF; font-size: 28px; font-weight: 900; "
             "letter-spacing: 0.5px; border: none;"
         )
         ac_layout.addWidget(author_name_lbl)
-
-        lbl_rank = QLabel("Quân hàm: Đại úy · Quân đội nhân dân Việt Nam")
-        lbl_rank.setStyleSheet("color: #FFD700; font-size: 13px; font-weight: 600; border: none;")
-        ac_layout.addWidget(lbl_rank)
 
         lbl_desc = QLabel(
             "Phần mềm được phát triển phục vụ công tác chuyển đổi văn bản thành giọng nói tiếng Việt chất lượng cao, "
@@ -211,7 +208,7 @@ class PageAbout(QWidget):
         layout.addWidget(lic_card)
 
         # -------------------------------------------------------------
-        # 4. CHÍNH SÁCH 5 GÓI BẢN QUYỀN
+        # 4. CHÍNH SÁCH 6 GÓI BẢN QUYỀN
         # -------------------------------------------------------------
         policy_card = QFrame()
         policy_card.setProperty("class", "CardFrame")
@@ -219,7 +216,7 @@ class PageAbout(QWidget):
         pc_layout.setContentsMargins(18, 14, 18, 14)
         pc_layout.setSpacing(6)
 
-        pc_title = QLabel("📜 5 GÓI BẢN QUYỀN CẤP PHÉP HỆ THỐNG")
+        pc_title = QLabel("📜 6 GÓI BẢN QUYỀN CẤP PHÉP HỆ THỐNG")
         pc_title.setProperty("class", "CardTitle")
         pc_layout.addWidget(pc_title)
 
@@ -228,6 +225,7 @@ class PageAbout(QWidget):
             "• <b>7 Ngày (KEY-7D)</b>: Gói trải nghiệm 1 tuần (168 giờ).<br>"
             "• <b>30 Ngày (KEY-30D)</b>: Gói bản quyền 1 tháng tiêu chuẩn.<br>"
             "• <b>6 Tháng (KEY-6M)</b>: Cấp phép nửa năm, tự động tính hạn theo lịch ngày thực tế.<br>"
+            "• <b>1 Năm (KEY-1Y)</b>: Cấp phép tròn 1 năm theo lịch ngày thực tế.<br>"
             "• <b>Vĩnh Viễn (KEY-PERM)</b>: Bản quyền trọn đời, không bao giờ hết hạn."
         )
         lbl_plans = QLabel(plans_text)
@@ -243,27 +241,31 @@ class PageAbout(QWidget):
         main_layout.addWidget(scroll)
 
     def reload_license_info(self):
-        info = tts_service.get_license_info()
-        mid = info.get("machine_id", "KHÔNG XÁC ĐỊNH")
+        try:
+            info = tts_service.get_license_info() or {}
+        except Exception:
+            info = {}
+
+        mid = str(info.get("machine_id") or "KHÔNG XÁC ĐỊNH")
         self.lbl_mid_val.setText(mid)
 
-        status = info.get("status", "unknown")
-        plan = info.get("plan", "none").upper()
-        days_left = info.get("days_left", 0)
-        expires_at = info.get("expires_at")
+        status = str(info.get("status") or "unknown").lower()
+        plan = str(info.get("plan") or "none").upper()
+        rem_str = str(info.get("remaining_formatted") or "Chưa kích hoạt")
+        expires_at = str(info.get("expires_readable") or info.get("expires_at") or "")
 
         if status == "active":
-            if plan == "PERMANENT":
+            if "PERM" in plan or plan == "PERMANENT":
                 self.lbl_lic_status.setText("Trạng thái: <b style='color:#FFD700;'>ĐÃ KÍCH HOẠT VĨNH VIỄN (TRỌN ĐỜI)</b>")
                 self.lbl_lic_detail.setText("Bản quyền trọn đời không giới hạn thời gian sử dụng.")
             else:
                 self.lbl_lic_status.setText(
-                    f"Trạng thái: <b style='color:#4ADE80;'>ĐANG HOẠT ĐỘNG (Gói {plan})</b> — Còn {days_left} ngày"
+                    f"Trạng thái: <b style='color:#4ADE80;'>ĐANG HOẠT ĐỘNG (Gói {plan})</b> — {rem_str}"
                 )
                 self.lbl_lic_detail.setText(f"Hạn sử dụng đến: {expires_at or 'Không giới hạn'}")
         elif status == "trial":
             self.lbl_lic_status.setText(
-                f"Trạng thái: <b style='color:#FEF08A;'>DÙNG THỬ (TRIAL)</b> — Còn {days_left} ngày"
+                f"Trạng thái: <b style='color:#FEF08A;'>DÙNG THỬ (TRIAL)</b> — {rem_str}"
             )
             self.lbl_lic_detail.setText(f"Hạn dùng thử: {expires_at or 'N/A'}")
         elif status == "expired":

@@ -30,6 +30,7 @@ from PySide6.QtWidgets import (
 
 from ..styles import LIGHT_ACTIVATION_QSS
 from backend.service import tts_service
+from backend.version import APP_VERSION, APP_NAME
 
 
 class LicenseActivationDialog(QDialog):
@@ -40,7 +41,7 @@ class LicenseActivationDialog(QDialog):
     def __init__(self, parent: Optional[QWidget] = None):
         super().__init__(parent)
         self.setObjectName("ActivationDialog")
-        self.setWindowTitle("Kích Hoạt Bản Quyền — T-TTS v1.0.1")
+        self.setWindowTitle(f"Kích Hoạt Bản Quyền — {APP_NAME} v{APP_VERSION}")
         self.setFixedSize(580, 680)
         self.setStyleSheet(LIGHT_ACTIVATION_QSS)
         self.setWindowFlags(self.windowFlags() & ~Qt.WindowContextHelpButtonHint)
@@ -69,7 +70,7 @@ class LicenseActivationDialog(QDialog):
         title_layout = QVBoxLayout()
         title_lbl = QLabel("KÍCH HOẠT BẢN QUYỀN")
         title_lbl.setObjectName("DialogTitle")
-        sub_lbl = QLabel("T-TTS v1.0.1 — Chuyển Văn Bản Thành Giọng Nói Tiếng Việt")
+        sub_lbl = QLabel(f"{APP_NAME} v{APP_VERSION} — Chuyển Văn Bản Thành Giọng Nói Tiếng Việt")
         sub_lbl.setObjectName("DialogSubtitle")
         title_layout.addWidget(title_lbl)
         title_layout.addWidget(sub_lbl)
@@ -85,8 +86,8 @@ class LicenseActivationDialog(QDialog):
 
         # Hướng dẫn kích hoạt
         guide_lbl = QLabel(
-            "Vui lòng gửi <b>Mã Máy</b> bên dưới cho nhà phát triển "
-            "(<b>Đại úy Nguyễn Văn Tiệp</b>) để nhận mã key kích hoạt bản quyền."
+            "Vui lòng gửi <b>Mã Máy</b> bên dưới cho tác giả "
+            "(<b>Nguyễn Văn Tiệp</b>) để nhận mã key kích hoạt bản quyền."
         )
         guide_lbl.setWordWrap(True)
         guide_lbl.setStyleSheet("color: #475569; font-size: 13px; line-height: 1.4;")

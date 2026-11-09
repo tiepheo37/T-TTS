@@ -7,34 +7,48 @@ from PyInstaller.utils.hooks import collect_all, collect_submodules, collect_dat
 
 block_cipher = None
 
-# Thu thập dữ liệu và binary cho PySide6, cryptography, vieneu, sea_g2p
+# Thu thập dữ liệu và binary cho PySide6, cryptography, vieneu, sea_g2p, velopack
 pyside_datas, pyside_binaries, pyside_hidden = collect_all('PySide6')
 crypto_datas, crypto_binaries, crypto_hidden = collect_all('cryptography')
+velo_datas, velo_binaries, velo_hidden = collect_all('velopack')
 
 datas = [
     ('gui', 'gui'),
     ('backend', 'backend'),
     ('app_icon.ico', '.'),
-] + collect_data_files('vieneu') + collect_data_files('sea_g2p') + pyside_datas + crypto_datas
+    ('python312/python/Lib/site-packages/_sounddevice_data', '_sounddevice_data'),
+] + collect_data_files('vieneu') + collect_data_files('sea_g2p') + pyside_datas + crypto_datas + velo_datas
 
-binaries = pyside_binaries + crypto_binaries
+binaries = pyside_binaries + crypto_binaries + velo_binaries
 
 hiddenimports = [
     'desktop_main',
     'gui',
     'gui.styles',
     'gui.main_window',
+    'gui.dialog_update',
     'gui.dialogs.license_dialog',
     'gui.pages.page_synthesize',
     'gui.pages.page_clone',
     'gui.pages.page_batch',
+    'gui.pages.page_broadcast',
+    'gui.pages.page_podcast',
     'gui.pages.page_voices',
+    'gui.pages.page_pron_dict',
     'gui.pages.page_history',
     'gui.pages.page_settings',
     'gui.pages.page_about',
     'gui.pages.page_guide',
+    'gui.pages.page_schedule',
+    'gui.pages.page_audio_studio',
+    'gui.waveform_widget',
+    'gui.task_worker',
+    'gui.notification_hub',
     'backend',
+    'backend.version',
+    'backend.updater',
     'backend.service',
+    'backend.recorder',
     'backend.audio_player',
     'backend.license',
     'backend.tts_engine',
@@ -44,12 +58,18 @@ hiddenimports = [
     'backend.models_bootstrap',
     'backend.storage',
     'backend.vieneu_adapter',
+    'backend.scheduler_engine',
+    'backend.project_manager',
     'vieneu',
     'vieneu._v3_turbo_engine',
     'vieneu._v3_turbo_engine.onnx_runtime_lite',
     'onnxruntime',
     'scipy',
     'soundfile',
+    'sounddevice',
+    '_sounddevice',
+    '_sounddevice_data',
+    'pydub',
     'kaldi_native_fbank',
     'pypdf',
     'docx',
@@ -59,7 +79,7 @@ hiddenimports = [
     'PySide6.QtGui',
     'PySide6.QtWidgets',
     'shiboken6',
-] + pyside_hidden + crypto_hidden
+] + pyside_hidden + crypto_hidden + velo_hidden
 
 a = Analysis(
     ['desktop_main.py'],
@@ -106,5 +126,5 @@ coll = COLLECT(
     strip=False,
     upx=True,
     upx_exclude=[],
-    name='T-TTS_v1.0.1_Desktop_Test',
+    name='T-TTS_v3.0.1_Desktop',
 )

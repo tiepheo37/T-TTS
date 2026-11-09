@@ -1,0 +1,93 @@
+[2026-10-16 07:32:19] ================================================================================
+[2026-10-16 07:32:19] BẮT ĐẦU QUY TRÌNH BUILD T-TTS v1.0.1 (PORTABLE & INNO SETUP INSTALLER)
+[2026-10-16 07:32:19] ================================================================================
+[2026-10-16 07:32:19] 
+--- BƯỚC 1: BUILD PYINSTALLER THỐNG NHẤT RA T-TTS_v1.0.1_Exe_Portable ---
+[2026-10-16 07:32:19] CHẠY LỆNH: C:\Users\Minh Dang\Downloads\voice-studio-app\python312\python\python.exe -m PyInstaller --clean -y C:\Users\Minh Dang\Downloads\voice-studio-app\t_tts.spec
+[2026-10-16 07:35:05]   [STDERR] 156863 INFO: checking PYZ
+[2026-10-16 07:35:05]   [STDERR] 156863 INFO: Building PYZ because PYZ-00.toc is non existent
+[2026-10-16 07:35:05]   [STDERR] 156863 INFO: Building PYZ (ZlibArchive) C:\Users\Minh Dang\Downloads\voice-studio-app\build\t_tts\PYZ-00.pyz
+[2026-10-16 07:35:05]   [STDERR] 159805 INFO: Building PYZ (ZlibArchive) C:\Users\Minh Dang\Downloads\voice-studio-app\build\t_tts\PYZ-00.pyz completed successfully.
+[2026-10-16 07:35:05]   [STDERR] 159875 INFO: checking PKG
+[2026-10-16 07:35:05]   [STDERR] 159875 INFO: Building PKG because PKG-00.toc is non existent
+[2026-10-16 07:35:05]   [STDERR] 159875 INFO: Building PKG (CArchive) T-TTS.pkg
+[2026-10-16 07:35:05]   [STDERR] 159918 INFO: Building PKG (CArchive) T-TTS.pkg completed successfully.
+[2026-10-16 07:35:05]   [STDERR] 159919 INFO: Bootloader C:\Users\Minh Dang\Downloads\voice-studio-app\python312\python\Lib\site-packages\PyInstaller\bootloader\Windows-64bit-intel\runw.exe
+[2026-10-16 07:35:05]   [STDERR] 159919 INFO: checking EXE
+[2026-10-16 07:35:05]   [STDERR] 159919 INFO: Building EXE because EXE-00.toc is non existent
+[2026-10-16 07:35:05]   [STDERR] 159919 INFO: Building EXE from EXE-00.toc
+[2026-10-16 07:35:05]   [STDERR] 159919 INFO: Copying bootloader EXE to C:\Users\Minh Dang\Downloads\voice-studio-app\build\t_tts\T-TTS.exe
+[2026-10-16 07:35:05]   [STDERR] 159964 INFO: Copying icon to EXE
+[2026-10-16 07:35:05]   [STDERR] 159967 INFO: Copying 0 resources to EXE
+[2026-10-16 07:35:05]   [STDERR] 159967 INFO: Embedding manifest in EXE
+[2026-10-16 07:35:05]   [STDERR] 159968 INFO: Appending PKG archive to EXE
+[2026-10-16 07:35:05]   [STDERR] 159987 INFO: Fixing EXE headers
+[2026-10-16 07:35:05]   [STDERR] 160147 INFO: Building EXE from EXE-00.toc completed successfully.
+[2026-10-16 07:35:05]   [STDERR] 160170 INFO: checking COLLECT
+[2026-10-16 07:35:05]   [STDERR] 160170 INFO: Building COLLECT because COLLECT-00.toc is non existent
+[2026-10-16 07:35:05]   [STDERR] 160170 INFO: Removing dir C:\Users\Minh Dang\Downloads\voice-studio-app\dist\T-TTS_v1.0.1_Exe_Portable
+[2026-10-16 07:35:05]   [STDERR] 160712 INFO: Building COLLECT COLLECT-00.toc
+[2026-10-16 07:35:05]   [STDERR] 164732 INFO: Building COLLECT COLLECT-00.toc completed successfully.
+[2026-10-16 07:35:05]   [STDERR] 164822 INFO: Build complete! The results are available in: C:\Users\Minh Dang\Downloads\voice-studio-app\dist
+[2026-10-16 07:35:05] [OK] Lệnh hoàn thành thành công (code 0)
+[2026-10-16 07:35:05] 
+--- BƯỚC 2: SAO CHÉP MODELS, DATA, OUTPUT, README_WINDOWS.txt VÀO PORTABLE ---
+[2026-10-16 07:35:05] [OK] Đã cập nhật VC Runtime DLLs từ System32 vào _internal để tương thích ONNX Runtime
+[2026-10-16 07:35:05] Sao chép models từ C:\Users\Minh Dang\Downloads\voice-studio-app\models -> C:\Users\Minh Dang\Downloads\voice-studio-app\dist\T-TTS_v1.0.1_Exe_Portable\models...
+[2026-10-16 07:35:05] [OK] Đã sao chép models (18 files)
+[2026-10-16 07:35:05] Sao chép data từ C:\Users\Minh Dang\Downloads\voice-studio-app\data -> C:\Users\Minh Dang\Downloads\voice-studio-app\dist\T-TTS_v1.0.1_Exe_Portable\data...
+[2026-10-16 07:35:05] [OK] Đã sao chép data (3 files)
+[2026-10-16 07:35:05] [OK] Đã khởi tạo thư mục output tại C:\Users\Minh Dang\Downloads\voice-studio-app\dist\T-TTS_v1.0.1_Exe_Portable\output
+[2026-10-16 07:35:05] [OK] Đã sao chép app_icon.ico vào C:\Users\Minh Dang\Downloads\voice-studio-app\dist\T-TTS_v1.0.1_Exe_Portable
+[2026-10-16 07:35:05] [OK] Đã tạo file C:\Users\Minh Dang\Downloads\voice-studio-app\dist\T-TTS_v1.0.1_Exe_Portable\README_WINDOWS.txt
+[2026-10-16 07:35:05] [OK] Đã tạo cờ C:\Users\Minh Dang\Downloads\voice-studio-app\dist\T-TTS_v1.0.1_Exe_Portable\portable.txt
+[2026-10-16 07:35:05] 
+--- BƯỚC 3: KIỂM TRA TOÀN BỘ SOURCE TRONG SETUP_INSTALLER.ISS ---
+[2026-10-16 07:35:05]   [VERIFIED] Source tồn tại: T-TTS.exe (File 34510719 bytes)
+[2026-10-16 07:35:05]   [VERIFIED] Source tồn tại: _internal (Thư mục)
+[2026-10-16 07:35:05]   [VERIFIED] Source tồn tại: models (Thư mục)
+[2026-10-16 07:35:05]   [VERIFIED] Source tồn tại: README_WINDOWS.txt (File 2184 bytes)
+[2026-10-16 07:35:05]   [VERIFIED] Source tồn tại: data (Thư mục)
+[2026-10-16 07:35:05]   [VERIFIED] Source tồn tại: output (Thư mục)
+[2026-10-16 07:35:05]   [VERIFIED] Source tồn tại: app_icon.ico (File 4875 bytes)
+[2026-10-16 07:35:05] 
+--- BƯỚC 4: BIÊN DỊCH BỘ CÀI ĐẶT INNO SETUP (ISCC) ---
+[2026-10-16 07:35:05] CHẠY LỆNH: C:\Users\Minh Dang\AppData\Local\Programs\Antigravity IDE\resources\app\node_modules\innosetup\bin\ISCC.exe C:\Users\Minh Dang\Downloads\voice-studio-app\setup_installer.iss
+[2026-10-16 07:38:32]   [STDOUT]    Compressing: C:\Users\Minh Dang\Downloads\voice-studio-app\dist\T-TTS_v1.0.1_Exe_Portable\models\moss_codec\moss_audio_tokenizer_encode.onnx
+[2026-10-16 07:38:32]   [STDOUT]    Compressing: C:\Users\Minh Dang\Downloads\voice-studio-app\dist\T-TTS_v1.0.1_Exe_Portable\models\v3turbo_onnx\config.json
+[2026-10-16 07:38:32]   [STDOUT]    Compressing: C:\Users\Minh Dang\Downloads\voice-studio-app\dist\T-TTS_v1.0.1_Exe_Portable\models\v3turbo_onnx\denoiser.onnx
+[2026-10-16 07:38:32]   [STDOUT]    Compressing: C:\Users\Minh Dang\Downloads\voice-studio-app\dist\T-TTS_v1.0.1_Exe_Portable\models\v3turbo_onnx\speaker_encoder.onnx
+[2026-10-16 07:38:32]   [STDOUT]    Compressing: C:\Users\Minh Dang\Downloads\voice-studio-app\dist\T-TTS_v1.0.1_Exe_Portable\models\v3turbo_onnx\tokenizer.json
+[2026-10-16 07:38:32]   [STDOUT]    Compressing: C:\Users\Minh Dang\Downloads\voice-studio-app\dist\T-TTS_v1.0.1_Exe_Portable\models\v3turbo_onnx\vieneu_acoustic_cached.onnx
+[2026-10-16 07:38:32]   [STDOUT]    Compressing: C:\Users\Minh Dang\Downloads\voice-studio-app\dist\T-TTS_v1.0.1_Exe_Portable\models\v3turbo_onnx\vieneu_backbone_shared.data
+[2026-10-16 07:38:32]   [STDOUT]    Compressing: C:\Users\Minh Dang\Downloads\voice-studio-app\dist\T-TTS_v1.0.1_Exe_Portable\models\v3turbo_onnx\vieneu_decode_step.onnx
+[2026-10-16 07:38:32]   [STDOUT]    Compressing: C:\Users\Minh Dang\Downloads\voice-studio-app\dist\T-TTS_v1.0.1_Exe_Portable\models\v3turbo_onnx\vieneu_prefill.onnx
+[2026-10-16 07:38:32]   [STDOUT]    Compressing: C:\Users\Minh Dang\Downloads\voice-studio-app\dist\T-TTS_v1.0.1_Exe_Portable\models\v3turbo_onnx\vieneu_v3_heads.npz
+[2026-10-16 07:38:32]   [STDOUT]    Compressing: C:\Users\Minh Dang\Downloads\voice-studio-app\dist\T-TTS_v1.0.1_Exe_Portable\models\v3turbo_onnx\voices_v3_turbo.json
+[2026-10-16 07:38:32]   [STDOUT]    Compressing: C:\Users\Minh Dang\Downloads\voice-studio-app\dist\T-TTS_v1.0.1_Exe_Portable\README_WINDOWS.txt
+[2026-10-16 07:38:32]   [STDOUT]    Compressing: C:\Users\Minh Dang\Downloads\voice-studio-app\app_icon.ico
+[2026-10-16 07:38:32]   [STDOUT]    Compressing: C:\Users\Minh Dang\Downloads\voice-studio-app\MicrosoftEdgeWebview2Setup.exe
+[2026-10-16 07:38:32]   [STDOUT]    Compressing: C:\Users\Minh Dang\Downloads\voice-studio-app\dist\T-TTS_v1.0.1_Exe_Portable\data\custom_voices.json
+[2026-10-16 07:38:32]   [STDOUT]    Compressing: C:\Users\Minh Dang\Downloads\voice-studio-app\dist\T-TTS_v1.0.1_Exe_Portable\data\history.json
+[2026-10-16 07:38:32]   [STDOUT]    Compressing: C:\Users\Minh Dang\Downloads\voice-studio-app\dist\T-TTS_v1.0.1_Exe_Portable\data\pronunciation-dict.json
+[2026-10-16 07:38:32]   [STDOUT]    Compressing: C:\Users\Minh Dang\Downloads\voice-studio-app\dist\T-TTS_v1.0.1_Exe_Portable\output\.gitkeep
+[2026-10-16 07:38:32]   [STDOUT]    Compressing Setup program executable
+[2026-10-16 07:38:32]   [STDOUT]    Updating version info (SETUP.EXE)
+[2026-10-16 07:38:32]   [STDOUT]    Updating manifest (SETUP.EXE)
+[2026-10-16 07:38:32]   [STDOUT] 
+[2026-10-16 07:38:32]   [STDOUT] 
+[2026-10-16 07:38:32]   [STDOUT] Successful compile (206,343 sec). Resulting Setup program filename is:
+[2026-10-16 07:38:32]   [STDOUT] C:\Users\Minh Dang\Downloads\voice-studio-app\dist\T-TTS_Setup_v1.0.1_Offline.exe
+[2026-10-16 07:38:32] [OK] Lệnh hoàn thành thành công (code 0)
+[2026-10-16 07:38:32] [THÀNH CÔNG] Đã tạo file Inno Setup Installer: T-TTS_Setup_v1.0.1_Offline.exe (374.88 MB)
+[2026-10-16 07:38:32] 
+--- BƯỚC 5: TẠO FILE ZIP BẢN PORTABLE DỰ PHÒNG ---
+[2026-10-16 07:38:32] Đang nén zip C:\Users\Minh Dang\Downloads\voice-studio-app\dist\T-TTS_v1.0.1_Exe_Portable -> C:\Users\Minh Dang\Downloads\voice-studio-app\dist\T-TTS_v1.0.1_Exe_Portable.zip...
+[2026-10-16 07:39:18] [THÀNH CÔNG] Đã tạo file Zip Portable: T-TTS_v1.0.1_Exe_Portable.zip (450.67 MB)
+[2026-10-16 07:39:18] 
+================================================================================
+[2026-10-16 07:39:18] HOÀN TẤT BUILD T-TTS v1.0.1 TRONG 418.54 GIÂY
+[2026-10-16 07:39:18]   - Bản Portable Exe:    C:\Users\Minh Dang\Downloads\voice-studio-app\dist\T-TTS_v1.0.1_Exe_Portable
+[2026-10-16 07:39:18]   - File Zip Portable:   C:\Users\Minh Dang\Downloads\voice-studio-app\dist\T-TTS_v1.0.1_Exe_Portable.zip (450.67 MB)
+[2026-10-16 07:39:18]   - File Setup Installer: C:\Users\Minh Dang\Downloads\voice-studio-app\dist\T-TTS_Setup_v1.0.1_Offline.exe (374.88 MB)
+[2026-10-16 07:39:18] ================================================================================

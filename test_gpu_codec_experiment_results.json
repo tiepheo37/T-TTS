@@ -1,0 +1,47 @@
+{
+  "timestamp": "2026-10-11 08:42:39",
+  "hardware": {
+    "detected": true,
+    "name": "NVIDIA GeForce RTX 2060",
+    "vram_total_mb": 6143,
+    "vram_free_mb": 4571,
+    "driver_version": "582.53",
+    "cuda_driver_version": "13.0"
+  },
+  "ort_info": {
+    "version": "1.31.0",
+    "location": "C:\\Users\\Minh Dang\\Downloads\\voice-studio-app\\venv\\Lib\\site-packages\\onnxruntime",
+    "available_providers": [
+      "AzureExecutionProvider",
+      "CPUExecutionProvider"
+    ],
+    "has_cuda_provider": false
+  },
+  "dll_status": {
+    "cudart64_12.dll": false,
+    "cublas64_12.dll": false,
+    "cublasLt64_12.dll": false,
+    "cudnn64_9.dll": false,
+    "cufft64_11.dll": false,
+    "curand64_10.dll": false
+  },
+  "codec_cpu_baseline": {
+    "provider": "CPUExecutionProvider",
+    "actual_providers": [
+      "CPUExecutionProvider"
+    ],
+    "load_time_s": 1.0509828999997808,
+    "latencies_s": [
+      1.668479599999955,
+      1.676260000000184,
+      1.6210297999996328
+    ],
+    "median_latency_ms": 1668.479599999955,
+    "wav_duration_s": 12.0,
+    "median_rtf": 0.13903996666666293
+  },
+  "codec_gpu_test": null,
+  "hybrid_e2e_test": null,
+  "status": "CHƯA_ĐẠT",
+  "reason": "Thiếu CUDAExecutionProvider trong onnxruntime (v1.31.0) và thiếu các runtime DLL (cudart64_12.dll, cublas64_12.dll, cudnn64_9.dll)."
+}

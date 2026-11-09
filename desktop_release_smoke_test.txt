@@ -1,0 +1,37 @@
+[2026-10-11 09:08:57] ================================================================================
+[2026-10-11 09:08:57] BẮT ĐẦU KIỂM THỬ NGHIỆM THU BẢN CÀI ĐẶT WINDOWS T-TTS v1.0.1
+[2026-10-11 09:08:57] Thư mục cài đặt: C:\Users\Minh Dang\Downloads\voice-studio-app\test_install_v101
+[2026-10-11 09:08:57] Tệp thực thi:    C:\Users\Minh Dang\Downloads\voice-studio-app\test_install_v101\T-TTS.exe
+[2026-10-11 09:08:57] ================================================================================
+[2026-10-11 09:08:57] 
+[ĐỢT 1] KHỞI ĐỘNG T-TTS.EXE LẦN 1 TỪ THƯ MỤC CÀI ĐẶT...
+[2026-10-11 09:09:04]   [OK] Server đã sẵn sàng: VieNeu-TTS V3TURBO (vNone)
+[2026-10-11 09:09:04] 
+--- BƯỚC 1: KIỂM TRA GIAO DIỆN & CÁC API CỐT LÕI ---
+[2026-10-11 09:09:04]   [1.1 Giao diện /] OK: HTTP 200, HTML nạp đầy đủ (49359 bytes).
+[2026-10-11 09:09:04]   [1.2 Danh sách giọng /voices] OK: HTTP 200, phát hiện 25 giọng đọc.
+[2026-10-11 09:09:04] 
+--- BƯỚC 2: TẠO GIỌNG NÓI WAV THẬT VÀ THẨM ĐỊNH ÂM HỌC ---
+[2026-10-11 09:09:06]   [2.1 Tạo giọng nói] OK: Sinh thành công trong 2.42s (Dung lượng: 545324 bytes)
+[2026-10-11 09:09:06]   [2.2 Định dạng WAV] OK: RIFF PCM Mono, Sample Rate: 48000 Hz, 16-bit, Thời lượng: 5.68s, Dung lượng: 545324 bytes.
+[2026-10-11 09:09:06] 
+--- BƯỚC 3: LƯU TỪ ĐIỂN PHÁT ÂM (KIỂM TRA PERSISTENCE) ---
+[2026-10-11 09:09:06]   [3.1 Lưu từ điển] OK: Đã lưu mục từ điển 'DHQG' -> 'Đại học Quốc gia'.
+[2026-10-11 09:09:06] 
+--- BƯỚC 4: KIỂM TRA LỊCH SỬ TẠO AUDIO ---
+[2026-10-11 09:09:06]   [4.1 Lịch sử ghi nhận] OK: Phát hiện 30 bản ghi trong lịch sử.
+[2026-10-11 09:09:06] 
+--- BƯỚC 5: ĐÓNG ỨNG DỤNG LẦN 1 AN TOÀN ---
+[2026-10-11 09:09:08]   [5.1 Kết thúc tiến trình] OK: Tiến trình đã dừng hoàn toàn (Exit code: 0).
+[2026-10-11 09:09:08] 
+[ĐỢT 2] KHỞI ĐỘNG ỨNG DỤNG LẦN 2 ĐỂ XÁC MINH DỮ LIỆU PERSISTENCE...
+[2026-10-11 09:09:13]   [OK] Server lần 2 đã sẵn sàng hoạt động!
+[2026-10-11 09:09:13]   [OK] Từ điển phát âm 'DHQG' -> 'Đại học Quốc gia' tồn tại nguyên vẹn sau khi mở lại ứng dụng!
+[2026-10-11 09:09:13]   [OK] Lịch sử âm thanh (30 mục) tồn tại nguyên vẹn sau khi khởi động lại!
+[2026-10-11 09:09:13] 
+--- ĐÓNG ỨNG DỤNG LẦN 2 ---
+[2026-10-11 09:09:15]   [OK] Tiến trình lần 2 đã đóng hoàn toàn (Exit code: 0).
+[2026-10-11 09:09:15] 
+================================================================================
+[2026-10-11 09:09:15] HOÀN THÀNH XUẤT SẮC TOÀN BỘ CÁC MỤC NGHIỆM THU TRÊN BẢN CÀI ĐẶT THỰC TẾ!
+[2026-10-11 09:09:15] ================================================================================

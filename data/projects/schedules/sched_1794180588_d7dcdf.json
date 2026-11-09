@@ -1,0 +1,23 @@
+{
+  "name": "Run Now Test",
+  "task_type": "tts",
+  "repeat_type": "once",
+  "task_config": {
+    "text": "Lệnh báo động kiểm tra quân số.",
+    "voice_id": "hn_nam_quan_doi"
+  },
+  "id": "sched_1794180588_d7dcdf",
+  "is_enabled": false,
+  "next_run": null,
+  "updated_at": "2026-11-09 08:00:02",
+  "created_at": "2026-11-09 06:29:48",
+  "last_run": "2026-11-09 08:00:02",
+  "execution_history": [
+    {
+      "timestamp": "2026-11-09 08:00:02",
+      "status": "success",
+      "message": "Hoàn thành tác vụ thành công",
+      "file_path": "D:\\cac loai app\\voice-studio-app\\output\\1794186001557_Schedule_Audio.wav"
+    }
+  ]
+}

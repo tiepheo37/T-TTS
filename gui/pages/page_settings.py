@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import os
 import sys
+import time
 import subprocess
 from pathlib import Path
 from typing import Optional
@@ -30,6 +31,7 @@ from PySide6.QtWidgets import (
 )
 
 from backend.service import tts_service
+from backend.version import APP_VERSION, APP_NAME, APP_DISPLAY_NAME, APP_AUTHOR, DEFAULT_GITHUB_REPO
 
 
 class PageSettings(QWidget):
@@ -49,6 +51,37 @@ class PageSettings(QWidget):
         layout = QVBoxLayout(content_widget)
         layout.setContentsMargins(18, 16, 18, 16)
         layout.setSpacing(14)
+
+        # BANNER NỔI BẬT: TÊN PHẦN MỀM · TÁC GIẢ · CÔNG NGHỆ
+        banner_card = QFrame()
+        banner_card.setProperty("class", "CardFrame")
+        banner_card.setStyleSheet(
+            "#SettingsBanner { background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #1E2D22, stop:1 #152219); border: 1px solid #3B533E; border-radius: 8px; }"
+        )
+        banner_card.setObjectName("SettingsBanner")
+        bn_layout = QVBoxLayout(banner_card)
+        bn_layout.setContentsMargins(18, 14, 18, 14)
+        bn_layout.setSpacing(6)
+
+        lbl_app_name = QLabel(f"🇻🇳 {APP_NAME} v{APP_VERSION} — HỆ THỐNG TRỢ LÝ GIỌNG NÓI QUÂN ĐỘI")
+        lbl_app_name.setStyleSheet("color: #FFD700; font-size: 16px; font-weight: 800; letter-spacing: 0.5px; border: none;")
+        bn_layout.addWidget(lbl_app_name)
+
+        lbl_author_info = QLabel("<b>TÁC GIẢ:</b> <span style='color: #FFFFFF; font-size: 15px; font-weight: 800;'>Nguyễn Văn Tiệp</span>")
+        lbl_author_info.setStyleSheet("color: #E2E8F0; font-size: 13px; border: none;")
+        bn_layout.addWidget(lbl_author_info)
+
+        lbl_tech_info = QLabel(
+            "<b>CÔNG NGHỆ CỐT LÕI:</b> "
+            "<span style='color: #22D3EE;'>VieNeu-TTS v3 Turbo ONNX Lite CPU</span> · "
+            "<span style='color: #86EFAC;'>Quantized INT8</span> · "
+            "<span style='color: #FCD34D;'>Âm thanh phát thanh 48,000 Hz</span> · "
+            "<span style='color: #93C5FD;'>100% Native Desktop (0% Localhost, 0% Trình duyệt)</span>"
+        )
+        lbl_tech_info.setStyleSheet("color: #CBD5E1; font-size: 12px; border: none; line-height: 1.4;")
+        bn_layout.addWidget(lbl_tech_info)
+
+        layout.addWidget(banner_card)
 
         # 1. CẤU HÌNH ĐƯỜNG DẪN ĐẦU RA
         dir_card = QFrame()
@@ -147,23 +180,100 @@ class PageSettings(QWidget):
         datac_layout.addLayout(data_btns)
         layout.addWidget(data_card)
 
-        # 4. THÔNG TIN PHIÊN BẢN
+        # 4. CẬP NHẬT PHẦN MỀM TỰ ĐỘNG (AUTO UPDATE)
+        update_card = QFrame()
+        update_card.setProperty("class", "CardFrame")
+        uc_layout = QVBoxLayout(update_card)
+        uc_layout.setContentsMargins(16, 14, 16, 14)
+        uc_layout.setSpacing(10)
+
+        uc_title = QLabel("🔄 CẬP NHẬT PHẦN MỀM TỰ ĐỘNG (AUTO UPDATE)")
+        uc_title.setProperty("class", "CardTitle")
+        uc_layout.addWidget(uc_title)
+
+        uc_desc = QLabel(
+            "Hệ thống tự động kiểm tra và nâng cấp phiên bản mới nhất từ GitHub Releases qua VelopPack & HTTPS an toàn."
+        )
+        uc_desc.setStyleSheet("color: #94A3B8; font-size: 12px;")
+        uc_layout.addWidget(uc_desc)
+
+        from backend.updater import UpdateManager
+        self.update_manager = UpdateManager(tts_service.data_dir)
+        cfg = self.update_manager.config
+
+        ver_info_row = QHBoxLayout()
+        lbl_cur_ver = QLabel(f"• Phiên bản hiện tại: <b style='color: #FFD700;'>v{APP_VERSION}</b>")
+        lbl_cur_ver.setStyleSheet("color: #FFFFFF; font-size: 13px;")
+        ver_info_row.addWidget(lbl_cur_ver)
+
+        lbl_chan = QLabel(f"• Kênh phát hành: <b style='color: #22D3EE;'>{cfg.get('channel', 'stable').capitalize()}</b>")
+        lbl_chan.setStyleSheet("color: #CBD5E1; font-size: 13px;")
+        ver_info_row.addWidget(lbl_chan)
+
+        ver_info_row.addStretch()
+        uc_layout.addLayout(ver_info_row)
+
+        repo_row = QHBoxLayout()
+        repo_lbl = QLabel("• Nguồn máy chủ cập nhật (GitHub Releases):")
+        repo_lbl.setStyleSheet("color: #FFFFFF; font-size: 13px;")
+        repo_row.addWidget(repo_lbl)
+
+        self.repo_edit = QLineEdit(cfg.get("github_repo", DEFAULT_GITHUB_REPO))
+        self.repo_edit.setPlaceholderText("VD: tiepheo37/T-TTS")
+        self.repo_edit.setMaximumWidth(260)
+        repo_row.addWidget(self.repo_edit)
+
+        btn_save_repo = QPushButton("💾 Lưu kho")
+        btn_save_repo.setProperty("class", "SecondaryBtn")
+        btn_save_repo.setCursor(Qt.PointingHandCursor)
+        btn_save_repo.clicked.connect(self._save_repo_config)
+        repo_row.addWidget(btn_save_repo)
+
+        repo_row.addStretch()
+        uc_layout.addLayout(repo_row)
+
+        from PySide6.QtWidgets import QCheckBox
+        self.chk_auto_update = QCheckBox("Tự động kiểm tra bản cập nhật mới khi khởi động T-TTS")
+        self.chk_auto_update.setChecked(cfg.get("auto_check_on_startup", True))
+        self.chk_auto_update.toggled.connect(self._on_toggle_auto_update)
+        uc_layout.addWidget(self.chk_auto_update)
+
+        last_time = cfg.get("last_checked_time") or "Chưa kiểm tra"
+        self.lbl_last_check = QLabel(f"Thời gian kiểm tra gần nhất: {last_time}")
+        self.lbl_last_check.setStyleSheet("color: #64748B; font-size: 11.5px;")
+        uc_layout.addWidget(self.lbl_last_check)
+
+        btn_row = QHBoxLayout()
+        self.btn_check_update = QPushButton("🔍 Kiểm tra cập nhật ngay")
+        self.btn_check_update.setProperty("class", "GoldBtn")
+        self.btn_check_update.setCursor(Qt.PointingHandCursor)
+        self.btn_check_update.clicked.connect(self._check_update_now)
+        btn_row.addWidget(self.btn_check_update)
+        btn_row.addStretch()
+        uc_layout.addLayout(btn_row)
+
+        layout.addWidget(update_card)
+
+        # 5. THÔNG TIN PHIÊN BẢN
         ver_card = QFrame()
         ver_card.setProperty("class", "CardFrame")
         vc_layout = QVBoxLayout(ver_card)
         vc_layout.setContentsMargins(16, 14, 16, 14)
         vc_layout.setSpacing(6)
 
-        ver_title = QLabel("T-TTS v1.0.1 — NATIVE WINDOWS DESKTOP")
-        ver_title.setStyleSheet("color: #22D3EE; font-weight: bold; font-size: 14px;")
+        ver_title = QLabel(f"{APP_NAME} v{APP_VERSION} — HỆ THỐNG TRỢ LÝ GIỌNG NÓI QUÂN ĐỘI")
+        ver_title.setStyleSheet("color: #FFD700; font-weight: bold; font-size: 14px; border: none;")
         vc_layout.addWidget(ver_title)
 
         ver_text = QLabel(
-            "Phần mềm bản quyền offline hoạt động độc lập, không yêu cầu kết nối mạng Internet khi sử dụng.<br>"
-            "Phiên bản 1.0.1 nâng cấp toàn diện: Modern Dark UI, loại bỏ localhost và trình duyệt, quản lý bản quyền đa thời hạn."
+            "• <b>Tác giả:</b> <span style='color: #FFFFFF; font-weight: bold;'>Nguyễn Văn Tiệp</span><br>"
+            "• <b>Công nghệ tổng hợp:</b> VieNeu-TTS v3 Turbo ONNX Runtime Lite CPU (Quantized int8)<br>"
+            "• <b>Kiến trúc phần mềm:</b> Native Desktop Windows (PySide6) — 100% Offline, không phụ thuộc localhost/trình duyệt<br>"
+            "• <b>Chất lượng âm thanh:</b> Chuẩn phát thanh Studio 48,000 Hz 16-bit Mono / MP3 192kbps<br>"
+            "• <b>Hệ thống bản quyền:</b> Mật mã bất đối xứng Ed25519 offline 6 gói thời hạn (1D, 7D, 30D, 6M, 1Y, Lifetime)"
         )
         ver_text.setWordWrap(True)
-        ver_text.setStyleSheet("color: #94A3B8; font-size: 12px; line-height: 1.5;")
+        ver_text.setStyleSheet("color: #CBD5E1; font-size: 12px; line-height: 1.6; border: none;")
         vc_layout.addWidget(ver_text)
         layout.addWidget(ver_card)
 
@@ -174,12 +284,80 @@ class PageSettings(QWidget):
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.addWidget(scroll)
 
+    def _on_toggle_auto_update(self, checked: bool):
+        from backend.version import save_update_config
+        self.update_manager.config["auto_check_on_startup"] = checked
+        save_update_config(tts_service.data_dir, self.update_manager.config)
+
+    def _save_repo_config(self):
+        new_repo = self.repo_edit.text().strip()
+        if not new_repo or "/" not in new_repo:
+            QMessageBox.warning(
+                self,
+                "Sai định dạng",
+                "Vui lòng nhập đúng định dạng tài khoản/kho GitHub.\nVí dụ: 'TenTaiKhoan/T-TTS'",
+            )
+            return
+        from backend.version import save_update_config
+        self.update_manager.config["github_repo"] = new_repo
+        self.update_manager.repo = new_repo
+        save_update_config(tts_service.data_dir, self.update_manager.config)
+        QMessageBox.information(
+            self,
+            "Đã cập nhật kho",
+            f"Đã lưu kho cập nhật GitHub thành công:\n{new_repo}",
+        )
+
+    def _check_update_now(self):
+        from backend.updater import CheckUpdateWorker
+        self.btn_check_update.setEnabled(False)
+        self.btn_check_update.setText("⏳ Đang kiểm tra cập nhật...")
+
+        self.check_worker = CheckUpdateWorker(tts_service.data_dir)
+        self.check_worker.check_finished.connect(self._on_manual_check_finished)
+        self.check_worker.check_error.connect(self._on_manual_check_error)
+        self.check_worker.start()
+
+    def _on_manual_check_finished(self, info):
+        self.btn_check_update.setEnabled(True)
+        self.btn_check_update.setText("🔍 Kiểm tra cập nhật ngay")
+        last_time = time.strftime("%Y-%m-%d %H:%M:%S")
+        self.lbl_last_check.setText(f"Thời gian kiểm tra gần nhất: {last_time}")
+
+        if info and getattr(info, "available", False):
+            from gui.dialog_update import UpdateDialog
+            dlg = UpdateDialog(self.update_manager, info, self)
+            dlg.exec()
+        elif info and getattr(info, "error_msg", ""):
+            QMessageBox.warning(
+                self,
+                "Không Thể Kiểm Tra Cập Nhật",
+                f"Đã xảy ra lỗi khi kết nối tới máy chủ cập nhật:\n\n{info.error_msg}\n\n"
+                "Vui lòng kiểm tra lại kết nối mạng Internet.",
+            )
+        else:
+            QMessageBox.information(
+                self,
+                "T-TTS Đã Ở Bản Mới Nhất",
+                f"🎉 Bạn đang sử dụng phiên bản T-TTS mới nhất (v{APP_VERSION})!\n\n"
+                "Hiện chưa có bản cập nhật nào mới hơn trên kênh phát hành.",
+            )
+
+    def _on_manual_check_error(self, err: str):
+        self.btn_check_update.setEnabled(True)
+        self.btn_check_update.setText("🔍 Kiểm tra cập nhật ngay")
+        QMessageBox.warning(
+            self,
+            "Lỗi Kết Nối",
+            f"Không thể kiểm tra bản cập nhật mới:\n\n{err}",
+        )
+
     def _change_default_dir(self):
-        new_dir = QFileDialog.getExistingDirectory(self, "Chọn thư mục lưu mặc định mới")
+        new_dir = QFileDialog.getExistingDirectory(self, "Chọn thư mục lưu mặc định mới", str(tts_service.default_out_dir))
         if new_dir:
-            tts_service.default_out_dir = Path(new_dir)
+            tts_service.set_default_out_dir(new_dir)
             self.out_dir_edit.setText(str(tts_service.default_out_dir))
-            QMessageBox.information(self, "Đã cập nhật", f"Đã đổi thư mục lưu mặc định thành:\n{new_dir}")
+            QMessageBox.information(self, "Đã cập nhật", f"Đã lưu vĩnh viễn thư mục lưu mặc định thành:\n{new_dir}")
 
     def _open_output_dir(self):
         self._open_folder(tts_service.default_out_dir)

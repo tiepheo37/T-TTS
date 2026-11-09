@@ -1,7 +1,7 @@
-"""build_test_release.py — BUILD BẢN THỬ NGHIỆM ĐỘC LẬP T-TTS v1.0.1 DESKTOP
+"""build_test_release.py — BUILD BẢN THỬ NGHIỆM ĐỘC LẬP T-TTS v3.0 DESKTOP
 =============================================================================
-Đóng gói ra thư mục riêng biệt: `release_test/T-TTS_v1.0.1_Desktop_Test/`
-Không ghi đè hoặc ảnh hưởng đến bản ổn định `dist/T-TTS_v1.0.1_Exe_Portable`.
+Đóng gói ra thư mục riêng biệt: `release_test/T-TTS_v3.0_Desktop/`
+Không ghi đè hoặc ảnh hưởng đến bản ổn định trước đó.
 """
 
 import os
@@ -12,8 +12,11 @@ import subprocess
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
+sys.path.insert(0, str(ROOT))
+from backend.version import APP_VERSION
+
 DIST = ROOT / "dist"
-RELEASE_TEST_DIR = ROOT / "release_test" / "T-TTS_v1.0.1_Desktop_Test"
+RELEASE_TEST_DIR = ROOT / "release_test" / f"T-TTS_v{APP_VERSION}_Desktop"
 PYTHON_EXE = ROOT / "python312" / "python" / "python.exe"
 
 if sys.platform == "win32":
@@ -56,7 +59,7 @@ def run_cmd(cmd, cwd=ROOT):
 def main():
     start_time = time.time()
     log("================================================================================")
-    log("BẮT ĐẦU BUILD BẢN THỬ NGHIỆM DESKTOP: release_test/T-TTS_v1.0.1_Desktop_Test")
+    log("BẮT ĐẦU BUILD BẢN NATIVE DESKTOP: release_test/T-TTS_v2.0_Desktop")
     log("================================================================================")
 
     # 1. Chạy PyInstaller với t_tts_test.spec
@@ -67,11 +70,11 @@ def main():
     pyi_cmd = [str(PYTHON_EXE), "-m", "PyInstaller", "--clean", "-y", str(spec_path)]
     run_cmd(pyi_cmd)
 
-    built_dir = DIST / "T-TTS_v1.0.1_Desktop_Test"
+    built_dir = DIST / f"T-TTS_v{APP_VERSION}_Desktop"
     if not built_dir.exists():
         raise FileNotFoundError(f"Thư mục build {built_dir} không tồn tại sau khi PyInstaller chạy!")
 
-    # 2. Chuyển/Sao chép sang release_test/T-TTS_v1.0.1_Desktop_Test
+    # 2. Chuyển/Sao chép sang release_test/T-TTS_v2.0_Desktop
     log(f"\n--- BƯỚC 2: SAO CHÉP BUILD SANG {RELEASE_TEST_DIR} ---")
     if RELEASE_TEST_DIR.exists():
         shutil.rmtree(RELEASE_TEST_DIR)
@@ -106,6 +109,13 @@ def main():
             shutil.copy2(src_seag2p_bin, dst_seag2p_bin)
             log("[OK] Đã sao chép sea_g2p.bin vào _internal")
 
+    dst_sd = internal_dir / "_sounddevice_data"
+    if not dst_sd.exists():
+        src_sd = sp_dir / "_sounddevice_data"
+        if src_sd.exists():
+            shutil.copytree(src_sd, dst_sd)
+            log("[OK] Đã sao chép _sounddevice_data vào _internal")
+
     # 5. Sao chép models, data, output
     log("\n--- BƯỚC 4: SAO CHÉP MODELS, DATA, OUTPUT VÀO THƯ MỤC THỬ NGHIỆM ---")
     src_models = ROOT / "models"
@@ -135,7 +145,9 @@ def main():
     (dst_output / "uploads").mkdir(parents=True, exist_ok=True)
 
     # Cờ portable.txt
-    (RELEASE_TEST_DIR / "portable.txt").write_text("T-TTS v1.0.1 Desktop Test Portable Flag", encoding="utf-8")
+    (RELEASE_TEST_DIR / "portable.txt").write_text(f"T-TTS v{APP_VERSION} Desktop Portable Flag", encoding="utf-8")
+    if built_dir.exists():
+        (built_dir / "portable.txt").write_text(f"T-TTS v{APP_VERSION} Desktop Portable Flag", encoding="utf-8")
 
     # Icon & Phù hiệu Quân đội
     if (ROOT / "app_icon.ico").exists():
@@ -155,11 +167,11 @@ def main():
         log("[OK] Đã sao chép phù hiệu Quân đội nhân dân Việt Nam vào assets")
 
     # 6. Tạo file Hướng dẫn sử dụng & Chẩn đoán lỗi cơ bản
-    guide_txt = """================================================================================
-T-TTS v1.0.1 — PHẦN MỀM CHUYỂN VĂN BẢN THÀNH GIỌNG NÓI TIẾNG VIỆT
-BẢN THỬ NGHIỆM DESKTOP NATIVE WINDOWS (PORTABLE)
+    guide_txt = f"""================================================================================
+T-TTS v{APP_VERSION} — PHẦN MỀM CHUYỂN VĂN BẢN THÀNH GIỌNG NÓI TIẾNG VIỆT
+BẢN NATIVE DESKTOP WINDOWS (PORTABLE)
 ================================================================================
-Phát triển bởi: Đại úy Nguyễn Văn Tiệp
+Tác giả: Nguyễn Văn Tiệp
 Mô hình giọng nói: VieNeu-TTS v3 Turbo do Phạm Nguyễn Ngọc Bảo phát triển.
 Công nghệ suy luận: ONNX Runtime Lite CPU (100% Offline, không phụ thuộc GPU).
 
@@ -172,21 +184,23 @@ Công nghệ suy luận: ONNX Runtime Lite CPU (100% Offline, không phụ thu�
    - Nhân bản giọng: Tải file âm thanh mẫu (WAV/MP3 5-15s) để tạo giọng riêng.
    - Xử lý hàng loạt: Đọc danh sách nhiều câu hoặc nhiều file văn bản cùng lúc.
    - Quản lý giọng: Nghe thử và quản lý 25 giọng preset cùng các giọng nhân bản.
+   - Từ điển phát âm: Thêm quy tắc thay thế từ viết tắt, thuật ngữ nước ngoài.
    - Lịch sử: Tra cứu và nghe lại các tệp âm thanh đã tạo trước đó.
    - Bản quyền & Giấy phép: Xem mã máy, hạn sử dụng và kích hoạt key.
 
-3. HỖ TRỢ 5 GÓI BẢN QUYỀN OFFLINE:
+3. HỖ TRỢ 6 GÓI BẢN QUYỀN OFFLINE:
    - 1 Ngày: Dùng thử 24 giờ.
    - 7 Ngày: Trải nghiệm 168 giờ.
    - 30 Ngày: Dùng thử 1 tháng (720 giờ).
    - 6 Tháng: Cấp phép nửa năm theo ngày lịch.
+   - 1 Năm: Cấp phép 1 năm theo ngày lịch.
    - Vĩnh Viễn: Sử dụng trọn đời không giới hạn thời gian.
 ================================================================================
 """
     (RELEASE_TEST_DIR / "HUONG_DAN_SU_DUNG.txt").write_text(guide_txt, encoding="utf-8")
 
-    troubleshoot_txt = """================================================================================
-HƯỚNG DẪN CHẨN ĐOÁN VÀ KHẮC PHỤC SỰ CỐ T-TTS v1.0.1
+    troubleshoot_txt = f"""================================================================================
+HƯỚNG DẪN CHẨN ĐOÁN VÀ KHẮC PHỤC SỰ CỐ T-TTS v{APP_VERSION}
 ================================================================================
 1. LỖI THIẾU DLL (VCRUNTIME140.dll hoặc MSVCP140.dll):
    - Bản phát hành đã tích hợp sẵn các DLL này trong thư mục _internal.
@@ -198,7 +212,7 @@ HƯỚNG DẪN CHẨN ĐOÁN VÀ KHẮC PHỤC SỰ CỐ T-TTS v1.0.1
 
 3. PHẦN MỀM BÁO "CHƯA KÍCH HOẠT" HOẶC "BẢN QUYỀN HẾT HẠN":
    - Vào mục "Bản quyền & Giấy phép" -> Bấm "Kích Hoạt / Nhập Key Mới".
-   - Sao chép Mã Máy (Machine ID) gửi cho Đại úy Nguyễn Văn Tiệp để nhận key mới.
+   - Sao chép Mã Máy (Machine ID) gửi cho Nguyễn Văn Tiệp để nhận key mới.
    - Dán chuỗi key hoặc nạp file .lic được cấp và bấm "Kích Hoạt".
 
 4. KHÔNG NGHE THẤY ÂM THANH:
@@ -210,7 +224,7 @@ HƯỚNG DẪN CHẨN ĐOÁN VÀ KHẮC PHỤC SỰ CỐ T-TTS v1.0.1
 
     elapsed = time.time() - start_time
     log("================================================================================")
-    log(f"🎉 BUILD THÀNH CÔNG BẢN THỬ NGHIỆM TRONG {elapsed:.1f} GIÂY!")
+    log(f"🎉 BUILD THÀNH CÔNG BẢN T-TTS v2.0 DESKTOP TRONG {elapsed:.1f} GIÂY!")
     log(f"📁 Thư mục xuất: {RELEASE_TEST_DIR}")
     log(f"🚀 File chạy: {RELEASE_TEST_DIR / 'T-TTS.exe'}")
     log("================================================================================")

@@ -1,0 +1,29 @@
+{
+  "name": "Bản Tin Tuần",
+  "type": "broadcast",
+  "title": "Ban_tin_phat_thanh",
+  "default_pause_sec": 1.0,
+  "out_format": "wav",
+  "bg_music_enabled": true,
+  "bg_music_path": "C:\\Users\\MINHDA~1\\AppData\\Local\\Temp\\tmpk5m_arxh\\bgm.wav",
+  "bg_music_vol_pct": 18,
+  "bg_music_vol_db": -26.0,
+  "bg_music_loop": true,
+  "bg_music_ducking": true,
+  "intro_music_path": "",
+  "outro_music_path": "",
+  "segments": [
+    {
+      "type": "lead_in",
+      "title": "Lời dẫn",
+      "text": "Kính thưa thủ trưởng.",
+      "id": "seg_1794150400_e88c",
+      "duration_sec": 0.0,
+      "pause_after": 1.0,
+      "status": "pending"
+    }
+  ],
+  "id": "broadcast_1794150400_ea7df9",
+  "updated_at": "2026-11-08 22:06:40",
+  "created_at": "2026-11-08 22:06:40"
+}

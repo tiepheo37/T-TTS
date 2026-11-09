@@ -100,8 +100,8 @@ QLabel {
 #NavFrame {
     background-color: #162E1A;
     border-right: 1px solid #2D5831;
-    min-width: 240px;
-    max-width: 250px;
+    min-width: 250px;
+    max-width: 265px;
 }
 
 .NavGroupLabel {
@@ -141,10 +141,15 @@ QPushButton.NavBtn[active="true"] {
 /* Sidebar Author Badge */
 #SidebarAuthorCard {
     background-color: #142817;
-    border: 1px solid #3F7545;
+    border: 1.5px solid #D4AF37;
     border-radius: 8px;
-    padding: 8px;
-    margin: 8px;
+    padding: 6px;
+    margin: 4px;
+}
+
+#SidebarAuthorCard:hover {
+    background-color: #1e3d23;
+    border: 1.5px solid #FFD700;
 }
 
 /* Cards & Frames */
@@ -361,6 +366,53 @@ QScrollBar::handle:vertical:hover {
 
 QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
     height: 0px;
+}
+
+/* =========================================================================
+   HỘP THOẠI & THÔNG BÁO (QMessageBox, QDialog)
+   Khắc phục triệt để lỗi nền trắng chữ trắng trên máy tính dùng Windows Light Mode
+   ========================================================================= */
+QDialog, QMessageBox {
+    background-color: #162E1A;
+    color: #FFFFFF;
+    font-family: "Segoe UI", Arial, sans-serif;
+    font-size: 13px;
+}
+
+QMessageBox QLabel {
+    background-color: transparent;
+    color: #FFFFFF;
+    font-size: 13px;
+    line-height: 1.4;
+    min-height: 36px;
+}
+
+QMessageBox QPushButton {
+    background-color: #254829;
+    color: #FFD700;
+    border: 1px solid #386B3E;
+    border-radius: 6px;
+    padding: 7px 22px;
+    font-weight: bold;
+    font-size: 13px;
+    min-width: 80px;
+    min-height: 26px;
+}
+
+QMessageBox QPushButton:hover {
+    background-color: #315F36;
+    border: 1px solid #FFD700;
+    color: #FFFFFF;
+}
+
+QMessageBox QPushButton:default {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #C92A2A, stop:1 #A81C1C);
+    border: 1px solid #FFD700;
+    color: #FFFFFF;
+}
+
+QMessageBox QPushButton:default:hover {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #DC2626, stop:1 #B91C1C);
 }
 """
 

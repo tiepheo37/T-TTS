@@ -1,4 +1,4 @@
-"""Quản lý đường dẫn lưu trữ và bảo đảm quyền ghi cho T-TTS v1.0.1.
+"""Quản lý đường dẫn lưu trữ và bảo đảm quyền ghi cho T-TTS v2.0.
 
 Quy tắc phân định thư mục lưu trữ:
 1. Nếu có biến môi trường T_TTS_DATA_DIR: ưu tiên sử dụng.
@@ -73,15 +73,22 @@ def init_storage() -> dict:
 
     if env_dir:
         storage_root = Path(env_dir).resolve()
-    elif is_portable_flag and not is_in_program_files(app_dir) and is_dir_writable(app_dir / "data"):
-        # Bản portable thực thụ ngoài Program Files
+    elif is_portable_flag and is_dir_writable(app_dir / "data"):
+        # Có cờ portable.txt và có quyền ghi: luôn lưu tại thư mục app
         storage_root = app_dir
-    elif not getattr(sys, "frozen", False) and not is_in_program_files(app_dir) and is_dir_writable(app_dir / "data"):
-        # Chạy trực tiếp từ mã nguồn trong môi trường dev
+    elif not is_in_program_files(app_dir) and is_dir_writable(app_dir / "data"):
+        # Chạy ngoài Program Files (Desktop, Downloads, ổ D, v.v.): luôn lưu tại thư mục app
+        storage_root = app_dir
+    elif is_dir_writable(app_dir / "output") and is_dir_writable(app_dir / "data"):
+        # Nằm trong Program Files nhưng đã được cấp quyền ghi: lưu tại thư mục app
         storage_root = app_dir
     else:
-        # Cài đặt trong Program Files hoặc thư mục không có quyền ghi: chuyển sang LocalAppData
-        storage_root = get_user_data_dir()
+        # Trường hợp bị hạn chế quyền ghi: ưu tiên thư mục Music hiển thị rõ ràng của User
+        user_music_dir = Path.home() / "Music" / "T-TTS"
+        if is_dir_writable(user_music_dir):
+            storage_root = user_music_dir
+        else:
+            storage_root = get_user_data_dir()
 
     data_dir = storage_root / "data"
     out_dir = storage_root / "output"
@@ -91,6 +98,26 @@ def init_storage() -> dict:
     data_dir.mkdir(parents=True, exist_ok=True)
     out_dir.mkdir(parents=True, exist_ok=True)
     upload_dir.mkdir(parents=True, exist_ok=True)
+
+    # Tự động di trú các tệp âm thanh và dữ liệu từ LocalAppData sang storage_root nếu có
+    user_data_root = get_user_data_dir()
+    if user_data_root.resolve() != storage_root.resolve() and user_data_root.exists():
+        old_out = user_data_root / "output"
+        if old_out.exists() and old_out.is_dir():
+            for f in old_out.glob("*.*"):
+                if f.is_file() and not (out_dir / f.name).exists():
+                    try:
+                        shutil.copy2(str(f), str(out_dir / f.name))
+                    except Exception:
+                        pass
+        old_data = user_data_root / "data"
+        if old_data.exists() and old_data.is_dir():
+            for f in old_data.glob("*.json"):
+                if f.is_file() and not (data_dir / f.name).exists():
+                    try:
+                        shutil.copy2(str(f), str(data_dir / f.name))
+                    except Exception:
+                        pass
 
     # Tương thích ngược: di trú các file upload cũ từ _uploads sang uploads nếu có
     if legacy_upload_dir.exists() and legacy_upload_dir.is_dir():

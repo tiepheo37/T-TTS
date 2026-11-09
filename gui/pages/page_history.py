@@ -198,17 +198,10 @@ class PageHistory(QWidget):
         audio_player.play(fpath)
 
     def _open_file_in_explorer(self, fpath: str):
-        f = Path(fpath)
-        if f.exists() and sys.platform == "win32":
-            subprocess.run(f'explorer /select,"{str(f)}"', shell=True)
-        elif f.parent.exists():
-            os.startfile(str(f.parent))
+        tts_service.open_file_in_explorer(fpath)
 
     def _open_output_folder(self):
-        f = tts_service.default_out_dir
-        f.mkdir(parents=True, exist_ok=True)
-        if sys.platform == "win32":
-            os.startfile(str(f))
+        tts_service.open_output_folder()
 
     def _delete_item(self, item_id: str):
         ans = QMessageBox.question(
