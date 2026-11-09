@@ -309,6 +309,7 @@ class UpdateManager:
             "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
             "current_version": self.current_version,
             "data_files": {},
+            "projects_backup": {},
         }
         for fname in ["update_config.json", "custom_voices.json", "license_state.json", "history.json"]:
             fpath = self.data_dir / fname
@@ -318,6 +319,18 @@ class UpdateManager:
                         state["data_files"][fname] = json.load(f)
                 except Exception:
                     pass
+
+        # Sao lưu toàn bộ các dự án Audio, Broadcast và Documents
+        proj_root = self.data_dir / "projects"
+        if proj_root.is_dir():
+            for p_json in proj_root.rglob("*.json"):
+                try:
+                    rel_p = str(p_json.relative_to(proj_root))
+                    with open(p_json, "r", encoding="utf-8") as pf:
+                        state["projects_backup"][rel_p] = json.load(pf)
+                except Exception:
+                    pass
+
         with open(backup_file, "w", encoding="utf-8") as f:
             json.dump(state, f, ensure_ascii=False, indent=2)
         return backup_file
