@@ -39,6 +39,7 @@ from PySide6.QtWidgets import (
 
 from backend.service import tts_service
 from backend.audio_player import audio_player
+from gui.dialog_import_document import DocumentImportDialog
 
 
 class SynthesisWorker(QThread):
@@ -314,8 +315,15 @@ class PageSynthesize(QWidget):
         self.lbl_char_count.setStyleSheet("color: #9EB39B; font-size: 11px;")
         tc_title_row.addWidget(self.lbl_char_count)
 
-        btn_paste = QPushButton("📋 Dán")
+        btn_import_doc = QPushButton("📂 Nhập tài liệu")
+        btn_import_doc.setProperty("class", "SecondaryBtn")
+        btn_import_doc.setToolTip("Nhập văn bản từ tài liệu Word (.docx), PDF, hoặc Text (.txt)")
+        btn_import_doc.clicked.connect(self._import_document)
+        tc_title_row.addWidget(btn_import_doc)
+
+        btn_paste = QPushButton("📋 Dán từ Clipboard")
         btn_paste.setProperty("class", "SecondaryBtn")
+        btn_paste.setToolTip("Dán nội dung từ bộ nhớ tạm (Clipboard)")
         btn_paste.clicked.connect(self._paste_text)
         tc_title_row.addWidget(btn_paste)
 
@@ -540,6 +548,32 @@ class PageSynthesize(QWidget):
 
     def _clear_text(self):
         self.txt_input.clear()
+
+    def _import_document(self):
+        """Mở hộp thoại trích xuất nội dung từ tài liệu (DOCX, PDF, TXT)."""
+        dlg = DocumentImportDialog(self)
+        if dlg.exec() == DocumentImportDialog.Accepted:
+            new_text = getattr(dlg, "final_text", "")
+            action = getattr(dlg, "selected_action", "replace")
+            meta = getattr(dlg, "document_meta", {})
+            if not new_text:
+                return
+
+            if action == "append":
+                curr = self.txt_input.toPlainText()
+                if curr.strip():
+                    self.txt_input.setPlainText(curr.rstrip() + "\n\n" + new_text)
+                else:
+                    self.txt_input.setPlainText(new_text)
+            else:  # "replace" or "new_project"
+                self.txt_input.setPlainText(new_text)
+
+            fmt = meta.get("format", "").upper()
+            chars = len(new_text)
+            words = len(new_text.split())
+            self.lbl_status.setVisible(True)
+            self.lbl_status.setStyleSheet("color: #4ADE80;")
+            self.lbl_status.setText(f"✅ Đã nhập tài liệu {fmt} ({words:,} từ | {chars:,} ký tự)")
 
     def _on_text_changed(self):
         text = self.txt_input.toPlainText()
