@@ -6,6 +6,7 @@ Không ghi đè hoặc ảnh hưởng đến bản ổn định trước đó.
 
 import os
 import sys
+import json
 import shutil
 import time
 import subprocess
@@ -62,15 +63,18 @@ def main():
     log("BẮT ĐẦU BUILD BẢN NATIVE DESKTOP: release_test/T-TTS_v2.0_Desktop")
     log("================================================================================")
 
-    # 1. Chạy PyInstaller với t_tts_test.spec
-    spec_path = ROOT / "t_tts_test.spec"
-    if not spec_path.exists():
-        raise FileNotFoundError(f"Không tìm thấy file spec: {spec_path}")
-
-    pyi_cmd = [str(PYTHON_EXE), "-m", "PyInstaller", "--clean", "-y", str(spec_path)]
-    run_cmd(pyi_cmd)
-
+    # 1. Chạy PyInstaller với t_tts_test.spec (bỏ qua nếu có cờ --skip-pyi)
     built_dir = DIST / f"T-TTS_v{APP_VERSION}_Desktop"
+    if "--skip-pyi" in sys.argv and built_dir.exists():
+        log(f"⚡ [SKIP-PYI] Đã có thư mục build sẵn tại {built_dir}, bỏ qua biên dịch lại.")
+    else:
+        spec_path = ROOT / "t_tts_test.spec"
+        if not spec_path.exists():
+            raise FileNotFoundError(f"Không tìm thấy file spec: {spec_path}")
+
+        pyi_cmd = [str(PYTHON_EXE), "-m", "PyInstaller", "--clean", "-y", str(spec_path)]
+        run_cmd(pyi_cmd)
+
     if not built_dir.exists():
         raise FileNotFoundError(f"Thư mục build {built_dir} không tồn tại sau khi PyInstaller chạy!")
 
@@ -134,11 +138,50 @@ def main():
         shutil.copytree(src_models, dst_models_dist)
         log("[OK] Đã sao chép thư mục models/ đầy đủ vào dist")
 
-    src_data = ROOT / "data"
+    # Chuẩn bị thư mục data/ sạch cho bản phát hành (Không chứa license cá nhân hoặc dự án thử nghiệm)
     dst_data = RELEASE_TEST_DIR / "data"
-    if src_data.exists() and not dst_data.exists():
-        shutil.copytree(src_data, dst_data)
-        log("[OK] Đã sao chép thư mục data/")
+    dst_data.mkdir(parents=True, exist_ok=True)
+    (dst_data / "logs").mkdir(parents=True, exist_ok=True)
+    (dst_data / "presets").mkdir(parents=True, exist_ok=True)
+    for p_sub in ["audio", "broadcast", "documents", "schedules"]:
+        (dst_data / "projects" / p_sub).mkdir(parents=True, exist_ok=True)
+
+    # Cấu hình mặc định sạch
+    default_cfg = {
+        "channel": "stable",
+        "github_repo": "tiepheo37/T-TTS",
+        "auto_check_on_startup": True,
+        "last_checked_time": "",
+        "last_version_checked": APP_VERSION,
+    }
+    (dst_data / "update_config.json").write_text(json.dumps(default_cfg, ensure_ascii=False, indent=2), encoding="utf-8")
+    (dst_data / "custom_voices.json").write_text("{}", encoding="utf-8")
+    (dst_data / "history.json").write_text("[]", encoding="utf-8")
+
+    src_dict = ROOT / "data" / "pronunciation-dict.json"
+    if src_dict.exists():
+        shutil.copy2(src_dict, dst_data / "pronunciation-dict.json")
+    else:
+        (dst_data / "pronunciation-dict.json").write_text(json.dumps({"UBND": "ủy ban nhân dân", "QĐND": "quân đội nhân dân"}, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    src_presets = ROOT / "data" / "presets" / "audio_presets.json"
+    if src_presets.exists():
+        shutil.copy2(src_presets, dst_data / "presets" / "audio_presets.json")
+    else:
+        default_presets = {
+            "version": APP_VERSION,
+            "presets": {
+                "military_comm": {"name": "Truyền thanh Doanh trại", "eq_low": -2.0, "eq_mid": 2.5, "eq_high": 1.0, "lufs": -16.0},
+                "studio_narrator": {"name": "Thuyết minh Tài liệu Quân sự", "eq_low": 0.5, "eq_mid": 1.0, "eq_high": 2.0, "lufs": -18.0},
+                "field_radio": {"name": "Bộ đàm Dã chiến", "eq_low": -6.0, "eq_mid": 4.0, "eq_high": -3.0, "lufs": -14.0},
+            }
+        }
+        (dst_data / "presets" / "audio_presets.json").write_text(json.dumps(default_presets, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    # Loại bỏ tuyệt đối license cá nhân nếu còn sót lại trong release_test
+    (dst_data / "license_state.json").unlink(missing_ok=True)
+    (dst_data / ".sys_lic_vault.dat").unlink(missing_ok=True)
+    log("[OK] Đã chuẩn bị cấu trúc data/ sạch (100% không chứa license cá nhân hay dự án thừa)")
 
     dst_output = RELEASE_TEST_DIR / "output"
     dst_output.mkdir(parents=True, exist_ok=True)

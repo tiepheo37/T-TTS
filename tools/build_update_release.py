@@ -64,7 +64,11 @@ def main():
     py_exe = ROOT / "python312" / "python" / "python.exe"
     build_script = ROOT / "build_test_release.py"
 
-    res = subprocess.run([str(py_exe), str(build_script)], cwd=ROOT)
+    cmd = [str(py_exe), str(build_script)]
+    if (dist_dir / f"T-TTS_v{APP_VERSION}_Desktop" / "T-TTS.exe").exists():
+        cmd.append("--skip-pyi")
+
+    res = subprocess.run(cmd, cwd=ROOT)
     if res.returncode != 0:
         log("❌ Lỗi khi biên dịch PyInstaller!")
         sys.exit(1)
@@ -87,6 +91,12 @@ def main():
             log("❌ Lỗi biên dịch Inno Setup!")
             sys.exit(1)
         log("✅ Đã tạo bộ cài đặt Offline Inno Setup!")
+        setup_official = dist_dir / f"T-TTS_v{APP_VERSION}_Setup.exe"
+        setup_offline = dist_dir / f"T-TTS_Setup_v{APP_VERSION}_Offline.exe"
+        if setup_official.exists() and not setup_offline.exists():
+            shutil.copy2(setup_official, setup_offline)
+        elif setup_offline.exists() and not setup_official.exists():
+            shutil.copy2(setup_offline, setup_official)
     else:
         log("❌ Không tìm thấy ISCC.exe hoặc setup_installer.iss!")
         sys.exit(1)
@@ -124,6 +134,7 @@ def main():
             log(f"  • {f.name}: {sha}")
 
     (dist_dir / "checksums.txt").write_text("\n".join(checksums_lines), encoding="utf-8")
+    (dist_dir / "SHA256SUMS.txt").write_text("\n".join(checksums_lines), encoding="utf-8")
 
     meta = {
         "app_name": APP_NAME,

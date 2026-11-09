@@ -56,6 +56,7 @@ hiddenimports = [
     'backend.tts_engine',
     'backend.audio_utils',
     'backend.audio_enhancement',
+    'backend.intelligent_audio',
     'backend.document_reader',
     'backend.text_processor',
     'backend.batch_tts',
