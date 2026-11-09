@@ -96,12 +96,12 @@ class UpdateInfoData:
 class UpdateManager:
     """Quản lý kiểm tra, tải về, xác minh và cài đặt phiên bản T-TTS mới."""
 
-    def __init__(self, data_dir: Optional[Path] = None):
+    def __init__(self, data_dir: Optional[Path] = None, current_version: Optional[str] = None):
         self.data_dir = data_dir or Path(os.environ.get("LOCALAPPDATA", ".")) / "T-TTS" / "data"
         self.config = load_update_config(self.data_dir)
         self.repo = self.config.get("github_repo", DEFAULT_GITHUB_REPO)
         self.channel = self.config.get("channel", DEFAULT_CHANNEL)
-        self.current_version = APP_VERSION
+        self.current_version = current_version or APP_VERSION
 
     def check_for_updates(self) -> UpdateInfoData:
         """Kiểm tra phiên bản mới từ GitHub Releases qua VelopPack hoặc HTTPS API."""
@@ -191,63 +191,11 @@ class UpdateManager:
             if not target_rel:
                 return UpdateInfoData(available=False, current_version=self.current_version, latest_version=self.current_version)
 
-            tag = target_rel.get("tag_name", "").strip().lstrip("vV")
-            if not is_newer_version(tag, self.current_version):
-                return UpdateInfoData(available=False, current_version=self.current_version, latest_version=tag)
-
-            # Tìm file cài đặt Setup (.exe) hoặc gói update trong assets
-            assets = target_rel.get("assets", [])
-            chosen_asset = None
-            for a in assets:
-                aname = a.get("name", "").lower()
-                if aname.endswith(".exe") and ("setup" in aname or "update" in aname or "t-tts" in aname):
-                    chosen_asset = a
-                    break
-
-            if not chosen_asset and assets:
-                for a in assets:
-                    aname = a.get("name", "").lower()
-                    if aname.endswith(".exe") or aname.endswith(".zip"):
-                        chosen_asset = a
-                        break
-
-            dl_url = chosen_asset.get("browser_download_url") if chosen_asset else target_rel.get("html_url")
-            asset_name = chosen_asset.get("name", f"T-TTS_Setup_v{tag}.exe") if chosen_asset else f"T-TTS_Setup_v{tag}.exe"
-            asset_size = chosen_asset.get("size", 0) if chosen_asset else 0
-
-            # Tìm checksum SHA256 nếu có
-            sha256_val = ""
-            # 1. Từ digest asset nếu có
-            if chosen_asset and chosen_asset.get("digest"):
-                dig = str(chosen_asset.get("digest", "")).lower()
-                if dig.startswith("sha256:"):
-                    sha256_val = dig.split("sha256:")[1].strip()
-            # 2. Từ body của release
-            if not sha256_val:
-                body = target_rel.get("body", "")
-                for line in body.splitlines():
-                    if "sha256" in line.lower() and ":" in line:
-                        parts = line.split(":")
-                        if len(parts) >= 2 and len(parts[1].strip()) == 64:
-                            sha256_val = parts[1].strip().lower()
-                            break
-
-            self.config["last_version_checked"] = tag
-            save_update_config(self.data_dir, self.config)
-
-            return UpdateInfoData(
-                available=True,
-                current_version=self.current_version,
-                latest_version=tag,
-                release_title=target_rel.get("name") or f"T-TTS v{tag}",
-                release_notes=target_rel.get("body", "") or "Cải tiến hiệu năng và cập nhật tính năng mới.",
-                published_at=target_rel.get("published_at", now_str),
-                download_url=dl_url,
-                asset_name=asset_name,
-                asset_size=asset_size,
-                sha256=sha256_val,
-                is_velopack=False,
-            )
+            info = self.parse_release_data(target_rel)
+            if info.available:
+                self.config["last_version_checked"] = info.latest_version
+                save_update_config(self.data_dir, self.config)
+            return info
 
         except urllib.error.HTTPError as e:
             if e.code == 404:
@@ -299,33 +247,169 @@ class UpdateManager:
                 error_msg=f"Lỗi kiểm tra cập nhật: {e}",
             )
 
-    def create_pre_update_backup(self) -> Path:
-        """Tạo bản sao lưu dữ liệu cấu hình, license và dự án người dùng trước khi nâng cấp."""
+    def parse_release_data(self, target_rel: dict) -> UpdateInfoData:
+        """Phân tích dữ liệu JSON một release từ GitHub API thành UpdateInfoData."""
+        tag = target_rel.get("tag_name", "").strip().lstrip("vV")
+        if not tag:
+            return UpdateInfoData(available=False, current_version=self.current_version, latest_version=self.current_version)
+
+        is_newer = is_newer_version(tag, self.current_version)
+        if not is_newer:
+            return UpdateInfoData(available=False, current_version=self.current_version, latest_version=tag)
+
+        # Tìm file cài đặt Setup (.exe) hoặc gói update trong assets
+        assets = target_rel.get("assets", [])
+        chosen_asset = None
+        for a in assets:
+            aname = a.get("name", "").lower()
+            if aname.endswith(".exe") and ("setup" in aname or "update" in aname or "t-tts" in aname):
+                chosen_asset = a
+                break
+
+        if not chosen_asset and assets:
+            for a in assets:
+                aname = a.get("name", "").lower()
+                if aname.endswith(".exe") or aname.endswith(".zip"):
+                    chosen_asset = a
+                    break
+
+        dl_url = chosen_asset.get("browser_download_url") if chosen_asset else target_rel.get("html_url", "")
+        asset_name = chosen_asset.get("name", f"T-TTS_Setup_v{tag}.exe") if chosen_asset else f"T-TTS_Setup_v{tag}.exe"
+        asset_size = chosen_asset.get("size", 0) if chosen_asset else 0
+
+        # Tìm checksum SHA256 nếu có
+        sha256_val = ""
+        if chosen_asset and chosen_asset.get("digest"):
+            dig = str(chosen_asset.get("digest", "")).lower()
+            if dig.startswith("sha256:"):
+                sha256_val = dig.split("sha256:")[1].strip()
+
+        if not sha256_val:
+            body = target_rel.get("body", "")
+            for line in body.splitlines():
+                if "sha256" in line.lower() and ":" in line:
+                    parts = line.split(":")
+                    if len(parts) >= 2 and len(parts[1].strip()) == 64:
+                        sha256_val = parts[1].strip().lower()
+                        break
+
+        now_str = time.strftime("%Y-%m-%d %H:%M:%S")
+        return UpdateInfoData(
+            available=True,
+            current_version=self.current_version,
+            latest_version=tag,
+            release_title=target_rel.get("name") or f"T-TTS v{tag}",
+            release_notes=target_rel.get("body", "") or "Cải tiến hiệu năng và cập nhật tính năng mới.",
+            published_at=target_rel.get("published_at", now_str),
+            download_url=dl_url,
+            asset_name=asset_name,
+            asset_size=asset_size,
+            sha256=sha256_val,
+            is_velopack=False,
+        )
+
+    def check_system_readiness(self, required_free_mb: int = 500) -> Dict[str, Any]:
+        """Kiểm tra điều kiện hệ thống trước khi cập nhật (dung lượng đĩa trống, quyền ghi, thư mục tạm)."""
+        import shutil
+        issues = []
+
+        # 1. Kiểm tra dung lượng đĩa
+        drive_path = self.data_dir if self.data_dir.exists() else Path(self.data_dir.anchor or ".")
+        try:
+            total, used, free = shutil.disk_usage(drive_path)
+            free_mb = free / (1024 * 1024)
+            if free_mb < required_free_mb:
+                issues.append(f"Dung lượng đĩa trống ({free_mb:.1f} MB) nhỏ hơn mức yêu cầu ({required_free_mb} MB).")
+        except Exception as e:
+            free_mb = 0.0
+            issues.append(f"Không thể đo dung lượng đĩa: {e}")
+
+        # 2. Kiểm tra quyền ghi tại data_dir
+        has_write_perm = False
+        try:
+            self.data_dir.mkdir(parents=True, exist_ok=True)
+            test_file = self.data_dir / ".write_test.tmp"
+            test_file.write_text("test_write_perm", encoding="utf-8")
+            test_file.unlink(missing_ok=True)
+            has_write_perm = True
+        except Exception as e:
+            issues.append(f"Không có quyền ghi tại thư mục dữ liệu: {e}")
+
+        # 3. Kiểm tra thư mục temp
+        temp_dir = Path(tempfile.gettempdir()) / "T-TTS_Updates"
+        try:
+            temp_dir.mkdir(parents=True, exist_ok=True)
+            t_test = temp_dir / ".temp_write_test.tmp"
+            t_test.write_text("temp_test", encoding="utf-8")
+            t_test.unlink(missing_ok=True)
+        except Exception as e:
+            issues.append(f"Không thể ghi vào thư mục tạm hệ thống: {e}")
+
+        return {
+            "ready": len(issues) == 0,
+            "free_space_mb": round(free_mb, 1),
+            "required_free_mb": required_free_mb,
+            "has_write_perm": has_write_perm,
+            "issues": issues,
+        }
+
+    def create_pre_update_backup(self, target_version: str = APP_VERSION) -> Path:
+        """Tạo bản sao lưu dữ liệu cấu hình, license và toàn bộ dự án người dùng trước khi nâng cấp."""
         backup_dir = self.data_dir / "backups"
         backup_dir.mkdir(parents=True, exist_ok=True)
-        backup_file = backup_dir / f"pre_update_backup_{time.strftime('%Y%m%d_%H%M%S')}.json"
+        timestamp_str = time.strftime("%Y%m%d_%H%M%S")
+        backup_file = backup_dir / f"pre_update_backup_{timestamp_str}.json"
+
+        # Lấy Machine ID nếu có thể
+        try:
+            from backend.license import get_machine_id
+            machine_id = get_machine_id()
+        except Exception:
+            machine_id = "UNKNOWN"
 
         state = {
             "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
             "current_version": self.current_version,
+            "target_version": target_version,
+            "machine_id": machine_id,
             "data_files": {},
+            "file_checksums": {},
             "projects_backup": {},
         }
-        for fname in ["update_config.json", "custom_voices.json", "license_state.json", "history.json"]:
+
+        # Danh sách file cấu hình quan trọng cần bảo vệ
+        critical_files = [
+            "update_config.json",
+            "custom_voices.json",
+            "license_state.json",
+            "history.json",
+            "pronunciation-dict.json",
+            "system_settings.json",
+        ]
+
+        for fname in critical_files:
             fpath = self.data_dir / fname
             if fpath.is_file():
                 try:
+                    with open(fpath, "rb") as bf:
+                        sha = hashlib.sha256(bf.read()).hexdigest()
+                    state["file_checksums"][fname] = sha
+
                     with open(fpath, "r", encoding="utf-8") as f:
                         state["data_files"][fname] = json.load(f)
-                except Exception:
-                    pass
+                except Exception as e:
+                    state["data_files"][fname] = {"_error": str(e)}
 
-        # Sao lưu toàn bộ các dự án Audio, Broadcast và Documents
+        # Sao lưu toàn bộ các dự án Audio, Broadcast, Schedules, Documents
         proj_root = self.data_dir / "projects"
         if proj_root.is_dir():
             for p_json in proj_root.rglob("*.json"):
                 try:
-                    rel_p = str(p_json.relative_to(proj_root))
+                    rel_p = str(p_json.relative_to(proj_root)).replace("\\", "/")
+                    with open(p_json, "rb") as bf:
+                        sha = hashlib.sha256(bf.read()).hexdigest()
+                    state["file_checksums"][f"projects/{rel_p}"] = sha
+
                     with open(p_json, "r", encoding="utf-8") as pf:
                         state["projects_backup"][rel_p] = json.load(pf)
                 except Exception:
@@ -334,6 +418,132 @@ class UpdateManager:
         with open(backup_file, "w", encoding="utf-8") as f:
             json.dump(state, f, ensure_ascii=False, indent=2)
         return backup_file
+
+    def restore_backup(self, backup_file: Path | str) -> Dict[str, Any]:
+        """Khôi phục dữ liệu cấu hình, license và các dự án từ bản sao lưu JSON."""
+        bpath = Path(backup_file)
+        if not bpath.is_file():
+            raise FileNotFoundError(f"Tệp sao lưu không tồn tại: {bpath}")
+
+        with open(bpath, "r", encoding="utf-8") as f:
+            state = json.load(f)
+
+        restored_files = []
+        restored_projects = []
+
+        # 1. Khôi phục các data files
+        data_files = state.get("data_files", {})
+        for fname, content in data_files.items():
+            if isinstance(content, dict) and "_error" in content:
+                continue
+            dest = self.data_dir / fname
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            with open(dest, "w", encoding="utf-8") as out:
+                json.dump(content, out, ensure_ascii=False, indent=2)
+            restored_files.append(fname)
+
+        # 2. Khôi phục các dự án
+        projects_backup = state.get("projects_backup", {})
+        proj_root = self.data_dir / "projects"
+        for rel_p, p_data in projects_backup.items():
+            dest = proj_root / rel_p
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            with open(dest, "w", encoding="utf-8") as out:
+                json.dump(p_data, out, ensure_ascii=False, indent=2)
+            restored_projects.append(rel_p)
+
+        return {
+            "status": "success",
+            "backup_file": str(bpath),
+            "restored_at": time.strftime("%Y-%m-%d %H:%M:%S"),
+            "source_version": state.get("current_version", "unknown"),
+            "restored_files": restored_files,
+            "restored_projects": restored_projects,
+            "total_files": len(restored_files),
+            "total_projects": len(restored_projects),
+        }
+
+    def list_backups(self) -> list[Dict[str, Any]]:
+        """Liệt kê các bản sao lưu hiện có trong thư mục backups, sắp xếp mới nhất lên đầu."""
+        backup_dir = self.data_dir / "backups"
+        if not backup_dir.is_dir():
+            return []
+
+        backups = []
+        for bf in backup_dir.glob("*.json"):
+            try:
+                st = bf.stat()
+                with open(bf, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                backups.append({
+                    "file_path": str(bf),
+                    "file_name": bf.name,
+                    "timestamp": data.get("timestamp", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(st.st_mtime))),
+                    "current_version": data.get("current_version", "unknown"),
+                    "target_version": data.get("target_version", ""),
+                    "size_bytes": st.st_size,
+                    "file_count": len(data.get("data_files", {})),
+                    "project_count": len(data.get("projects_backup", {})),
+                    "mtime": st.st_mtime,
+                })
+            except Exception:
+                pass
+
+        backups.sort(key=lambda x: x["mtime"], reverse=True)
+        return backups
+
+    def perform_data_migration(self, from_version: str = "3.0.0", to_version: str = "3.1.0") -> Dict[str, Any]:
+        """Thực hiện di chuyển và chuẩn bị dữ liệu khi nâng cấp từ v3.0.0 lên v3.1.0.
+        Bỏ qua hoàn toàn v3.0.1, bảo toàn 100% bản quyền, cấu hình và dự án cũ.
+        """
+        # 1. Tạo backup an toàn trước
+        backup_file = self.create_pre_update_backup(target_version=to_version)
+
+        # 2. Tạo cấu trúc thư mục mới của v3.1.0 nếu chưa có
+        doc_dir = self.data_dir / "projects" / "documents"
+        doc_dir.mkdir(parents=True, exist_ok=True)
+
+        presets_dir = self.data_dir / "presets"
+        presets_dir.mkdir(parents=True, exist_ok=True)
+
+        # Khởi tạo presets mặc định nếu tệp audio_presets.json chưa tồn tại
+        presets_file = presets_dir / "audio_presets.json"
+        if not presets_file.exists():
+            default_presets = {
+                "version": to_version,
+                "presets": {
+                    "military_comm": {"name": "Truyền thanh Doanh trại", "eq_low": -2.0, "eq_mid": 2.5, "eq_high": 1.0, "lufs": -16.0},
+                    "studio_narrator": {"name": "Thuyết minh Tài liệu Quân sự", "eq_low": 0.5, "eq_mid": 1.0, "eq_high": 2.0, "lufs": -18.0},
+                    "field_radio": {"name": "Bộ đàm Dã chiến", "eq_low": -6.0, "eq_mid": 4.0, "eq_high": -3.0, "lufs": -14.0},
+                }
+            }
+            try:
+                with open(presets_file, "w", encoding="utf-8") as f:
+                    json.dump(default_presets, f, ensure_ascii=False, indent=2)
+            except Exception:
+                pass
+
+        # 3. Ghi nhận nhật ký di chuyển migration
+        migration_manifest = {
+            "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
+            "from_version": from_version,
+            "to_version": to_version,
+            "bypassed_version": "3.0.1",
+            "direct_jump": True,
+            "backup_file": str(backup_file),
+            "status": "completed",
+            "message": f"Nâng cấp trực tiếp thành công từ v{from_version} lên v{to_version} (Bỏ qua hoàn toàn v3.0.1).",
+            "new_directories": [
+                str(doc_dir.relative_to(self.data_dir)).replace("\\", "/"),
+                str(presets_dir.relative_to(self.data_dir)).replace("\\", "/"),
+            ],
+        }
+
+        manifest_file = self.data_dir / f"migration_v{from_version}_to_v{to_version}.json"
+        with open(manifest_file, "w", encoding="utf-8") as mf:
+            json.dump(migration_manifest, mf, ensure_ascii=False, indent=2)
+
+        return migration_manifest
 
     def download_update(
         self,

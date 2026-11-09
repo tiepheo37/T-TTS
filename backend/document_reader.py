@@ -526,3 +526,24 @@ def _cancelled_result(title: str, fmt: str) -> Dict[str, Any]:
         "warning": None,
         "error": "Người dùng đã hủy quá trình trích xuất tài liệu.",
     }
+
+
+class DocumentReader:
+    """Lớp điều phối trích xuất tài liệu (DOCX, PDF, TXT) hỗ trợ cả OOP và hàm tiện ích."""
+
+    @staticmethod
+    def read_file(
+        file_path: str | Path,
+        strip_header_footer: bool = False,
+        progress_callback: Optional[Callable[[int, int, str], None]] = None,
+        cancel_check: Optional[Callable[[], bool]] = None,
+    ) -> Dict[str, Any]:
+        return extract_document_text(
+            file_path=file_path,
+            strip_header_footer=strip_header_footer,
+            progress_callback=progress_callback,
+            cancel_check=cancel_check,
+        )
+
+    def extract(self, file_path: str | Path, **kwargs) -> Dict[str, Any]:
+        return extract_document_text(file_path, **kwargs)
