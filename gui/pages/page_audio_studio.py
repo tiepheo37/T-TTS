@@ -134,6 +134,129 @@ class BGMConfigDialog(QDialog):
         self.accept()
 
 
+class AudioStudioExportDialog(QDialog):
+    """Hộp thoại cấu hình xuất bản âm thanh nâng cao (WAV/MP3 + Chuẩn hóa LUFS / Peak)."""
+
+    def __init__(self, default_name: str, default_dir: Path, parent: Optional[QWidget] = None):
+        super().__init__(parent)
+        self.setWindowTitle("Xuất Bản Âm Thanh (Audio Export Master)")
+        self.setFixedSize(560, 360)
+        self.setStyleSheet("""
+            QDialog { background-color: #122215; color: #FFFFFF; }
+            QLabel { color: #CBD5E1; font-size: 13px; }
+            QLineEdit { background-color: #0F1E11; color: #FFFFFF; border: 1px solid #3B533E; padding: 6px; border-radius: 4px; }
+            QComboBox { background-color: #0F1E11; color: #FFFFFF; border: 1px solid #3B533E; padding: 6px; border-radius: 4px; }
+            QPushButton { background-color: #2D5A27; color: #FFFFFF; border: 1px solid #4ADE80; padding: 6px 14px; border-radius: 4px; font-weight: bold; }
+            QPushButton:hover { background-color: #386E31; }
+        """)
+
+        self.default_dir = default_dir
+        self.export_path: Optional[Path] = None
+        self.format_type: str = "wav"
+        self.mastering_mode: str = "lufs_voice"
+        self.target_lufs: float = -16.0
+        self.bitrate_kbps: int = 192
+
+        layout = QVBoxLayout(self)
+        layout.setSpacing(14)
+        layout.setContentsMargins(20, 18, 20, 18)
+
+        # 1. Đường dẫn xuất
+        layout.addWidget(QLabel("<b>Đường dẫn tệp xuất ra:</b>"))
+        p_row = QHBoxLayout()
+        self.txt_path = QLineEdit()
+        init_file = default_dir / f"{default_name}.wav"
+        self.txt_path.setText(str(init_file))
+        p_row.addWidget(self.txt_path, 1)
+
+        btn_browse = QPushButton("Chọn...")
+        btn_browse.clicked.connect(self._browse_save_path)
+        p_row.addWidget(btn_browse)
+        layout.addLayout(p_row)
+
+        # 2. Định dạng & Bitrate
+        fmt_row = QHBoxLayout()
+        fmt_row.addWidget(QLabel("Định dạng:"))
+        self.combo_fmt = QComboBox()
+        self.combo_fmt.addItem("WAV (Không nén PCM 16-bit 48kHz)", "wav")
+        self.combo_fmt.addItem("MP3 (Nén âm thanh tiêu chuẩn)", "mp3")
+        self.combo_fmt.currentIndexChanged.connect(self._on_fmt_changed)
+        fmt_row.addWidget(self.combo_fmt, 1)
+
+        self.lbl_bitrate = QLabel("Bitrate:")
+        self.combo_bitrate = QComboBox()
+        self.combo_bitrate.addItem("128 kbps", 128)
+        self.combo_bitrate.addItem("192 kbps (Chuẩn)", 192)
+        self.combo_bitrate.addItem("256 kbps", 256)
+        self.combo_bitrate.addItem("320 kbps (Cao nhất)", 320)
+        self.combo_bitrate.setCurrentIndex(1)
+        self.lbl_bitrate.setVisible(False)
+        self.combo_bitrate.setVisible(False)
+        fmt_row.addWidget(self.lbl_bitrate)
+        fmt_row.addWidget(self.combo_bitrate)
+        layout.addLayout(fmt_row)
+
+        # 3. Chuẩn hóa âm lượng (Mastering Normalization)
+        layout.addWidget(QLabel("<b>Chuẩn hóa âm lượng đầu ra (Loudness Mastering):</b>"))
+        self.combo_mode = QComboBox()
+        self.combo_mode.addItem("✨ EBU R128: -16.0 LUFS (Chuẩn Giọng đọc / Podcast)", "lufs_voice")
+        self.combo_mode.addItem("📻 EBU R128: -23.0 LUFS (Chuẩn Phát thanh Châu Âu / Quốc tế)", "lufs_broadcast")
+        self.combo_mode.addItem("📺 EBU R128: -24.0 LUFS (Chuẩn Truyền hình ATSC A/85)", "lufs_tv")
+        self.combo_mode.addItem("📊 Peak Normalization (-0.1 dBFS)", "peak")
+        self.combo_mode.addItem("🔘 Giữ nguyên âm lượng gốc (Không can thiệp)", "none")
+        layout.addWidget(self.combo_mode)
+
+        layout.addStretch()
+
+        # Nút hành động
+        btn_box = QHBoxLayout()
+        btn_cancel = QPushButton("Hủy Bỏ")
+        btn_cancel.clicked.connect(self.reject)
+        btn_box.addWidget(btn_cancel)
+
+        btn_box.addStretch()
+
+        btn_ok = QPushButton("🚀 Xuất Bản Tệp Âm Thanh")
+        btn_ok.setProperty("class", "PrimaryBtn")
+        btn_ok.clicked.connect(self._on_export)
+        btn_box.addWidget(btn_ok)
+        layout.addLayout(btn_box)
+
+    def _on_fmt_changed(self):
+        is_mp3 = self.combo_fmt.currentData() == "mp3"
+        self.lbl_bitrate.setVisible(is_mp3)
+        self.combo_bitrate.setVisible(is_mp3)
+        curr = Path(self.txt_path.text())
+        new_ext = ".mp3" if is_mp3 else ".wav"
+        self.txt_path.setText(str(curr.with_suffix(new_ext)))
+
+    def _browse_save_path(self):
+        is_mp3 = self.combo_fmt.currentData() == "mp3"
+        filter_str = "MP3 Audio (*.mp3);;All Files (*.*)" if is_mp3 else "WAV Audio (*.wav);;All Files (*.*)"
+        f, _ = QFileDialog.getSaveFileName(self, "Chọn nơi lưu tệp xuất", self.txt_path.text(), filter_str)
+        if f:
+            self.txt_path.setText(f)
+
+    def _on_export(self):
+        p_str = self.txt_path.text().strip()
+        if not p_str:
+            QMessageBox.warning(self, "Lỗi đường dẫn", "Vui lòng nhập đường dẫn tệp xuất.")
+            return
+        self.export_path = Path(p_str)
+        self.format_type = self.combo_fmt.currentData()
+        self.mastering_mode = self.combo_mode.currentData()
+        self.bitrate_kbps = self.combo_bitrate.currentData() if self.format_type == "mp3" else 192
+
+        if self.mastering_mode == "lufs_voice":
+            self.target_lufs = -16.0
+        elif self.mastering_mode == "lufs_broadcast":
+            self.target_lufs = -23.0
+        elif self.mastering_mode == "lufs_tv":
+            self.target_lufs = -24.0
+
+        self.accept()
+
+
 class PageAudioStudio(QWidget):
     """Trang Phân Hệ Biên Tập Âm Thanh Chuyên Nghiệp (Audio Studio)."""
 
@@ -417,8 +540,9 @@ class PageAudioStudio(QWidget):
         self.btn_fade_out.clicked.connect(lambda: self.apply_fade(False))
         t_layout.addWidget(self.btn_fade_out)
 
-        self.btn_normalize = QPushButton("🎚 Chuẩn Hóa")
+        self.btn_normalize = QPushButton("🎚 Chuẩn Hóa Peak")
         self.btn_normalize.setProperty("class", "SecondaryBtn")
+        self.btn_normalize.setToolTip("Chuẩn hóa âm lượng đỉnh Peak (-0.1 dBFS)")
         self.btn_normalize.clicked.connect(self.normalize_audio)
         t_layout.addWidget(self.btn_normalize)
 
@@ -427,9 +551,9 @@ class PageAudioStudio(QWidget):
         self.btn_bgm.clicked.connect(self.mix_bgm_dialog)
         t_layout.addWidget(self.btn_bgm)
 
-        self.btn_dsp = QPushButton("✨ Nâng Cấp DSP")
+        self.btn_dsp = QPushButton("✨ Nâng Cấp DSP & LUFS")
         self.btn_dsp.setProperty("class", "SecondaryBtn")
-        self.btn_dsp.setToolTip("Bộ lọc nhiễu, 5-band EQ giọng nói, De-Esser, Compressor và chuẩn hóa EBU R128 LUFS")
+        self.btn_dsp.setToolTip("Giảm nhiễu, Voice EQ 6 dải, De-Esser, Compressor và chuẩn hóa EBU R128 LUFS")
         self.btn_dsp.clicked.connect(self.enhance_audio_dialog)
         t_layout.addWidget(self.btn_dsp)
 
@@ -663,31 +787,64 @@ class PageAudioStudio(QWidget):
         self._update_ui_state()
 
     def export_audio_dialog(self):
-        """Mở hộp thoại xuất file WAV hoặc MP3 ra ổ đĩa."""
+        """Mở hộp thoại xuất bản âm thanh tích hợp chuẩn hóa LUFS hoặc Peak."""
         if self.current_audio is None:
             return
 
-        default_name = f"{self.current_project_name}_exported.wav"
-        save_path, selected_filter = QFileDialog.getSaveFileName(
-            self, "Xuất file âm thanh", str(Path(tts_service.default_out_dir) / default_name),
-            "WAV Audio (*.wav);;MP3 Audio (*.mp3)"
-        )
-        if not save_path:
+        default_dir = Path(tts_service.default_out_dir)
+        default_name = f"{self.current_project_name}_exported"
+        dlg = AudioStudioExportDialog(default_name=default_name, default_dir=default_dir, parent=self)
+        if dlg.exec() != QDialog.Accepted or not dlg.export_path:
             return
 
-        out_p = Path(save_path)
-        fmt = "mp3" if out_p.suffix.lower() == ".mp3" else "wav"
+        out_p = dlg.export_path
+        fmt = dlg.format_type
+        mode = dlg.mastering_mode
 
         try:
-            if fmt == "mp3":
-                self.current_audio.export(str(out_p), format="mp3", bitrate="192k")
+            temp_raw = Path(tempfile.gettempdir()) / f"studio_export_raw_{os.getpid()}.wav"
+            self.current_audio.export(str(temp_raw), format="wav")
+
+            if mode == "peak":
+                norm_audio = pydub_normalize(self.current_audio)
+                if fmt == "mp3":
+                    norm_audio.export(str(out_p), format="mp3", bitrate=f"{dlg.bitrate_kbps}k")
+                else:
+                    norm_audio.export(str(out_p), format="wav")
+            elif mode.startswith("lufs"):
+                from backend.audio_enhancement import audio_enhancement_engine, AudioEnhancementConfig
+                cfg = AudioEnhancementConfig(
+                    enable_loudnorm=True,
+                    target_lufs=dlg.target_lufs,
+                    loudness_range=7.0,
+                    true_peak=-1.5,
+                    enable_noise_reduction=False,
+                    enable_eq=False,
+                    enable_compressor=False,
+                )
+                res = audio_enhancement_engine.enhance_audio(
+                    input_file=temp_raw,
+                    output_file=out_p,
+                    config=cfg,
+                )
+                if not res.get("success"):
+                    raise RuntimeError(res.get("error") or "Lỗi chuẩn hóa LUFS")
             else:
-                self.current_audio.export(str(out_p), format="wav")
+                if fmt == "mp3":
+                    self.current_audio.export(str(out_p), format="mp3", bitrate=f"{dlg.bitrate_kbps}k")
+                else:
+                    self.current_audio.export(str(out_p), format="wav")
+
+            try:
+                if temp_raw.is_file():
+                    temp_raw.unlink()
+            except Exception:
+                pass
 
             notification_hub.notify_success.emit("Xuất Âm Thanh Thành Công", f"Đã xuất tệp:\n{out_p.name}")
             QMessageBox.information(
                 self, "Xuất thành công",
-                f"Đã xuất tệp âm thanh thành công:\n\n{out_p}\n\nThời lượng: {format_ms_to_time(len(self.current_audio))}"
+                f"Đã xuất tệp âm thanh thành công:\n\n{out_p}\n\nĐịnh dạng: {fmt.upper()} | Chế độ: {dlg.combo_mode.currentText()}\nThời lượng: {format_ms_to_time(len(self.current_audio))}"
             )
         except Exception as e:
             QMessageBox.critical(self, "Lỗi xuất file", f"Không thể xuất file âm thanh:\n\n{e}")
