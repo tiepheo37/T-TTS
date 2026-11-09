@@ -121,5 +121,72 @@ class ProjectManager:
                 return False
         return False
 
+    # -------------------------------------------------------------------------
+    # HỖ TRỢ DỰ ÁN TÀI LIỆU VĂN BẢN (DOCUMENT-TO-SPEECH PROJECTS) — V3.1.0
+    # -------------------------------------------------------------------------
+    @classmethod
+    def create_document_project(
+        cls,
+        name: str,
+        raw_text: str,
+        source_path: Optional[str] = None,
+        voice_id: str = "v-nam-1",
+        speed: float = 1.0,
+        fmt: str = "wav",
+    ) -> Dict[str, Any]:
+        """Khởi tạo dự án chuyển đổi tài liệu sang giọng nói."""
+        from .text_processor import VietnameseTextProcessor
+
+        normalized = VietnameseTextProcessor.full_normalize(raw_text)
+        chunks = VietnameseTextProcessor.smart_split_paragraphs(normalized)
+        stats = VietnameseTextProcessor.calculate_statistics(normalized)
+
+        segments = []
+        for idx, chunk in enumerate(chunks):
+            segments.append({
+                "index": idx,
+                "text": chunk,
+                "status": "pending",  # pending | synthesizing | completed | error
+                "audio_path": None,
+                "duration": 0.0,
+                "error": None,
+            })
+
+        project_data = {
+            "source_path": str(source_path) if source_path else None,
+            "raw_text": raw_text,
+            "normalized_text": normalized,
+            "voice_id": voice_id,
+            "speed": speed,
+            "format": fmt,
+            "statistics": stats,
+            "segments": segments,
+            "total_segments": len(segments),
+            "completed_segments": 0,
+            "merged_audio_path": None,
+        }
+
+        schema = cls.create_project_schema(
+            project_type="documents",
+            name=name,
+            data=project_data,
+        )
+        return schema
+
+    @classmethod
+    def save_document_project(cls, project_dict: Dict[str, Any]) -> str:
+        """Lưu dự án tài liệu vào thư mục data/projects/documents/."""
+        return cls.save_project("documents", project_dict)
+
+    @classmethod
+    def load_document_project(cls, project_id: str) -> Optional[Dict[str, Any]]:
+        """Tải dự án tài liệu theo ID."""
+        return cls.load_project("documents", project_id)
+
+    @classmethod
+    def list_document_projects(cls) -> List[Dict[str, Any]]:
+        """Liệt kê toàn bộ dự án tài liệu hiện có."""
+        return cls.list_projects("documents")
+
 
 project_manager = ProjectManager()
