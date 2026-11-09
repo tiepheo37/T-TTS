@@ -39,7 +39,11 @@ from PySide6.QtWidgets import (
 
 from backend.service import tts_service
 from backend.audio_player import audio_player
+from backend.project_manager import project_manager
 from gui.dialog_import_document import DocumentImportDialog
+from gui.dialog_text_processor import TextProcessorDialog
+from gui.dialog_find_replace import FindReplaceDialog
+from gui.dialog_document_project import DocumentProjectDialog
 
 
 class SynthesisWorker(QThread):
@@ -357,6 +361,25 @@ class PageSynthesize(QWidget):
             tags_bar.addWidget(btn_tag)
 
         tags_bar.addStretch()
+
+        btn_normalize = QPushButton("⚙️ Chuẩn Hóa")
+        btn_normalize.setProperty("class", "SecondaryBtn")
+        btn_normalize.setToolTip("Chuẩn hóa Unicode, đọc ngày tháng, giờ phút, tiền tệ và số tiếng Việt cho TTS")
+        btn_normalize.clicked.connect(self._open_text_processor)
+        tags_bar.addWidget(btn_normalize)
+
+        btn_find_replace = QPushButton("🔍 Tìm/Thay Thế")
+        btn_find_replace.setProperty("class", "SecondaryBtn")
+        btn_find_replace.setToolTip("Tìm kiếm và thay thế văn bản (Find & Replace)")
+        btn_find_replace.clicked.connect(self._open_find_replace)
+        tags_bar.addWidget(btn_find_replace)
+
+        btn_project_menu = QPushButton("📁 Dự Án")
+        btn_project_menu.setProperty("class", "SecondaryBtn")
+        btn_project_menu.setToolTip("Quản lý, lưu và mở dự án tài liệu văn bản (Document Project)")
+        btn_project_menu.clicked.connect(self._open_document_projects)
+        tags_bar.addWidget(btn_project_menu)
+
         tc_layout.addLayout(tags_bar)
 
         # Ô soạn thảo văn bản chính
@@ -574,6 +597,73 @@ class PageSynthesize(QWidget):
             self.lbl_status.setVisible(True)
             self.lbl_status.setStyleSheet("color: #4ADE80;")
             self.lbl_status.setText(f"✅ Đã nhập tài liệu {fmt} ({words:,} từ | {chars:,} ký tự)")
+
+    def _open_text_processor(self):
+        """Mở hộp thoại cấu hình chuẩn hóa văn bản và đọc số tiếng Việt."""
+        curr_text = self.txt_input.toPlainText()
+        if not curr_text.strip():
+            QMessageBox.information(self, "Thông báo", "Vui lòng nhập văn bản trước khi chuẩn hóa!")
+            return
+
+        dlg = TextProcessorDialog(curr_text, self)
+        if dlg.exec() == TextProcessorDialog.Accepted:
+            self.txt_input.setPlainText(dlg.final_text)
+            self.lbl_status.setVisible(True)
+            self.lbl_status.setStyleSheet("color: #4ADE80;")
+            self.lbl_status.setText("✅ Đã áp dụng chuẩn hóa văn bản & đọc số tiếng Việt cho TTS!")
+
+    def _open_find_replace(self):
+        """Mở hộp thoại tìm kiếm và thay thế văn bản."""
+        dlg = FindReplaceDialog(self.txt_input, self)
+        dlg.show()
+        dlg.raise_()
+        dlg.activateWindow()
+
+    def _open_document_projects(self):
+        """Quản lý, mở hoặc lưu dự án tài liệu văn bản."""
+        # Menu lựa chọn thao tác nhanh
+        ans = QMessageBox.question(
+            self,
+            "Quản Lý Dự Án Tài Liệu",
+            "Bạn muốn làm gì?\n\n- Chọn 'Yes' để Mở danh sách quản lý dự án đã có.\n- Chọn 'No' để Lưu nội dung hiện tại thành dự án mới.",
+            QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel,
+            QMessageBox.Yes,
+        )
+        if ans == QMessageBox.Yes:
+            dlg = DocumentProjectDialog(self)
+            if dlg.exec() == DocumentProjectDialog.Accepted and dlg.selected_project:
+                proj = dlg.selected_project
+                pdata = proj.get("data", {})
+                content = pdata.get("raw_text") or pdata.get("normalized_text", "")
+                self.txt_input.setPlainText(content)
+                self.current_project_id = proj.get("id")
+                self.lbl_status.setVisible(True)
+                self.lbl_status.setStyleSheet("color: #4ADE80;")
+                self.lbl_status.setText(f"✅ Đã mở dự án tài liệu: '{proj.get('name')}'")
+        elif ans == QMessageBox.No:
+            self._save_current_project()
+
+    def _save_current_project(self):
+        """Lưu văn bản đang soạn thảo thành dự án DocumentProject."""
+        content = self.txt_input.toPlainText().strip()
+        if not content:
+            QMessageBox.warning(self, "Chưa Có Nội Dung", "Ô soạn thảo đang rỗng, không thể lưu dự án!")
+            return
+
+        proj_name, ok = QInputDialog.getText(self, "Lưu Dự Án Tài Liệu", "Nhập tên dự án:", text="Dự thảo phát thanh mới")
+        if not ok or not proj_name.strip():
+            return
+
+        proj = project_manager.create_document_project(
+            name=proj_name.strip(),
+            raw_text=content,
+            voice_id=self.selected_voice_id or "v-nam-1",
+            speed=self.slider_speed.value() / 100.0,
+            fmt=self.combo_fmt.currentData() or "wav",
+        )
+        pid = project_manager.save_document_project(proj)
+        self.current_project_id = pid
+        QMessageBox.information(self, "Đã Lưu Dự Án", f"🎉 Dự án '{proj_name}' đã được lưu thành công!\nMã dự án: {pid}")
 
     def _on_text_changed(self):
         text = self.txt_input.toPlainText()

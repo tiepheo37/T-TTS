@@ -81,7 +81,15 @@ class ProjectManager:
             with open(file_path, "r", encoding="utf-8") as f:
                 return json.load(f)
         except Exception as e:
-            print(f"Lỗi khi tải dự án '{project_id}': {e}")
+            try:
+                print(f"[ProjectManager] Error loading project '{project_id}': {e}")
+            except Exception:
+                pass
+            try:
+                corrupt_backup = file_path.with_suffix(f".corrupted_{int(time.time())}")
+                file_path.rename(corrupt_backup)
+            except Exception:
+                pass
             return None
 
     @staticmethod
@@ -177,6 +185,65 @@ class ProjectManager:
     def save_document_project(cls, project_dict: Dict[str, Any]) -> str:
         """Lưu dự án tài liệu vào thư mục data/projects/documents/."""
         return cls.save_project("documents", project_dict)
+
+    @classmethod
+    def save_as_document_project(cls, project_dict: Dict[str, Any], new_name: str) -> str:
+        """Lưu dự án tài liệu thành một bản mới với tên và ID khác (Save As)."""
+        new_dict = dict(project_dict)
+        new_pid = f"documents_{int(time.time())}_{uuid.uuid4().hex[:6]}"
+        new_dict["id"] = new_pid
+        new_dict["name"] = new_name.strip()
+        new_dict["created_at"] = time.strftime("%Y-%m-%d %H:%M:%S")
+        new_dict["updated_at"] = new_dict["created_at"]
+        return cls.save_project("documents", new_dict)
+
+    @classmethod
+    def rename_document_project(cls, project_id: str, new_name: str) -> bool:
+        """Đổi tên dự án tài liệu."""
+        proj = cls.load_document_project(project_id)
+        if not proj:
+            return False
+        proj["name"] = new_name.strip()
+        cls.save_document_project(proj)
+        return True
+
+    @classmethod
+    def duplicate_document_project(cls, project_id: str) -> Optional[Dict[str, Any]]:
+        """Nhân bản dự án tài liệu."""
+        proj = cls.load_document_project(project_id)
+        if not proj:
+            return None
+        clone_name = f"{proj.get('name', 'Dự án')} (Bản sao)"
+        new_pid = cls.save_as_document_project(proj, clone_name)
+        return cls.load_document_project(new_pid)
+
+    @classmethod
+    def delete_document_project(cls, project_id: str, delete_audio: bool = False) -> bool:
+        """Xóa dự án tài liệu (tùy chọn xóa kèm tệp âm thanh liên kết)."""
+        proj = cls.load_document_project(project_id)
+        if delete_audio and proj:
+            data = proj.get("data", {})
+            # Xóa các segment audio nếu người dùng yêu cầu
+            for seg in data.get("segments", []):
+                ap = seg.get("audio_path")
+                if ap and Path(ap).is_file():
+                    try:
+                        Path(ap).unlink()
+                    except Exception:
+                        pass
+            merged = data.get("merged_audio_path")
+            if merged and Path(merged).is_file():
+                try:
+                    Path(merged).unlink()
+                except Exception:
+                    pass
+        return cls.delete_project("documents", project_id)
+
+    @classmethod
+    def get_recent_document_projects(cls, limit: int = 10) -> List[Dict[str, Any]]:
+        """Lấy danh sách các dự án tài liệu gần đây nhất."""
+        all_docs = cls.list_document_projects()
+        return all_docs[:limit]
 
     @classmethod
     def load_document_project(cls, project_id: str) -> Optional[Dict[str, Any]]:
